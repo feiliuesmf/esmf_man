@@ -1,0 +1,22 @@
+  48.5.41 ESMF_HConfigIterNext - Step iterator forward
+
+   INTERFACE:
+   subroutine ESMF_HConfigIterNext(hconfig, rc)
+
+   ARGUMENTS:
+     type(ESMF_HConfigIter), intent(inout)         :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Step the iterator hconfig one step forward.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfigIter object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

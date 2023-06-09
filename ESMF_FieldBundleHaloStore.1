@@ -1,0 +1,47 @@
+  25.5.16 ESMF_FieldBundleHaloStore - Precompute a FieldBundle halo operation
+
+   INTERFACE:
+     subroutine ESMF_FieldBundleHaloStore(fieldbundle, routehandle, &
+       rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(inout) :: fieldbundle
+     type(ESMF_RouteHandle), intent(inout) :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Store a FieldBundle halo operation over the data in fieldbundle. By
+   definition, all elements in the total Field regions that lie outside
+   the exclusive regions will be considered potential destination elements
+   for the halo operation. However, only those elements that have a
+   corresponding halo source element, i.e. an exclusive element on one of
+   the DEs, will be updated under the halo operation. Elements that have
+   no associated source remain unchanged under halo.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_FieldBundleHalo() on any pair of FieldBundles that matches
+   srcFieldBundle and dstFieldBundle in type, kind, and memory layout of
+   the gridded dimensions. However, the size, number, and index order of
+   ungridded dimensions may be different. See section [738]37.2.5 for a
+   more detailed discussion of RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   fieldbundle
+          ESMF_FieldBundle containing data to be haloed. The data in this
+          FieldBundle may be destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

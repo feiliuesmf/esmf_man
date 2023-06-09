@@ -1,0 +1,25 @@
+  48.5.22 ESMF_HConfigGetDocCount - Get number of docs in HConfig
+
+   INTERFACE:
+   function ESMF_HConfigGetDocCount(hconfig, rc)
+
+   RETURN VALUE:
+     integer :: ESMF_HConfigGetDocCount
+
+   ARGUMENTS:
+     type(ESMF_HConfig), intent(in)            :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return the number of documents held by hconfig.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

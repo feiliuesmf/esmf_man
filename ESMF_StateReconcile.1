@@ -1,0 +1,35 @@
+  21.7.14 ESMF_StateReconcile - Reconcile State data across all PETs in a VM
+
+   INTERFACE:
+   subroutine ESMF_StateReconcile(state, vm, rc)
+
+   ARGUMENTS:
+     type(ESMF_State),            intent(inout)         :: state
+     type(ESMF_VM),               intent(in),  optional :: vm
+     integer,                     intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Must be called for any ESMF_State which contains ESMF objects that have
+   not been created on all the PETs of the currently running
+   ESMF_Component. For example, if a coupler is operating on data which
+   was created by another component that ran on only a subset of the
+   couplers PETs, the coupler must make this call first before operating
+   on any data inside that ESMF_State. After calling ESMF_StateReconcile
+   all PETs will have a common view of all objects contained in this
+   ESMF_State.
+
+   This call is collective across the specified VM.
+
+   The arguments are:
+
+   state
+          ESMF_State to reconcile.
+
+   [vm]
+          ESMF_VM for this ESMF_Component. By default, it is set to the
+          current vm.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,40 @@
+  40.4.16 ESMF_InfoGetFromHost - Get an Info handle from an ESMF object
+
+   INTERFACE:
+  subroutine ESMF_InfoGetFromHost(host, info, rc)
+
+   ARGUMENTS:
+    type(ESMF_*), intent(inout) :: host
+    type(ESMF_Info), intent(out) :: info
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+    integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get an ESMF_Info object handle from a host ESMF object. The returned
+   handle should not be destroyed.
+
+   The arguments are:
+
+   host
+          Target ESMF object. Overloaded for:
+
+          + ESMF_Array
+          + ESMF_ArrayBundle
+          + ESMF_CplComp
+          + ESMF_GridComp
+          + ESMF_SciComp
+          + ESMF_DistGrid
+          + ESMF_Field
+          + ESMF_FieldBundle
+          + ESMF_Grid
+          + ESMF_State
+          + ESMF_LocStream
+          + ESMF_Mesh
+
+   info
+          Outgoing ESMF_Info object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

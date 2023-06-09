@@ -1,0 +1,1422 @@
+  26.6.30 ESMF_FieldEmptyComplete - Complete a Field from arrayspec
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+ subroutine ESMF_FieldEmptyCompAS(field, arrayspec, indexflag, &
+  gridToFieldMap, ungriddedLBound, ungriddedUBound, totalLWidth, totalUWidth, &
+  pinflag, rc)
+
+   ARGUMENTS:
+  type(ESMF_Field), intent(inout) :: field
+  type(ESMF_ArraySpec), intent(in) :: arrayspec
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+  type(ESMF_Index_Flag), intent(in), optional :: indexflag
+  integer, intent(in), optional :: gridToFieldMap(:)
+  integer, intent(in), optional :: ungriddedLBound(:)
+  integer, intent(in), optional :: ungriddedUBound(:)
+  integer, intent(in), optional :: totalLWidth(:)
+  integer, intent(in), optional :: totalUWidth(:)
+  type(ESMF_Pin_Flag), intent(in), optional :: pinflag
+  integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        8.1.0
+                Added argument pinflag to provide access to DE sharing
+                between PETs.
+
+   DESCRIPTION:
+
+   Complete an ESMF_Field and allocate space internally for an ESMF_Array
+   based on arrayspec. The input ESMF_Field must have a status of
+   ESMF_FIELDSTATUS_GRIDSET. After this call the completed ESMF_Field has
+   a status of ESMF_FIELDSTATUS_COMPLETE.
+
+   The arguments are:
+
+   field
+          The input ESMF_Field with a status of ESMF_FIELDSTATUS_GRIDSET.
+
+   arrayspec
+          Data type and kind specification.
+
+   [indexflag]
+          Indicate how DE-local indices are defined. By default each DE's
+          exclusive region is placed to start at the local index space
+          origin, i.e. (1, 1, ..., 1). Alternatively the DE-local index
+          space can be aligned with the global index space, if a global
+          index space is well defined by the associated Grid. See section
+          [887]54.27 for a list of valid indexflag options.
+
+   [gridToFieldMap]
+          List with number of elements equal to the grid's dimCount. The
+          list elements map each dimension of the grid to a dimension in
+          the field by specifying the appropriate field dimension index.
+          The default is to map all of the grid's dimensions against the
+          lowest dimensions of the field in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). The values of all gridToFieldMap entries must
+          be greater than or equal to one and smaller than or equal to the
+          field rank. It is erroneous to specify the same gridToFieldMap
+          entry multiple times. The total ungridded dimensions in the
+          field are the total field dimensions less the dimensions in the
+          grid. Ungridded dimensions must be in the same order they are
+          stored in the field. If the Field dimCount is less than the Grid
+          dimCount then the default gridToFieldMap will contain zeros for
+          the rightmost entries. A zero entry in the gridToFieldMap
+          indicates that the particular Grid dimension will be replicating
+          the Field across the DEs along this direction.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of this array is the number
+          of gridded dimensions in the Field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalLWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should be max( totalLWidth
+          + totalUWidth + computationalCount, exclusiveCount ).
+
+   [totalUWidth]
+          Upper bound of halo region. The size of this array is the number
+          of gridded dimensions in the Field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalUWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should max( totalLWidth +
+          totalUWidth + computationalCount, exclusiveCount ).
+
+   [pinflag]
+          Specify which type of resource DEs are pinned to. See section
+          [888]50.2.1 for a list of valid pinning options. The default is
+          to pin DEs to PETs, i.e. only the PET on which a DE was created
+          considers the DE as local.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.31 ESMF_FieldEmptyComplete - Complete a Field from typekind
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+ subroutine ESMF_FieldEmptyCompTK(field, typekind, indexflag, &
+  gridToFieldMap, ungriddedLBound, ungriddedUBound, totalLWidth, totalUWidth, &
+  pinflag, rc)
+
+   ARGUMENTS:
+  type(ESMF_Field), intent(inout) :: field
+  type(ESMF_TypeKind_Flag), intent(in) :: typekind
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+  type(ESMF_Index_Flag), intent(in), optional :: indexflag
+  integer, intent(in), optional :: gridToFieldMap(:)
+  integer, intent(in), optional :: ungriddedLBound(:)
+  integer, intent(in), optional :: ungriddedUBound(:)
+  integer, intent(in), optional :: totalLWidth(:)
+  integer, intent(in), optional :: totalUWidth(:)
+  type(ESMF_Pin_Flag), intent(in), optional :: pinflag
+  integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        8.1.0
+                Added argument pinflag to provide access to DE sharing
+                between PETs.
+
+   DESCRIPTION:
+
+   Complete an ESMF_Field and allocate space internally for an ESMF_Array
+   based on typekind. The input ESMF_Field must have a status of
+   ESMF_FIELDSTATUS_GRIDSET. After this call the completed ESMF_Field has
+   a status of ESMF_FIELDSTATUS_COMPLETE.
+
+   For an example and associated documentation using this method see
+   section [889]26.3.7.
+
+   The arguments are:
+
+   field
+          The input ESMF_Field with a status of ESMF_FIELDSTATUS_GRIDSET.
+
+   typekind
+          Data type and kind specification.
+
+   [indexflag]
+          Indicate how DE-local indices are defined. By default each DE's
+          exclusive region is placed to start at the local index space
+          origin, i.e. (1, 1, ..., 1). Alternatively the DE-local index
+          space can be aligned with the global index space, if a global
+          index space is well defined by the associated Grid. See section
+          [890]54.27 for a list of valid indexflag options.
+
+   [gridToFieldMap]
+          List with number of elements equal to the grid's dimCount. The
+          list elements map each dimension of the grid to a dimension in
+          the field by specifying the appropriate field dimension index.
+          The default is to map all of the grid's dimensions against the
+          lowest dimensions of the field in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). The values of all gridToFieldMap entries must
+          be greater than or equal to one and smaller than or equal to the
+          field rank. It is erroneous to specify the same gridToFieldMap
+          entry multiple times. The total ungridded dimensions in the
+          field are the total field dimensions less the dimensions in the
+          grid. Ungridded dimensions must be in the same order they are
+          stored in the field. If the Field dimCount is less than the Grid
+          dimCount then the default gridToFieldMap will contain zeros for
+          the rightmost entries. A zero entry in the gridToFieldMap
+          indicates that the particular Grid dimension will be replicating
+          the Field across the DEs along this direction.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of this array is the number
+          of gridded dimensions in the Field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalLWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should be max( totalLWidth
+          + totalUWidth + computationalCount, exclusiveCount ).
+
+   [totalUWidth]
+          Upper bound of halo region. The size of this array is the number
+          of gridded dimensions in the Field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalUWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should max( totalLWidth +
+          totalUWidth + computationalCount, exclusiveCount ).
+
+   [pinflag]
+          Specify which type of resource DEs are pinned to. See section
+          [891]50.2.1 for a list of valid pinning options. The default is
+          to pin DEs to PETs, i.e. only the PET on which a DE was created
+          considers the DE as local.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.32 ESMF_FieldEmptyComplete - Complete a Field from Fortran array
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyComp<rank><type><kind>(field, &
+   farray, indexflag, datacopyflag, gridToFieldMap, &
+   ungriddedLBound, ungriddedUBound, totalLWidth, totalUWidth, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   <type> (ESMF_KIND_<kind>),intent(in), target :: farray(<rank>)
+   type(ESMF_Index_Flag), intent(in) :: indexflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: ungriddedLBound(:)
+   integer, intent(in), optional :: ungriddedUBound(:)
+   integer, intent(in), optional :: totalLWidth(:)
+   integer, intent(in), optional :: totalUWidth(:)
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Complete an ESMF_Field and allocate space internally for an ESMF_Array
+   based on typekind. The input ESMF_Field must have a status of
+   ESMF_FIELDSTATUS_GRIDSET. After this call the completed ESMF_Field has
+   a status of ESMF_FIELDSTATUS_COMPLETE.
+
+   The Fortran data pointer inside ESMF_Field can be queried but
+   deallocating the retrieved data pointer is not allowed.
+
+   For an example and associated documentation using this method see
+   section [892]26.3.8.
+
+   The arguments are:
+
+   field
+          The input ESMF_Field with a status of ESMF_FIELDSTATUS_GRIDSET.
+          The ESMF_Field will have the same dimension (dimCount) as the
+          rank of the farray.
+
+   farray
+          Native Fortran data array to be copied/referenced in the field.
+          The field dimension (dimCount) will be the same as the dimCount
+          for the farray.
+
+   indexflag
+          Indicate how DE-local indices are defined. See section
+          [893]54.27 for a list of valid indexflag options.
+
+   [datacopyflag]
+          Indicates whether to copy the farray or reference it directly.
+          For valid values see [894]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [gridToFieldMap]
+          List with number of elements equal to the grid's dimCount. The
+          list elements map each dimension of the grid to a dimension in
+          the farray by specifying the appropriate farray dimension index.
+          The default is to map all of the grid's dimensions against the
+          lowest dimensions of the farray in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). Unmapped farray dimensions are undistributed
+          Field dimensions. All gridToFieldMap entries must be greater
+          than or equal to zero and smaller than or equal to the Field
+          dimCount. It is erroneous to specify the same entry multiple
+          times unless it is zero. If the Field dimCount is less than the
+          Grid dimCount then the default gridToFieldMap will contain zeros
+          for the rightmost entries. A zero entry in the gridToFieldMap
+          indicates that the particular Grid dimension will be replicating
+          the Field across the DEs along this direction.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalLWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should be max( totalLWidth
+          + totalUWidth + computationalCount, exclusiveCount ).
+
+   [totalUWidth]
+          Upper bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalUWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should max( totalLWidth +
+          totalUWidth + computationalCount, exclusiveCount ).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.33 ESMF_FieldEmptyComplete - Complete a Field from Fortran array pointer
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompPtr<rank><type><kind>(field, &
+   farrayPtr, datacopyflag, gridToFieldMap, &
+   totalLWidth, totalUWidth, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   <type> (ESMF_KIND_<kind>), pointer :: farrayPtr(<rank>)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: totalLWidth(:)
+   integer, intent(in), optional :: totalUWidth(:)
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Complete an ESMF_Field and allocate space internally for an ESMF_Array
+   based on typekind. The input ESMF_Field must have a status of
+   ESMF_FIELDSTATUS_GRIDSET. After this call the completed ESMF_Field has
+   a status of ESMF_FIELDSTATUS_COMPLETE.
+
+   The Fortran data pointer inside ESMF_Field can be queried and
+   deallocated when datacopyflag is ESMF_DATACOPY_REFERENCE. Note that the
+   ESMF_FieldDestroy call does not deallocate the Fortran data pointer in
+   this case. This gives user more flexibility over memory management.
+
+   The arguments are:
+
+   field
+          The input ESMF_Field with a status of ESMF_FIELDSTATUS_GRIDSET.
+          The ESMF_Field will have the same dimension (dimCount) as the
+          rank of the farrayPtr.
+
+   farrayPtr
+          Native Fortran data pointer to be copied/referenced in the
+          field. The field dimension (dimCount) will be the same as the
+          dimCount for the farrayPtr.
+
+   [datacopyflag]
+          Indicates whether to copy the farrayPtr or reference it
+          directly. For valid values see [895]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [gridToFieldMap]
+          List with number of elements equal to the grid's dimCount. The
+          list elements map each dimension of the grid to a dimension in
+          the farrayPtr by specifying the appropriate farrayPtr dimension
+          index. The default is to map all of the grid's dimensions
+          against the lowest dimensions of the farrayPtr in sequence, i.e.
+          gridToFieldMap = (/1,2,3,.../). Unmapped farrayPtr dimensions
+          are undistributed Field dimensions. All gridToFieldMap entries
+          must be greater than or equal to zero and smaller than or equal
+          to the Field dimCount. It is erroneous to specify the same entry
+          multiple times unless it is zero. If the Field dimCount is less
+          than the Grid dimCount then the default gridToFieldMap will
+          contain zeros for the rightmost entries. A zero entry in the
+          gridToFieldMap indicates that the particular Grid dimension will
+          be replicating the Field across the DEs along this direction.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalLWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should be max( totalLWidth
+          + totalUWidth + computationalCount, exclusiveCount ).
+
+   [totalUWidth]
+          Upper bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalUWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should max( totalLWidth +
+          totalUWidth + computationalCount, exclusiveCount ).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.34 ESMF_FieldEmptyComplete - Complete a Field from Grid started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompGrid<rank><type><kind>(field, grid, &
+   farray, indexflag, datacopyflag, staggerloc, gridToFieldMap, &
+   ungriddedLBound, ungriddedUBound, totalLWidth, totalUWidth, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_Grid), intent(in) :: grid
+   <type> (ESMF_KIND_<kind>),intent(in), target :: farray(<rank>)
+   type(ESMF_Index_Flag), intent(in) :: indexflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   type(ESMF_STAGGERLOC), intent(in), optional :: staggerloc
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: ungriddedLBound(:)
+   integer, intent(in), optional :: ungriddedUBound(:)
+   integer, intent(in), optional :: totalLWidth(:)
+   integer, intent(in), optional :: totalUWidth(:)
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call.
+
+   The Fortran data pointer inside ESMF_Field can be queried but
+   deallocating the retrieved data pointer is not allowed.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farray.
+
+   grid
+          The ESMF_Grid object to complete the Field.
+
+   farray
+          Native Fortran data array to be copied/referenced in the field.
+          The field dimension (dimCount) will be the same as the dimCount
+          for the farray.
+
+   indexflag
+          Indicate how DE-local indices are defined. See section
+          [896]54.27 for a list of valid indexflag options.
+
+   [datacopyflag]
+          Indicates whether to copy the farray or reference it directly.
+          For valid values see [897]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [staggerloc]
+          Stagger location of data in grid cells. For valid predefined
+          values see section [898]31.2.6. To create a custom stagger
+          location see section [899]31.3.25. The default value is
+          ESMF_STAGGERLOC_CENTER.
+
+   [gridToFieldMap]
+          List with number of elements equal to the grid's dimCount. The
+          list elements map each dimension of the grid to a dimension in
+          the farray by specifying the appropriate farray dimension index.
+          The default is to map all of the grid's dimensions against the
+          lowest dimensions of the farray in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). Unmapped farray dimensions are undistributed
+          Field dimensions. All gridToFieldMap entries must be greater
+          than or equal to zero and smaller than or equal to the Field
+          dimCount. It is erroneous to specify the same entry multiple
+          times unless it is zero. If the Field dimCount is less than the
+          Grid dimCount then the default gridToFieldMap will contain zeros
+          for the rightmost entries. A zero entry in the gridToFieldMap
+          indicates that the particular Grid dimension will be replicating
+          the Field across the DEs along this direction.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalLWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should be max( totalLWidth
+          + totalUWidth + computationalCount, exclusiveCount ).
+
+   [totalUWidth]
+          Upper bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalUWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should max( totalLWidth +
+          totalUWidth + computationalCount, exclusiveCount ).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.35 ESMF_FieldEmptyComplete - Complete a Field from Grid started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompGridPtr<rank><type><kind>(field, grid, &
+   farrayPtr, datacopyflag, staggerloc, gridToFieldMap, &
+   totalLWidth, totalUWidth, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_Grid), intent(in) :: grid
+   <type> (ESMF_KIND_<kind>), pointer :: farrayPtr(<rank>)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   type(ESMF_STAGGERLOC), intent(in), optional :: staggerloc
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: totalLWidth(:)
+   integer, intent(in), optional :: totalUWidth(:)
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call.
+
+   The Fortran data pointer inside ESMF_Field can be queried and
+   deallocated when datacopyflag is ESMF_DATACOPY_REFERENCE. Note that the
+   ESMF_FieldDestroy call does not deallocate the Fortran data pointer in
+   this case. This gives user more flexibility over memory management. The
+   Fortran data pointer inside ESMF_Field can be queried and deallocated
+   when
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farrayPtr.
+
+   grid
+          The ESMF_Grid object to complete the Field.
+
+   farrayPtr
+          Native Fortran data pointer to be copied/referenced in the
+          field. The field dimension (dimCount) will be the same as the
+          dimCount for the farrayPtr.
+
+   [datacopyflag]
+          Indicates whether to copy the farrayPtr or reference it
+          directly. For valid values see [900]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [staggerloc]
+          Stagger location of data in grid cells. For valid predefined
+          values see section [901]31.2.6. To create a custom stagger
+          location see section [902]31.3.25. The default value is
+          ESMF_STAGGERLOC_CENTER.
+
+   [gridToFieldMap]
+          List with number of elements equal to the grid's dimCount. The
+          list elements map each dimension of the grid to a dimension in
+          the farrayPtr by specifying the appropriate farrayPtr dimension
+          index. The default is to map all of the grid's dimensions
+          against the lowest dimensions of the farrayPtr in sequence, i.e.
+          gridToFieldMap = (/1,2,3,.../). Unmapped farrayPtr dimensions
+          are undistributed Field dimensions. All gridToFieldMap entries
+          must be greater than or equal to zero and smaller than or equal
+          to the Field dimCount. It is erroneous to specify the same entry
+          multiple times unless it is zero. If the Field dimCount is less
+          than the Grid dimCount then the default gridToFieldMap will
+          contain zeros for the rightmost entries. A zero entry in the
+          gridToFieldMap indicates that the particular Grid dimension will
+          be replicating the Field across the DEs along this direction.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalLWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should be max( totalLWidth
+          + totalUWidth + computationalCount, exclusiveCount ).
+
+   [totalUWidth]
+          Upper bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalUWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should max( totalLWidth +
+          totalUWidth + computationalCount, exclusiveCount ).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.36 ESMF_FieldEmptyComplete - Complete a Field from LocStream started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompLS<rank><type><kind>(field, locstream, &
+   farray, indexflag, datacopyflag, gridToFieldMap, &
+   ungriddedLBound, ungriddedUBound, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_LocStream), intent(in) :: locstream
+   <type> (ESMF_KIND_<kind>), intent(in), target :: farray(<rank>)
+   type(ESMF_Index_Flag), intent(in) :: indexflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: ungriddedLBound(:)
+   integer, intent(in), optional :: ungriddedUBound(:)
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call.
+
+   The Fortran data pointer inside ESMF_Field can be queried but
+   deallocating the retrieved data pointer is not allowed.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farray.
+
+   locstream
+          The ESMF_LocStream object to complete the Field.
+
+   farray
+          Native Fortran data array to be copied/referenced in the field.
+          The field dimension (dimCount) will be the same as the dimCount
+          for the farray.
+
+   indexflag
+          Indicate how DE-local indices are defined. See section
+          [903]54.27 for a list of valid indexflag options.
+
+   [datacopyflag]
+          Indicates whether to copy the farray or reference it directly.
+          For valid values see [904]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [gridToFieldMap]
+          List with number of elements equal to the locstream's dimCount.
+          The list elements map each dimension of the locstream to a
+          dimension in the farray by specifying the appropriate farray
+          dimension index. The default is to map all of the locstream's
+          dimensions against the lowest dimensions of the farray in
+          sequence, i.e. gridToFieldMap = (/1,2,3,.../). Unmapped farray
+          dimensions are undistributed Field dimensions. All
+          gridToFieldMap entries must be greater than or equal to zero and
+          smaller than or equal to the Field dimCount. It is erroneous to
+          specify the same entry multiple times unless it is zero. If the
+          Field dimCount is less than the LocStream dimCount then the
+          default gridToFieldMap will contain zeros for the rightmost
+          entries. A zero entry in the gridToFieldMap indicates that the
+          particular LocStream dimension will be replicating the Field
+          across the DEs along this direction.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than locstream dimension count, both ungriddedLBound
+          and ungriddedUBound must be specified. When both are specified
+          the values are checked for consistency. Note that the the
+          ordering of these ungridded dimensions is the same as their
+          order in the field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than locstream dimension count, both ungriddedLBound
+          and ungriddedUBound must be specified. When both are specified
+          the values are checked for consistency. Note that the the
+          ordering of these ungridded dimensions is the same as their
+          order in the field.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.37 ESMF_FieldEmptyComplete - Complete a Field from LocStream started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompLSPtr<rank><type><kind>(field, locstream, &
+   farrayPtr, datacopyflag, gridToFieldMap, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_LocStream), intent(in) :: locstream
+   <type> (ESMF_KIND_<kind>), pointer :: farrayPtr(<rank>)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call.
+
+   The Fortran data pointer inside ESMF_Field can be queried and
+   deallocated when datacopyflag is ESMF_DATACOPY_REFERENCE. Note that the
+   ESMF_FieldDestroy call does not deallocate the Fortran data pointer in
+   this case. This gives user more flexibility over memory management.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farrayPtr.
+
+   locstream
+          The ESMF_LocStream object to complete the Field.
+
+   farrayPtr
+          Native Fortran data pointer to be copied/referenced in the
+          field. The field dimension (dimCount) will be the same as the
+          dimCount for the farrayPtr.
+
+   [datacopyflag]
+          Indicates whether to copy the farrayPtr or reference it
+          directly. For valid values see [905]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [gridToFieldMap]
+          List with number of elements equal to the locstream's dimCount.
+          The list elements map each dimension of the locstream to a
+          dimension in the farrayPtr by specifying the appropriate
+          farrayPtr dimension index. The default is to map all of the
+          locstream's dimensions against the lowest dimensions of the
+          farrayPtr in sequence, i.e. gridToFieldMap = (/1,2,3,.../).
+          Unmapped farrayPtr dimensions are undistributed Field
+          dimensions. All gridToFieldMap entries must be greater than or
+          equal to zero and smaller than or equal to the Field dimCount.
+          It is erroneous to specify the same entry multiple times unless
+          it is zero. If the Field dimCount is less than the LocStream
+          dimCount then the default gridToFieldMap will contain zeros for
+          the rightmost entries. A zero entry in the gridToFieldMap
+          indicates that the particular LocStream dimension will be
+          replicating the Field across the DEs along this direction.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.38 ESMF_FieldEmptyComplete - Complete a Field from Mesh started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompMesh<rank><type><kind>(field, mesh, &
+   farray, indexflag, datacopyflag, meshloc, &
+   gridToFieldMap, ungriddedLBound, ungriddedUBound, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_Mesh), intent(in) :: mesh
+   <type> (ESMF_KIND_<kind>), intent(in), target :: farray(<rank>)
+   type(ESMF_Index_Flag), intent(in) :: indexflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   type(ESMF_MeshLoc), intent(in), optional :: meshloc
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: ungriddedLBound(:)
+   integer, intent(in), optional :: ungriddedUBound(:)
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call.
+
+   The Fortran data pointer inside ESMF_Field can be queried but
+   deallocating the retrieved data pointer is not allowed.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farray.
+
+   mesh
+          The ESMF_Mesh object to complete the Field.
+
+   farray
+          Native Fortran data array to be copied/referenced in the field.
+          The field dimension (dimCount) will be the same as the dimCount
+          for the farray.
+
+   indexflag
+          Indicate how DE-local indices are defined. See section
+          [906]54.27 for a list of valid indexflag options.
+
+   [datacopyflag]
+          Indicates whether to copy the farray or reference it directly.
+          For valid values see [907]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [meshloc]
+          Which part of the mesh to build the Field on. Can be set to
+          either ESMF_MESHLOC_NODE or ESMF_MESHLOC_ELEMENT. If not set,
+          defaults to ESMF_MESHLOC_NODE.
+
+   [gridToFieldMap]
+          List with number of elements equal to the mesh's dimCount. The
+          list elements map each dimension of the mesh to a dimension in
+          the farray by specifying the appropriate farray dimension index.
+          The default is to map all of the mesh's dimensions against the
+          lowest dimensions of the farray in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). Unmapped farray dimensions are undistributed
+          Field dimensions. All gridToFieldMap entries must be greater
+          than or equal to zero and smaller than or equal to the Field
+          dimCount. It is erroneous to specify the same entry multiple
+          times unless it is zero. If the Field dimCount is less than the
+          Mesh dimCount then the default gridToFieldMap will contain zeros
+          for the rightmost entries. A zero entry in the gridToFieldMap
+          indicates that the particular Mesh dimension will be replicating
+          the Field across the DEs along this direction.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than Mesh dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than Mesh dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.39 ESMF_FieldEmptyComplete - Complete a Field from Mesh started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompMeshPtr<rank><type><kind>(field, mesh, &
+   farrayPtr, datacopyflag, meshloc, gridToFieldMap, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_Mesh), intent(in) :: mesh
+   <type> (ESMF_KIND_<kind>), pointer :: farrayPtr(<rank>)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   type(ESMF_MeshLoc), intent(in), optional :: meshloc
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call.
+
+   The Fortran data pointer inside ESMF_Field can be queried and
+   deallocated when datacopyflag is ESMF_DATACOPY_REFERENCE. Note that the
+   ESMF_FieldDestroy call does not deallocate the Fortran data pointer in
+   this case. This gives user more flexibility over memory management.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farrayPtr.
+
+   mesh
+          The ESMF_Mesh object to complete the Field.
+
+   farrayPtr
+          Native Fortran data pointer to be copied/referenced in the
+          field. The field dimension (dimCount) will be the same as the
+          dimCount for the farrayPtr.
+
+   [datacopyflag]
+          Indicates whether to copy the farrayPtr or reference it
+          directly. For valid values see [908]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [meshloc]
+          Which part of the mesh to build the Field on. Can be set to
+          either ESMF_MESHLOC_NODE or ESMF_MESHLOC_ELEMENT. If not set,
+          defaults to ESMF_MESHLOC_NODE.
+
+   [gridToFieldMap]
+          List with number of elements equal to the mesh's dimCount. The
+          list elements map each dimension of the mesh to a dimension in
+          the farrayPtr by specifying the appropriate farrayPtr dimension
+          index. The default is to map all of the mesh's dimensions
+          against the lowest dimensions of the farrayPtr in sequence, i.e.
+          gridToFieldMap = (/1,2,3,.../). Unmapped farrayPtr dimensions
+          are undistributed Field dimensions. All gridToFieldMap entries
+          must be greater than or equal to zero and smaller than or equal
+          to the Field dimCount. It is erroneous to specify the same entry
+          multiple times unless it is zero. If the Field dimCount is less
+          than the Mesh dimCount then the default gridToFieldMap will
+          contain zeros for the rightmost entries. A zero entry in the
+          gridToFieldMap indicates that the particular Mesh dimension will
+          be replicating the Field across the DEs along this direction.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.40 ESMF_FieldEmptyComplete - Complete a Field from XGrid started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompXG<rank><type><kind>(field, xgrid, &
+   farray, indexflag, datacopyflag, xgridside, gridindex, &
+   gridToFieldMap, &
+   ungriddedLBound, ungriddedUBound, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_XGrid), intent(in) :: xgrid
+   <type> (ESMF_KIND_<kind>), intent(in), target :: farray(<rank>)
+   type(ESMF_Index_Flag), intent(in) :: indexflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   type(ESMF_XGridSide_Flag), intent(in), optional :: xgridside
+   integer, intent(in), optional :: gridindex
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: ungriddedLBound(:)
+   integer, intent(in), optional :: ungriddedUBound(:)
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call.
+
+   The Fortran data pointer inside ESMF_Field can be queried but
+   deallocating the retrieved data pointer is not allowed.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farray.
+
+   xgrid
+          The ESMF_XGrid object to complete the Field.
+
+   farray
+          Native Fortran data array to be copied/referenced in the field.
+          The field dimension (dimCount) will be the same as the dimCount
+          for the farray.
+
+   indexflag
+          Indicate how DE-local indices are defined. See section
+          [909]54.27 for a list of valid indexflag options.
+
+   [datacopyflag]
+          Indicates whether to copy the farray or reference it directly.
+          For valid values see [910]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [xgridside]
+          Which side of the XGrid to create the Field on (either
+          ESMF_XGRIDSIDE_A, ESMF_XGRIDSIDE_B, or ESMF_XGRIDSIDE_BALANCED).
+          If not passed in then defaults to ESMF_XGRIDSIDE_BALANCED.
+
+   [gridindex]
+          If xgridSide is ESMF_XGRIDSIDE_A or ESMF_XGRIDSIDE_B then this
+          index tells which Grid on that side to create the Field on. If
+          not provided, defaults to 1.
+
+   [gridToFieldMap]
+          List with number of elements equal to the xgrid's dimCount. The
+          list elements map each dimension of the xgrid to a dimension in
+          the farray by specifying the appropriate farray dimension index.
+          The default is to map all of the xgrid's dimensions against the
+          lowest dimensions of the farray in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). Unmapped farray dimensions are undistributed
+          Field dimensions. All gridToFieldMap entries must be greater
+          than or equal to zero and smaller than or equal to the Field
+          dimCount. It is erroneous to specify the same entry multiple
+          times unless it is zero. If the Field dimCount is less than the
+          XGrid dimCount then the default gridToFieldMap will contain
+          zeros for the rightmost entries. A zero entry in the
+          gridToFieldMap indicates that the particular XGrid dimension
+          will be replicating the Field across the DEs along this
+          direction.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than XGrid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than XGrid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.41 ESMF_FieldEmptyComplete - Complete a Field from XGrid started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompXGPtr<rank><type><kind>(field, xgrid, &
+   farrayPtr, xgridside, gridindex, &
+   datacopyflag, gridToFieldMap, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_XGrid), intent(in) :: xgrid
+   <type> (ESMF_KIND_<kind>), pointer :: farrayPtr(<rank>)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   type(ESMF_XGridSide_Flag), intent(in), optional :: xgridside
+   integer, intent(in), optional :: gridindex
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call.
+
+   The Fortran data pointer inside ESMF_Field can be queried and
+   deallocated when datacopyflag is ESMF_DATACOPY_REFERENCE. Note that the
+   ESMF_FieldDestroy call does not deallocate the Fortran data pointer in
+   this case. This gives user more flexibility over memory management.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farrayPtr.
+
+   xgrid
+          The ESMF_XGrid object to complete the Field.
+
+   farrayPtr
+          Native Fortran data pointer to be copied/referenced in the
+          field. The field dimension (dimCount) will be the same as the
+          dimCount for the farrayPtr.
+
+   [datacopyflag]
+          Indicates whether to copy the farrayPtr or reference it
+          directly. For valid values see [911]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [xgridside]
+          Which side of the XGrid to create the Field on (either
+          ESMF_XGRIDSIDE_A, ESMF_XGRIDSIDE_B, or ESMF_XGRIDSIDE_BALANCED).
+          If not passed in then defaults to ESMF_XGRIDSIDE_BALANCED.
+
+   [gridindex]
+          If xgridside is ESMF_XGRIDSIDE_A or ESMF_XGRIDSIDE_B then this
+          index tells which Grid on that side to create the Field on. If
+          not provided, defaults to 1.
+
+   [gridToFieldMap]
+          List with number of elements equal to the xgrid's dimCount. The
+          list elements map each dimension of the xgrid to a dimension in
+          the farrayPtr by specifying the appropriate farrayPtr dimension
+          index. The default is to map all of the xgrid's dimensions
+          against the lowest dimensions of the farrayPtr in sequence, i.e.
+          gridToFieldMap = (/1,2,3,.../). Unmapped farrayPtr dimensions
+          are undistributed Field dimensions. All gridToFieldMap entries
+          must be greater than or equal to zero and smaller than or equal
+          to the Field dimCount. It is erroneous to specify the same entry
+          multiple times unless it is zero. If the Field dimCount is less
+          than the XGrid dimCount then the default gridToFieldMap will
+          contain zeros for the rightmost entries. A zero entry in the
+          gridToFieldMap indicates that the particular XGrid dimension
+          will be replicating the Field across the DEs along this
+          direction.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.42 ESMF_FieldEmptyComplete - Complete a Field started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompGB<rank><type><kind>(field, geom, &
+   farray, indexflag, datacopyflag, gridToFieldMap, ungriddedLBound, &
+   ungriddedUBound, totalLWidth, totalUWidth, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_Geom), intent(in) :: geom
+   <type> (ESMF_KIND_<kind>), dimension(<rank>), target :: farray
+   type(ESMF_Index_Flag), intent(in) :: indexflag
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: ungriddedLBound(:)
+   integer, intent(in), optional :: ungriddedUBound(:)
+   integer, intent(in), optional :: totalLWidth(:)
+   integer, intent(in), optional :: totalUWidth(:)
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call. For an example and associated
+   documentation using this method see section [912]26.3.7.
+
+   The Fortran data pointer inside ESMF_Field can be queried but
+   deallocating the retrieved data pointer is not allowed.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farray.
+
+   geom
+          The ESMF_Geom object to complete the Field.
+
+   farray
+          Native Fortran data array to be copied/referenced in the field.
+          The field dimension (dimCount) will be the same as the dimCount
+          for the farray.
+
+   indexflag
+          Indicate how DE-local indices are defined. See section
+          [913]54.27 for a list of valid indexflag options.
+
+   [datacopyflag]
+          Indicates whether to copy the farray or reference it directly.
+          For valid values see [914]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [gridToFieldMap]
+          List with number of elements equal to the geom's dimCount. The
+          list elements map each dimension of the geom to a dimension in
+          the farray by specifying the appropriate farray dimension index.
+          The default is to map all of the geom's dimensions against the
+          lowest dimensions of the farray in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). Unmapped farray dimensions are undistributed
+          Field dimensions. All gridToFieldMap entries must be greater
+          than or equal to zero and smaller than or equal to the Field
+          dimCount. It is erroneous to specify the same entry multiple
+          times unless it is zero. If the Field dimCount is less than the
+          Grid dimCount then the default gridToFieldMap will contain zeros
+          for the rightmost entries. A zero entry in the gridToFieldMap
+          indicates that the particular Grid dimension will be replicating
+          the Field across the DEs along this direction.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalLWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should be max( totalLWidth
+          + totalUWidth + computationalCount, exclusiveCount ).
+
+   [totalUWidth]
+          Upper bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalUWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should max( totalLWidth +
+          totalUWidth + computationalCount, exclusiveCount ).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.43 ESMF_FieldEmptyComplete - Complete a Field started with
+  FieldEmptyCreate
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptyComplete()
+   subroutine ESMF_FieldEmptyCompGBPtr<rank><type><kind>(field, geom, &
+   farrayPtr, datacopyflag, gridToFieldMap, &
+   totalLWidth, totalUWidth, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inou) :: field
+   type(ESMF_Geom), intent(in) :: geom
+   <type> (ESMF_KIND_<kind>), dimension(<rank>), pointer :: farrayPtr
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   integer, intent(in), optional :: gridToFieldMap(:)
+   integer, intent(in), optional :: totalLWidth(:)
+   integer, intent(in), optional :: totalUWidth(:)
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call completes an ESMF_Field allocated with the
+   ESMF_FieldEmptyCreate() call. For an example and associated
+   documentation using this method see section [915]26.3.7.
+
+   The Fortran data pointer inside ESMF_Field can be queried and
+   deallocated when datacopyflag is ESMF_DATACOPY_REFERENCE. Note that the
+   ESMF_FieldDestroy call does not deallocate the Fortran data pointer in
+   this case. This gives user more flexibility over memory management.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to be completed and committed in this
+          call. The field will have the same dimension (dimCount) as the
+          rank of the farrayPtr.
+
+   geom
+          The ESMF_Geom object to complete the Field. The dimCount of the
+          Geom must be smaller than or equal to the rank of the farrayPtr.
+
+   farrayPtr
+          Native Fortran data pointer to be copied/referenced in the
+          field. The field dimension (dimCount) will be the same as the
+          dimCount for the farrayPtr.
+
+   [datacopyflag]
+          Indicates whether to copy the farrayPtr or reference it
+          directly. For valid values see [916]54.12. The default is
+          ESMF_DATACOPY_REFERENCE.
+
+   [gridToFieldMap]
+          List with number of elements equal to the geom's dimCount. The
+          list elements map each dimension of the geom to a dimension in
+          the farrayPtr by specifying the appropriate farrayPtr dimension
+          index. The default is to map all of the geom's dimensions
+          against the lowest dimensions of the farrayPtr in sequence, i.e.
+          gridToFieldMap = (/1,2,3,.../). Unmapped farrayPtr dimensions
+          are undistributed Field dimensions. All gridToFieldMap entries
+          must be greater than or equal to zero and smaller than or equal
+          to the Field dimCount. It is erroneous to specify the same entry
+          multiple times unless it is zero. If the Field dimCount is less
+          than the Grid dimCount then the default gridToFieldMap will
+          contain zeros for the rightmost entries. A zero entry in the
+          gridToFieldMap indicates that the particular Grid dimension will
+          be replicating the Field across the DEs along this direction.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalLWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should be max( totalLWidth
+          + totalUWidth + computationalCount, exclusiveCount ).
+
+   [totalUWidth]
+          Upper bound of halo region. The size of this array is the number
+          of gridded dimensions in the field. However, ordering of the
+          elements needs to be the same as they appear in the field.
+          Values default to 0. If values for totalUWidth are specified
+          they must be reflected in the size of the field. That is, for
+          each gridded dimension the field size should max( totalLWidth +
+          totalUWidth + computationalCount, exclusiveCount ).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

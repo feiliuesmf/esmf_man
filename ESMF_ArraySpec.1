@@ -1,0 +1,207 @@
+          + [361]30 ArraySpec Class
+               o [362]30.1 Description
+               o [363]30.2 Use and Examples
+                    # [364]30.2.1 Set ArraySpec values
+                    # [365]30.2.2 Get ArraySpec values
+               o [366]30.3 Restrictions and Future Work
+               o [367]30.4 Design and Implementation Notes
+               o [368]30.5 Class API
+                    # [369]30.5.1 ESMF_ArraySpecAssignment(=)
+                    # [370]30.5.2 ESMF_ArraySpecOperator(==)
+                    # [371]30.5.3 ESMF_ArraySpecOperator(/=)
+                    # [372]30.5.4 ESMF_ArraySpecGet
+                    # [373]30.5.5 ESMF_ArraySpecPrint
+                    # [374]30.5.6 ESMF_ArraySpecSet
+                    # [375]30.5.7 ESMF_ArraySpecValidate
+                               30 ArraySpec Class
+
+30.1 Description
+
+   An ArraySpec is a very simple class that contains type, kind, and rank
+   information about an Array. This information is stored in two
+   parameters. TypeKind describes the data type of the elements in the
+   Array and their precision. Rank is the number of dimensions in the
+   Array.
+
+   The only methods that are associated with the ArraySpec class are those
+   that allow you to set and retrieve this information.
+
+30.2 Use and Examples
+
+   The ArraySpec is passed in as an argument at Field and FieldBundle
+   creation in order to describe an Array that will be allocated or
+   attached at a later time. There are any number of situations in which
+   this approach is useful. One common example is a case in which the user
+   wants to create a very flexible export State with many diagnostic
+   variables predefined, but only a subset desired and consequently
+   allocated for a particular run.
+
+! !PROGRAM: ESMF_ArraySpecEx - ArraySpec manipulation examples
+!
+! !DESCRIPTION:
+!
+! This program shows examples of ArraySpec set and get usage
+!-----------------------------------------------------------------------------
+#include "ESMF.h"
+
+      ! ESMF Framework module
+      use ESMF
+      use ESMF_TestMod
+      implicit none
+
+      ! local variables
+      type(ESMF_ArraySpec) :: arrayDS
+      integer :: myrank
+      type(ESMF_TypeKind_Flag) :: mytypekind
+
+
+      ! return code
+      integer:: rc, result
+      character(ESMF_MAXSTR) :: testname
+      character(ESMF_MAXSTR) :: failMsg
+
+      ! initialize ESMF framework
+      call ESMF_Initialize(defaultlogfilename="ArraySpecEx.Log", &
+                    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+  30.2.1 Set ArraySpec values
+
+   This example shows how to set values in an ESMF_ArraySpec.
+
+      call ESMF_ArraySpecSet(arrayDS, rank=2, &
+                             typekind=ESMF_TYPEKIND_R8, rc=rc)
+
+  30.2.2 Get ArraySpec values
+
+   This example shows how to query an ESMF_ArraySpec.
+
+      call ESMF_ArraySpecGet(arrayDS, rank=myrank, &
+        typekind=mytypekind, rc=rc)
+      print *, "Returned values from ArraySpec:"
+      print *, "rank =", myrank
+
+      ! finalize ESMF framework
+      call ESMF_Finalize(rc=rc)
+
+      end program ESMF_ArraySpecEx
+
+30.3 Restrictions and Future Work
+
+    1. Limit on rank. The values for type, kind and rank passed into the
+       ArraySpec class are subject to the same limitations as Arrays. The
+       maximum array rank is 7, which is the highest rank supported by
+       Fortran.
+
+30.4 Design and Implementation Notes
+
+   The information contained in an ESMF_ArraySpec is used to create
+   ESMF_Array objects.
+
+   ESMF_ArraySpec is a shallow class, and only set and get methods are
+   needed. They do not need to be created or destroyed.
+
+30.5 Class API
+
+  30.5.1 ESMF_ArraySpecAssignment(=) - Assign an ArraySpec to another ArraySpec
+
+   INTERFACE:
+   interface assignment(=)
+     arrayspec1 = arrayspec2
+
+   ARGUMENTS:
+     type(ESMF_ArraySpec) :: arrayspec1
+     type(ESMF_ArraySpec) :: arrayspec2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Set arrayspec1 equal to arrayspec2. This is the default Fortran
+   assignment, which creates a complete, independent copy of arrayspec2 as
+   arrayspec1. If arrayspec2 is an invalid ESMF_ArraySpec object then
+   arrayspec1 will be equally invalid after the assignment.
+
+   The arguments are:
+
+   arrayspec1
+          The ESMF_ArraySpec to be set.
+
+   arrayspec2
+          The ESMF_ArraySpec to be copied.
+
+  30.5.2 ESMF_ArraySpecOperator(==) - Test if ArraySpec 1 is equal to ArraySpec
+  2
+
+   INTERFACE:
+   interface operator(==)
+     if (arrayspec1 == arrayspec2) then ... endif
+                  OR
+     result = (arrayspec1 == arrayspec2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_ArraySpec), intent(in) :: arrayspec1
+     type(ESMF_ArraySpec), intent(in) :: arrayspec2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (==) operator for the ESMF_ArraySpec class to return
+   .true. if arrayspec1 and arrayspec2 specify the same type, kind and
+   rank, and .false. otherwise.
+
+   The arguments are:
+
+   arrayspec1
+          First ESMF_ArraySpec in comparison.
+
+   arrayspec2
+          Second ESMF_ArraySpec in comparison.
+
+  30.5.3 ESMF_ArraySpecOperator(/=) - Test if ArraySpec 1 is not equal to
+  ArraySpec 2
+
+   INTERFACE:
+   interface operator(/=)
+     if (arrayspec1 /= arrayspec2) then ... endif
+                  OR
+     result = (arrayspec1 /= arrayspec2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_ArraySpec), intent(in) :: arrayspec1
+     type(ESMF_ArraySpec), intent(in) :: arrayspec2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (/=) operator for the ESMF_ArraySpec class to return
+   .true. if arrayspec1 and arrayspec2 do not specify the same type, kind
+   or rank, and .false. otherwise.
+
+   The arguments are:
+
+   arrayspec1
+          First ESMF_ArraySpec in comparison.
+
+   arrayspec2
+          Second ESMF_ArraySpec in comparison.
+

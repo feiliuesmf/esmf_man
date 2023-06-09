@@ -1,0 +1,46 @@
+  48.5.16 ESMF_HConfigCreateAt - Return HConfig object at location
+
+   INTERFACE:
+    function ESMF_HConfigCreateAt(hconfig, index, key, &
+      keyString, doc, rc)
+
+   RETURN VALUE:
+      type(ESMF_HConfig) :: ESMF_HConfigCreateAt
+
+   ARGUMENTS:
+      type(ESMF_HConfig[Iter]), intent(in)      :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,            intent(in),  optional :: index
+      type(ESMF_HConfig), intent(in),  optional :: key
+      character(*),       intent(in),  optional :: keyString
+      integer,            intent(in),  optional :: doc
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a new HConfig object at the current iteration, or as specified
+   by index, key or keyString. The hconfig must not be a map iterator.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig or ESMF_HConfigIter object.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          key and keyString.
+
+   [key]
+          Attempt to access by key if specified. Mutural exclusive with
+          index and keyString,
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index and key.
+
+   [doc]
+          The doc index. Defaults to the first document.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,92 @@
+  18.4.27 ESMF_CplCompSetVMMinThreads - Set a reduced threading level in CplComp
+  VM
+
+   INTERFACE:
+   subroutine ESMF_CplCompSetVMMinThreads(cplcomp, &
+     maxPeCountPerPet, prefIntraProcess, prefIntraSsi, prefInterSsi, &
+     pthreadMinStackSize, forceChildPthreads, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp),  intent(inout)         :: cplcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(in),  optional :: maxPeCountPerPet
+     integer,             intent(in),  optional :: prefIntraProcess
+     integer,             intent(in),  optional :: prefIntraSsi
+     integer,             intent(in),  optional :: prefInterSsi
+     integer,             intent(in),  optional :: pthreadMinStackSize
+     logical,             intent(in),  optional :: forceChildPthreads
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set characteristics of the ESMF_VM for this ESMF_CplComp. Reduces the
+   number of threaded PETs in each VAS. The max argument may be specified
+   to limit the maximum number of PEs that a single PET can be associated
+   with.
+
+   Several constraints apply: 1) the number of PEs cannot change, 2) PEs
+   cannot migrate between single system images (SSIs), 3) the number of
+   PETs cannot increase, only decrease, 4) PETs cannot migrate between
+   virtual address spaces (VASs), nor can VASs migrate between SSIs.
+
+   The typical use of ESMF_CplCompSetVMMinThreads() is to run a Component
+   across a set of single-threaded PETs.
+
+   The arguments are:
+
+   cplcomp
+          ESMF_CplComp to set the ESMF_VM for.
+
+   [maxPeCountPerPet]
+          Maximum number of PEs on each PET. Default for each SSI is the
+          local number of PEs.
+
+   [prefIntraProcess]
+          Communication preference within a single process. Currently
+          options not documented. Use default.
+
+   [prefIntraSsi]
+          Communication preference within a single system image (SSI).
+          Currently options not documented. Use default.
+
+   [prefInterSsi]
+          Communication preference between different single system images
+          (SSIs). Currently options not documented. Use default.
+
+   [pthreadMinStackSize]
+          Minimum stack size in byte of any child PET executing as
+          Pthread. By default single threaded child PETs do not execute as
+          Pthread, and their stack size is unaffected by this argument.
+          However, for multi-threaded child PETs, or if forceChildPthreads
+          is .true., child PETs execute as Pthreads with their own private
+          stack.
+
+          For cases where OpenMP threads are used by the user code, each
+          thread allocates its own private stack. For all threads other
+          than the master, the stack size is set via the typical
+          OMP_STACKSIZE environment variable mechanism. The PET itself,
+          however, becomes the master of the OpenMP thread team, and is
+          not affected by OMP_STACKSIZE. It is the master's stack that can
+          be sized via the pthreadMinStackSize argument, and a large
+          enough size is often critical.
+
+          When pthreadMinStackSize is absent, the default is to use the
+          system default set by the limit or ulimit command. However, the
+          stack of a Pthread cannot be unlimited, and a shell stacksize
+          setting of unlimited, or any setting below the ESMF implemented
+          minimum, will result in setting the stack size to 20MiB (the
+          ESMF minimum). Depending on how much private data is used by the
+          user code under the master thread, the default might be too
+          small, and pthreadMinStackSize must be used to allocate
+          sufficient stack space.
+
+   [forceChildPthreads]
+          For .true., force each child PET to execute in its own Pthread.
+          By default, .false., single PETs spawned from a parent PET
+          execute in the same thread (or MPI process) as the parent PET.
+          Multiple child PETs spawned by the same parent PET always
+          execute as their own Pthreads.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

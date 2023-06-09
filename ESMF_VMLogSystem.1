@@ -1,0 +1,26 @@
+  51.6.24 ESMF_VMLogSystem - LogSystem
+
+   INTERFACE:
+   subroutine ESMF_VMLogSystem(prefix, logMsgFlag, rc)
+
+   ARGUMENTS:
+     character(len=*),       intent(in),   optional  :: prefix
+     type(ESMF_LogMsg_Flag), intent(in),   optional  :: logMsgFlag
+     integer, intent(out),                 optional  :: rc
+
+   DESCRIPTION:
+
+   Log the VM.
+
+   The arguments are:
+
+   [prefix]
+          String to prefix the log message. Default is no prefix.
+
+   [logMsgFlag]
+          Type of log message generated. See section [621]49.2.3 for a
+          list of valid message types. Default is ESMF_LOGMSG_INFO.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

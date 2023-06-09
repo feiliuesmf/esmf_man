@@ -1,0 +1,60 @@
+  28.6.5 ESMF_DynamicMaskSetR4R4R4 - Set DynamicMask for R4R4R4
+
+   INTERFACE:
+   subroutine ESMF_DynamicMaskSetR4R4R4(dynamicMask, dynamicMaskRoutine, &
+     handleAllElements, dynamicSrcMaskValue, &
+     dynamicDstMaskValue, rc)
+
+   ARGUMENTS:
+     type(ESMF_DynamicMask), intent(out)           :: dynamicMask
+     procedure(ESMF_DynamicMaskRoutineR4R4R4)      :: dynamicMaskRoutine
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                intent(in),  optional :: handleAllElements
+     real(ESMF_KIND_R4),     intent(in),  optional :: dynamicSrcMaskValue
+     real(ESMF_KIND_R4),     intent(in),  optional :: dynamicDstMaskValue
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set an ESMF_DynamicMask object suitable for destination element
+   typekind ESMF_TYPEKIND_R4, factor typekind ESMF_TYPEKIND_R4, and source
+   element typekind ESMF_TYPEKIND_R4.
+
+   All values in dynamicMask will be reset by this call.
+
+   See section [1178]37.2.6 for a general discussion of dynamic masking.
+
+   The arguments are:
+
+   dynamicMask
+          DynamicMask object.
+
+   dynamicMaskRoutine
+          The routine responsible for handling dynamically masked source
+          and destination elements. See section [1179]37.2.6 for the
+          precise definition of the dynamicMaskRoutine procedure
+          interface. The routine is only called on PETs where at least one
+          interpolation element is identified for special handling.
+
+   [handleAllElements]
+          If set to .true., all local elements, regardless of their
+          dynamic masking status, are made available to dynamicMaskRoutine
+          for handling. This option can be used to implement fully
+          customized interpolations based on the information provided by
+          ESMF. The default is .false., meaning that only elements
+          affected by dynamic masking will be handed to
+          dynamicMaskRoutine.
+
+   [dynamicSrcMaskValue]
+          The value for which a source element is considered dynamically
+          masked. The default is to not consider any source elements as
+          dynamically masked.
+
+   [dynamicDstMaskValue]
+          The value for which a destination element is considered
+          dynamically masked. The default is to not consider any
+          destination elements as dynamically masked.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,36 @@
+  31.7.1 ESMF_StaggerLocGet - Get the value of one dimension of a StaggerLoc
+
+   INTERFACE:
+   ! Private name; call using ESMF_StaggerLocGet()
+       subroutine ESMF_StaggerLocGetDim(staggerloc, dim, loc, &
+            rc)
+
+   ARGUMENTS:
+       type (ESMF_StaggerLoc), intent(in)  :: staggerloc
+       integer,                intent(in)  :: dim
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, optional,      intent(out) :: loc
+       integer, optional                   :: rc
+
+   DESCRIPTION:
+
+   Gets the position of a particular dimension of a cell staggerloc The
+   argument loc will be only be 0,1. If loc is 0 it means the position
+   should be in the center in that dimension. If loc is +1 then for the
+   dimension, the position should be on the positive side of the cell.
+   Please see Section [1429]31.3.25 for diagrams.
+
+   The arguments are:
+
+   staggerloc
+          Stagger location for which to get information.
+
+   dim
+          Dimension for which to get information (1-7).
+
+   [loc]
+          Output position data (should be either 0,1).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

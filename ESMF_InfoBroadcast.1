@@ -1,0 +1,33 @@
+  40.4.4 ESMF_InfoBroadcast - Broadcast Info contents
+
+   INTERFACE:
+ subroutine ESMF_InfoBroadcast(info, rootPet, rc)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(inout) :: info
+   integer, intent(in) :: rootPet
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Broadcast an ESMF_Info object collectively across the current VM.
+
+   Users wishing to synchronize via broadcast an attribute hierarchy
+   associated with an ESMF object should consult the ESMF_InfoSync
+   documentation [487]40.4.29
+
+   The arguments are:
+
+   info
+          The ESMF_Info object that is the source (on rootPet) or the
+          destination object to populate (on all other PETs). On
+          destination PETs, the structure of info is overwritten with data
+          from rootPet.
+
+   rootPet
+          The root PET identifier.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

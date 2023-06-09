@@ -1,0 +1,158 @@
+  32.4.4 ESMF_LocStreamAddKey - Add a key Array and allocate the internal memory
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocStreamAddKey()
+   subroutine ESMF_LocStreamAddKeyAlloc(locstream, keyName, &
+                keyTypeKind, keyUnits, keyLongName, rc)
+
+   ARGUMENTS:
+     type(ESMF_Locstream),     intent(in)            :: locstream
+     character (len=*),        intent(in)            :: keyName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_TypeKind_Flag), intent(in),  optional :: keyTypeKind
+     character (len=*),        intent(in),  optional :: keyUnits
+     character (len=*),        intent(in),  optional :: keyLongName
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Add a key to a locstream with a required keyName. Once a key has been
+   added, a pointer to its internally allocated memory can be retrieved
+   and used to set key values.
+
+   The arguments are:
+
+   locstream
+          The ESMF_LocStream object to add key to.
+
+   keyName
+          The name of the key to add.
+
+   [keyTypeKind]
+          The type/kind of the key data. If not specified then the
+          type/kind will default to 8 byte reals.
+
+   [keyUnits]
+          The units of the key data. If not specified, then the item
+          remains blank.
+
+   [keyLongName]
+          The long name of the key data. If not specified, then the item
+          remains blank.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.5 ESMF_LocStreamAddKey - Add a key Array
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocStreamAddKey()
+   subroutine ESMF_LocStreamAddKeyArray(locstream, keyName, keyArray, &
+                destroyKey, keyUnits, keyLongName, rc)
+
+   ARGUMENTS:
+     type(ESMF_Locstream), intent(in)             :: locstream
+     character (len=*),    intent(in)             :: keyName
+     type(ESMF_Array),     intent(in)             :: keyArray
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,              intent(in),  optional  :: destroyKey
+     character (len=*),    intent(in),  optional  :: keyUnits
+     character (len=*),    intent(in),  optional  :: keyLongName
+     integer,              intent(out), optional  :: rc
+
+   DESCRIPTION:
+
+   Add a key to a locstream with a required keyName and a required
+   ESMF_Array. The user is responsible for the creation of the ESMF_Array
+   that will hold the key values.
+
+   The arguments are:
+
+   locstream
+          The ESMF_LocStream object to add key to.
+
+   keyName
+          The name of the key to add.
+
+   keyArray
+          An ESMF Array which contains the key data
+
+   [destroyKey]
+          if .true. destroy this key array when the locstream is
+          destroyed. Defaults to .false.
+
+   [keyUnits]
+          The units of the key data. If not specified, then the item
+          remains blank.
+
+   [keyLongName]
+          The long name of the key data. If not specified, then the item
+          remains blank.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.6 ESMF_LocStreamAddKey - Add a key Array created around user memory
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocStreamAddKey()
+    subroutine ESMF_LocStreamAddKeyI4(locstream, keyName, farray, &
+                 datacopyflag, keyUnits, keyLongName, rc)
+
+   ARGUMENTS:
+      type(ESMF_Locstream), intent(in) :: locstream
+      character (len=*), intent(in) :: keyName
+      <farray>
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+      character (len=*), intent(in), optional :: keyUnits
+      character (len=*), intent(in), optional :: keyLongName
+      integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Add a key to a locstream with a required keyName and a required Fortran
+   array. The user is responsible for the creation of the Fortran array
+   that will hold the key values, including the maintenance of any
+   allocated memory.
+
+   Supported values for <farray> are:
+
+          integer(ESMF_KIND_I4), intent(in) :: farray(:)
+
+          real(ESMF_KIND_R4), intent(in) :: farray(:)
+
+          real(ESMF_KIND_R8), intent(in) :: farray(:)
+
+   The arguments are:
+
+   locstream
+          The ESMF_LocStream object to add key to.
+
+   keyName
+          The name of the key to add.
+
+   farray
+          Valid native Fortran array, i.e. memory must be associated with
+          the actual argument. The type/kind/rank information of farray
+          will be used to set the key Array's properties accordingly.
+
+   [datacopyflag]
+          Specifies whether the Array object will reference the memory
+          allocation provided by farray directly or will copy the data
+          from farray into a new memory allocation. Valid options are !
+          ESMF_DATACOPY_REFERENCE (default) or ESMF_DATACOPY_VALUE.
+          Depending on the specific situation the ESMF_DATACOPY_REFERENCE
+          option may be unsafe when specifying an array slice for farray.
+
+   [keyUnits]
+          The units of the key data. If not specified, then the item
+          remains blank.
+
+   [keyLongName]
+          The long name of the key data. If not specified, then the item
+          remains blank.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

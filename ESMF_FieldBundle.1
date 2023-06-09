@@ -1,0 +1,711 @@
+          + [40]25 FieldBundle Class
+               o [41]25.1 Description
+               o [42]25.2 Use and Examples
+                    # [43]25.2.1 Creating a FieldBundle from a list of
+                      Fields
+                    # [44]25.2.2 Creating an empty FieldBundle then add
+                      one Field to it
+                    # [45]25.2.3 Creating an empty FieldBundle then add a
+                      list of Fields to it
+                    # [46]25.2.4 Query a Field stored in the FieldBundle
+                      by name or index
+                    # [47]25.2.5 Query FieldBundle for Fields list either
+                      alphabetical or in order of addition
+                    # [48]25.2.6 Create a packed FieldBundle on a Grid
+                    # [49]25.2.7 Create a packed FieldBundle on a Mesh
+                    # [50]25.2.8 Destroy a FieldBundle
+                    # [51]25.2.9 Redistribute data from a source
+                      FieldBundle to a destination FieldBundle
+                    # [52]25.2.10 Redistribute data from a packed source
+                      FieldBundle to a packed destination FieldBundle
+                    # [53]25.2.11 Perform sparse matrix multiplication
+                      from a source FieldBundle to a destination
+                      FieldBundle
+                    # [54]25.2.12 Perform FieldBundle halo update
+               o [55]25.3 Restrictions and Future Work
+               o [56]25.4 Design and Implementation Notes
+               o [57]25.5 Class API: Basic FieldBundle Methods
+                    # [58]25.5.1 ESMF_FieldBundleAssignment(=)
+                    # [59]25.5.2 ESMF_FieldBundleOperator(==)
+                    # [60]25.5.3 ESMF_FieldBundleOperator(/=)
+                    # [61]25.5.4 ESMF_FieldBundleAdd
+                    # [62]25.5.5 ESMF_FieldBundleAddReplace
+                    # [63]25.5.6 ESMF_FieldBundleCreate
+                    # [64]25.5.7 ESMF_FieldBundleCreate
+                    # [65]25.5.8 ESMF_FieldBundleCreate
+                    # [66]25.5.9 ESMF_FieldBundleDestroy
+                    # [67]25.5.10 ESMF_FieldBundleGet
+                    # [68]25.5.11 ESMF_FieldBundleGet
+                    # [69]25.5.12 ESMF_FieldBundleGet
+                    # [70]25.5.13 ESMF_FieldBundleGet
+                    # [71]25.5.14 ESMF_FieldBundleHalo
+                    # [72]25.5.15 ESMF_FieldBundleHaloRelease
+                    # [73]25.5.16 ESMF_FieldBundleHaloStore
+                    # [74]25.5.17 ESMF_FieldBundleIsCreated
+                    # [75]25.5.18 ESMF_FieldBundlePrint
+                    # [76]25.5.19 ESMF_FieldBundleRead
+                    # [77]25.5.20 ESMF_FieldBundleRedist
+                    # [78]25.5.21 ESMF_FieldBundleRedistRelease
+                    # [79]25.5.22 ESMF_FieldBundleRedistStore
+                    # [80]25.5.23 ESMF_FieldBundleRedistStore
+                    # [81]25.5.24 ESMF_FieldBundleRegrid
+                    # [82]25.5.25 ESMF_FieldBundleRegridRelease
+                    # [83]25.5.26 ESMF_FieldBundleRegridStore
+                    # [84]25.5.27 ESMF_FieldBundleRemove
+                    # [85]25.5.28 ESMF_FieldBundleReplace
+                    # [86]25.5.29 ESMF_FieldBundleSet
+                    # [87]25.5.30 ESMF_FieldBundleSet
+                    # [88]25.5.31 ESMF_FieldBundleSet
+                    # [89]25.5.32 ESMF_FieldBundleSet
+                    # [90]25.5.33 ESMF_FieldBundleSMM
+                    # [91]25.5.34 ESMF_FieldBundleSMMRelease
+                    # [92]25.5.35 ESMF_FieldBundleSMMStore
+                    # [93]25.5.36 ESMF_FieldBundleSMMStore
+                    # [94]25.5.37 ESMF_FieldBundleSMMStore
+                    # [95]25.5.38 ESMF_FieldBundleValidate
+                    # [96]25.5.39 ESMF_FieldBundleWrite
+                              25 FieldBundle Class
+
+25.1 Description
+
+   A FieldBundle functions mainly as a convenient container for storing
+   similar Fields. It represents “bundles” of Fields that are discretized
+   on the same Grid, Mesh, LocStream, or XGrid and distributed in the same
+   manner. The FieldBundle is an important data structure because it can
+   be added to a State, which is used for sending and receiving data
+   between Components.
+
+   In the common case where FieldBundle is built on top of a Grid, Fields
+   within a FieldBundle may be located at different locations relative to
+   the vertices of their common Grid. The Fields in a FieldBundle may be
+   of different dimensions, as long as the Grid dimensions that are
+   distributed are the same. For example, a surface Field on a distributed
+   lat/lon Grid and a 3D Field with an added vertical dimension on the
+   same distributed lat/lon Grid can be included in the same FieldBundle.
+
+   FieldBundles can be created and destroyed, can have Attributes added or
+   retrieved, and can have Fields added, removed, replaced, or retrieved.
+   Methods include queries that return information about the FieldBundle
+   itself and about the Fields that it contains. The Fortran data pointer
+   of a Field within a FieldBundle can be obtained by first retrieving the
+   Field with a call to ESMF_FieldBundleGet(), and then using
+   ESMF_FieldGet() to get the data.
+
+   In the future FieldBundles will serve as a mechanism for performance
+   optimization. ESMF will take advantage of the similarities of the
+   Fields within a FieldBundle to optimize collective communication, I/O,
+   and regridding. See Section [726]25.3 for a description of features
+   that are scheduled for future work.
+
+25.2 Use and Examples
+
+   Examples of creating, accessing and destroying FieldBundles and their
+   constituent Fields are provided in this section, along with some notes
+   on FieldBundle methods.
+
+  25.2.1 Creating a FieldBundle from a list of Fields
+
+   A user can create a FieldBundle from a predefined list of Fields. In
+   the following example, we first create an ESMF_Grid, then build 3
+   different ESMF_Fields with different names. The ESMF_FieldBundle is
+   created from the list of 3 Fields.
+
+!-------------------------------------------------------------------------
+!   !  Create several Fields and add them to a new FieldBundle.
+
+    grid = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/100,200/), &
+                                  regDecomp=(/2,2/), name="atmgrid", rc=rc)
+
+    call ESMF_ArraySpecSet(arrayspec, 2, ESMF_TYPEKIND_R8, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    field(1) = ESMF_FieldCreate(grid, arrayspec, &
+                                staggerloc=ESMF_STAGGERLOC_CENTER, &
+                                name="temperature", rc=rc)
+
+    field(2) = ESMF_FieldCreate(grid, arrayspec, &
+                                staggerloc=ESMF_STAGGERLOC_CENTER, &
+                                name="pressure", rc=rc)
+
+    field(3) = ESMF_FieldCreate(grid, arrayspec, &
+                                staggerloc=ESMF_STAGGERLOC_CENTER, &
+                                name="heat flux", rc=rc)
+
+    bundle1 = ESMF_FieldBundleCreate(fieldList=field(1:3), &
+                                name="atmosphere data", rc=rc)
+
+    print *, "FieldBundle example 1 returned"
+
+  25.2.2 Creating an empty FieldBundle then add one Field to it
+
+   A user can create an empty FieldBundle then add Fields to the empty
+   FieldBundle. In the following example, we use the previously defined
+   ESMF_Grid to build an ESMF_Field. An empty ESMF_FieldBundle is created,
+   then the Field is added to the FieldBundle.
+
+!-------------------------------------------------------------------------
+!   !  Create an empty FieldBundle and then add a single field to it.
+
+
+    simplefield = ESMF_FieldCreate(grid, arrayspec, &
+                  staggerloc=ESMF_STAGGERLOC_CENTER, name="rh", rc=rc)
+
+    bundle2 = ESMF_FieldBundleCreate(name="time step 1", rc=rc)
+
+    call ESMF_FieldBundleAdd(bundle2, (/simplefield/), rc=rc)
+
+    call ESMF_FieldBundleGet(bundle2, fieldCount=fieldcount, rc=rc)
+
+    print *, "FieldBundle example 2 returned, fieldcount =", fieldcount
+
+  25.2.3 Creating an empty FieldBundle then add a list of Fields to it
+
+   A user can create an empty FieldBundle then add multiple Fields to the
+   empty FieldBundle. In the following example, we use the previously
+   defined ESMF_Grid and ESMF_Fields. An empty ESMF_FieldBundle is
+   created, then three Fields are added to the FieldBundle.
+
+!-------------------------------------------------------------------------
+!   !  Create an empty FieldBundle and then add multiple fields to it.
+
+    bundle3 = ESMF_FieldBundleCreate(name="southern hemisphere", rc=rc)
+
+    call ESMF_FieldBundleAdd(bundle3, field(1:3), rc=rc)
+
+    call ESMF_FieldBundleGet(bundle3, fieldCount=fieldcount, rc=rc)
+
+    print *, "FieldBundle example 3 returned, fieldcount =", fieldcount
+
+  25.2.4 Query a Field stored in the FieldBundle by name or index
+
+   Users can query a Field stored in a FieldBundle by the Field's name or
+   index. In the following example, the pressure Field stored in
+   FieldBundle is queried by its name then by its index through
+   ESMF_FieldBundleGet() method.
+
+!-------------------------------------------------------------------------
+!   !  Get a Field back from a FieldBundle, first by name and then by index.
+!   !  Also get the FieldBundle name.
+
+    call ESMF_FieldBundleGet(bundle1, "pressure", field=returnedfield1, rc=rc)
+
+    call ESMF_FieldGet(returnedfield1, name=fname1, rc=rc)
+
+    call ESMF_FieldBundleGet(bundle1, 2, returnedfield2, rc=rc)
+
+    call ESMF_FieldGet(returnedfield2, name=fname2, rc=rc)
+
+    call ESMF_FieldBundleGet(bundle1, name=bname1, rc=rc)
+
+    print *, "FieldBundle example 4 returned, field names = ", &
+                   trim(fname1), ", ", trim(fname2)
+    print *, "FieldBundle name = ", trim(bname1)
+
+  25.2.5 Query FieldBundle for Fields list either alphabetical or in order of
+  addition
+
+   Users can query the list of Fields stored in a FieldBundle. By default
+   the returned list of Fields are ordered alphabetically by the Field
+   names. Users can also retrieve the list of Fields in the order by which
+   the Fields were added to the FieldBundle.
+
+    call ESMF_FieldBundleGet(bundle1, fieldList=r_fields, rc=rc)
+
+    do i = 1, 3
+      call ESMF_FieldGet(r_fields(i), name=fname1, rc=rc)
+
+      print *, fname1
+    enddo
+
+    call ESMF_FieldBundleGet(bundle1, fieldList=r_fields, &
+      itemorderflag=ESMF_ITEMORDER_ADDORDER, rc=rc)
+
+    do i = 1, 3
+      call ESMF_FieldGet(r_fields(i), name=fname1, rc=rc)
+
+      print *, fname1
+    enddo
+
+  25.2.6 Create a packed FieldBundle on a Grid
+
+   Create a packed fieldbundle from user supplied field names and a packed
+   Fortran array pointer that contains the data of the packed fields on a
+   Grid.
+
+   Create a 2D grid of 4x1 regular decomposition on 4 PETs, each PET has
+   10x50 elements. The index space of the entire Grid is 40x50.
+
+  gridxy = ESMF_GridCreateNoPeriDim(maxIndex=(/40,50/), regDecomp=(/4,1/), rc=rc
+)
+
+   Allocate a packed Fortran array pointer containing 10 packed fields,
+   each field has 3 time slices and uses the 2D grid created. Note that
+   gridToFieldMap uses the position of the grid dimension as elements, 3rd
+   element of the packedPtr is 10, 4th element of the packedPtr is 50.
+
+  allocate(packedPtr(10, 3, 10, 50)) ! fieldDim, time, y, x
+  fieldDim = 1
+  packedFB = ESMF_FieldBundleCreate(fieldNameList, packedPtr, gridxy, fieldDim,
+&
+  gridToFieldMap=(/3,4/), staggerloc=ESMF_Staggerloc_Center, rc=rc)
+
+  25.2.7 Create a packed FieldBundle on a Mesh
+
+   Similarly we could create a packed fieldbundle from user supplied field
+   names and a packed Fortran array pointer that contains the data of the
+   packed fields on a Mesh.
+
+   Due to the verbosity of the MeshCreate process, the code for MeshCreate
+   is not shown below, user can either refer to the MeshCreate section
+   [727]33.3.1 or examine the FieldBundleCreate example source code
+   contained in the ESMF source distribution directly. A ESMF Mesh on 4
+   PETs with one mesh element on each PET is created.
+
+   Allocate the packed Fortran array pointer, the first dimension is
+   fieldDim; second dimension is the data associated with mesh element,
+   since there is only one mesh element on each processor in this example,
+   the allocation is 1; last dimension is the time dimension which
+   contains 3 time slices.
+
+      allocate(packedPtr3D(10, 1, 3))
+      fieldDim = 1
+      packedFB = ESMF_FieldBundleCreate(fieldNameList, packedPtr3D, meshEx, fiel
+dDim, &
+        gridToFieldMap=(/2/), meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+
+  25.2.8 Destroy a FieldBundle
+
+   The user must call ESMF_FieldBundleDestroy() before deleting any of the
+   Fields it contains. Because Fields can be shared by multiple
+   FieldBundles and States, they are not deleted by this call.
+
+!-------------------------------------------------------------------------
+
+     call ESMF_FieldBundleDestroy(bundle1, rc=rc)
+
+  25.2.9 Redistribute data from a source FieldBundle to a destination
+  FieldBundle
+
+   The ESMF_FieldBundleRedist interface can be used to redistribute data
+   from source FieldBundle to destination FieldBundle. This interface is
+   overloaded by type and kind; In the version of ESMF_FieldBundleRedist
+   without factor argument, a default value of factor 1 is used.
+
+   In this example, we first create two FieldBundles, a source FieldBundle
+   and a destination FieldBundle. Then we use ESMF_FieldBundleRedist to
+   redistribute data from source FieldBundle to destination FieldBundle.
+
+    ! perform redist
+    call ESMF_FieldBundleRedistStore(srcFieldBundle, dstFieldBundle, &
+         routehandle, rc=rc)
+
+    call ESMF_FieldBundleRedist(srcFieldBundle, dstFieldBundle, &
+         routehandle, rc=rc)
+
+  25.2.10 Redistribute data from a packed source FieldBundle to a packed
+  destination FieldBundle
+
+   The ESMF_FieldBundleRedist interface can be used to redistribute data
+   from source FieldBundle to destination FieldBundle when both Bundles
+   are packed with same number of fields.
+
+   In this example, we first create two packed FieldBundles, a source
+   FieldBundle and a destination FieldBundle. Then we use
+   ESMF_FieldBundleRedist to redistribute data from source FieldBundle to
+   destination FieldBundle.
+
+   The same Grid is used where the source and destination packed
+   FieldBundle are built upon. Source and destination Bundle have
+   different memory layout.
+
+    allocate(srcfptr(3,5,10), dstfptr(10,5,3))
+    srcfptr = lpe
+    srcFieldBundle = ESMF_FieldBundleCreate((/'field01', 'field02', 'field03'/),
+ &
+      srcfptr, grid, 1, gridToFieldMap=(/2,3/), rc=rc)
+
+    dstFieldBundle = ESMF_FieldBundleCreate((/'field01', 'field02', 'field03'/),
+ &
+      dstfptr, grid, 3, gridToFieldMap=(/2,1/), rc=rc)
+
+    ! perform redist
+    call ESMF_FieldBundleRedistStore(srcFieldBundle, dstFieldBundle, &
+         routehandle, rc=rc)
+
+    call ESMF_FieldBundleRedist(srcFieldBundle, dstFieldBundle, &
+         routehandle, rc=rc)
+
+  25.2.11 Perform sparse matrix multiplication from a source FieldBundle to a
+  destination FieldBundle
+
+   The ESMF_FieldBundleSMM interface can be used to perform SMM from
+   source FieldBundle to destination FieldBundle. This interface is
+   overloaded by type and kind;
+
+   In this example, we first create two FieldBundles, a source FieldBundle
+   and a destination FieldBundle. Then we use ESMF_FieldBundleSMM to
+   perform sparse matrix multiplication from source FieldBundle to
+   destination FieldBundle.
+
+   The operation performed in this example is better illustrated in
+   section [728]26.3.33.
+
+   Section [729]28.2.18 provides a detailed discussion of the sparse
+   matrix multiplication operation implemented in ESMF.
+
+    call ESMF_VMGetCurrent(vm, rc=rc)
+
+    call ESMF_VMGet(vm, localPet=lpe, rc=rc)
+
+    ! create distgrid and grid
+    distgrid = ESMF_DistGridCreate(minIndex=(/1/), maxIndex=(/16/), &
+        regDecomp=(/4/), &
+        rc=rc)
+
+    grid = ESMF_GridCreate(distgrid=distgrid, &
+        gridEdgeLWidth=(/0/), gridEdgeUWidth=(/0/), &
+        name="grid", rc=rc)
+
+    call ESMF_ArraySpecSet(arrayspec, 1, ESMF_TYPEKIND_I4, rc=rc)
+
+    ! create field bundles and fields
+    srcFieldBundle = ESMF_FieldBundleCreate(rc=rc)
+
+    dstFieldBundle = ESMF_FieldBundleCreate(rc=rc)
+
+    do i = 1, 3
+        srcField(i) = ESMF_FieldCreate(grid, arrayspec, &
+            totalLWidth=(/1/), totalUWidth=(/2/), &
+            rc=rc)
+
+        call ESMF_FieldGet(srcField(i), localDe=0, farrayPtr=srcfptr, rc=rc)
+
+        srcfptr = 1
+
+        call ESMF_FieldBundleAdd(srcFieldBundle, (/srcField(i)/), rc=rc)
+
+        dstField(i) = ESMF_FieldCreate(grid, arrayspec, &
+            totalLWidth=(/1/), totalUWidth=(/2/), &
+            rc=rc)
+
+        call ESMF_FieldGet(dstField(i), localDe=0, farrayPtr=dstfptr, rc=rc)
+
+        dstfptr = 0
+
+        call ESMF_FieldBundleAdd(dstFieldBundle, (/dstField(i)/), rc=rc)
+
+    enddo
+
+    ! initialize factorList and factorIndexList
+    allocate(factorList(4))
+    allocate(factorIndexList(2,4))
+    factorList = (/1,2,3,4/)
+    factorIndexList(1,:) = (/lpe*4+1,lpe*4+2,lpe*4+3,lpe*4+4/)
+    factorIndexList(2,:) = (/lpe*4+1,lpe*4+2,lpe*4+3,lpe*4+4/)
+    call ESMF_FieldBundleSMMStore(srcFieldBundle, dstFieldBundle, &
+        routehandle, factorList, factorIndexList, rc=rc)
+
+    ! perform smm
+    call ESMF_FieldBundleSMM(srcFieldBundle, dstFieldBundle, routehandle, &
+          rc=rc)
+
+    ! release SMM route handle
+    call ESMF_FieldBundleSMMRelease(routehandle, rc=rc)
+
+  25.2.12 Perform FieldBundle halo update
+
+   ESMF_FieldBundleHalo interface can be used to perform halo updates for
+   all the Fields contained in the ESMF_FieldBundle.
+
+   In this example, we will set up a FieldBundle for a 2D inviscid and
+   compressible flow problem. We will illustrate the FieldBundle halo
+   update operation but we will not solve the non-linear PDEs. The
+   emphasis here is to demonstrate how to set up halo regions, how a
+   numerical scheme updates the exclusive regions, and how a halo update
+   communicates data in the halo regions. Here are the governing
+   equations:
+
+   $u_t + u u_x + v u_y + \frac{1}{\rho} p_x = 0$ (conservation of
+   momentum in x-direction)
+
+   $v_t + u v_x + v v_y + \frac{1}{\rho} p_y = 0$ (conservation of
+   momentum in y-direction)
+
+   ${\rho}_t + {\rho u}_x + {\rho v}_y = 0$ (conservation of mass)
+
+   $\frac{\rho}{\rho^\gamma} + u {(\frac{p}{\rho^\gamma})}_x + v
+   {(\frac{p}{\rho^\gamma})}_y = 0$ (conservation of energy)
+
+   The four unknowns are pressure $p$ , density $\rho$ , velocity ( $u$ ,
+   $v$ ). The grids are set up using Arakawa D stagger ( $p$ on corner,
+   $\rho$ at center, $u$ and $v$ on edges). $p$ , $\rho$ , $u$ , and $v$
+   are bounded by necessary boundary conditions and initial conditions.
+
+   Section [730]28.2.15 provides a detailed discussion of the halo
+   operation implemented in ESMF.
+
+    ! create distgrid and grid according to the following decomposition
+    ! and stagger pattern, r is density.
+    !
+    ! p--------u-------+p+-------u--------p
+    ! !                 |                 |
+    ! !                 |                 |
+    ! !                 |                 |
+    ! v        r        v        r        v
+    ! !      PET 0      |      PET 1      |
+    ! !                 |                 |
+    ! !                 |                 |
+    ! p--------u-------+p+-------u--------p
+    ! !                 |                 |
+    ! !                 |                 |
+    ! !                 |                 |
+    ! v        r        v        r        v
+    ! !      PET 2      |      PET 3      |
+    ! !                 |                 |
+    ! !                 |                 |
+    ! p--------u-------+p+-------u--------p
+    !
+    distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/256,256/), &
+        regDecomp=(/2,2/), &
+        rc=rc)
+
+    grid = ESMF_GridCreate(distgrid=distgrid, name="grid", rc=rc)
+
+    call ESMF_ArraySpecSet(arrayspec, 2, ESMF_TYPEKIND_R4, rc=rc)
+
+    ! create field bundles and fields
+    fieldBundle = ESMF_FieldBundleCreate(rc=rc)
+
+    ! set up exclusive/total region for the fields
+    !
+    ! halo: L/U, nDim, nField, nPet
+    ! halo configuration for pressure, and similarly for density, u, and v
+    halo(1,1,1,1) = 0
+    halo(2,1,1,1) = 0
+    halo(1,2,1,1) = 0
+    halo(2,2,1,1) = 0
+    halo(1,1,1,2) = 1   ! halo in x direction on left hand side of pet 1
+    halo(2,1,1,2) = 0
+    halo(1,2,1,2) = 0
+    halo(2,2,1,2) = 0
+    halo(1,1,1,3) = 0
+    halo(2,1,1,3) = 1   ! halo in y direction on upper side of pet 2
+    halo(1,2,1,3) = 0
+    halo(2,2,1,3) = 0
+    halo(1,1,1,4) = 1   ! halo in x direction on left hand side of pet 3
+    halo(2,1,1,4) = 1   ! halo in y direction on upper side of pet 3
+    halo(1,2,1,4) = 0
+    halo(2,2,1,4) = 0
+
+    ! names and staggers of the 4 unknown fields
+    names(1) = "pressure"
+    names(2) = "density"
+    names(3) = "u"
+    names(4) = "v"
+    staggers(1) = ESMF_STAGGERLOC_CORNER
+    staggers(2) = ESMF_STAGGERLOC_CENTER
+    staggers(3) = ESMF_STAGGERLOC_EDGE2
+    staggers(4) = ESMF_STAGGERLOC_EDGE1
+
+    ! create a FieldBundle
+    lpe = lpe + 1
+    do i = 1, 4
+        field(i) = ESMF_FieldCreate(grid, arrayspec, &
+                totalLWidth=(/halo(1,1,i,lpe), halo(1,2,i,lpe)/), &
+                totalUWidth=(/halo(2,1,i,lpe), halo(2,2,i,lpe)/), &
+                staggerloc=staggers(i), name=names(i), &
+                rc=rc)
+
+        call ESMF_FieldBundleAdd(fieldBundle, (/field(i)/), rc=rc)
+
+    enddo
+
+    ! compute the routehandle
+    call ESMF_FieldBundleHaloStore(fieldBundle, routehandle=routehandle, &
+                                   rc=rc)
+
+    do iter = 1, 10
+        do i = 1, 4
+            call ESMF_FieldGet(field(i), farrayPtr=fptr, &
+                exclusiveLBound=excllb, exclusiveUBound=exclub, rc=rc)
+
+            sizes = exclub - excllb
+            ! fill the total region with 0.
+            fptr = 0.
+            ! only update the exclusive region on local PET
+            do j = excllb(1), exclub(1)
+              do k = excllb(2), exclub(2)
+                fptr(j,k) = iter * cos(2.*PI*j/sizes(1))*sin(2.*PI*k/sizes(2))
+              enddo
+            enddo
+        enddo
+        ! call halo execution to update the data in the halo region,
+        ! it can be verified that the halo regions change from 0.
+        ! to non zero values.
+        call ESMF_FieldBundleHalo(fieldbundle, routehandle=routehandle, rc=rc)
+
+    enddo
+    ! release halo route handle
+    call ESMF_FieldBundleHaloRelease(routehandle, rc=rc)
+
+25.3 Restrictions and Future Work
+
+    1. No enforcement of the same Grid, Mesh, LocStream, or XGrid
+       restriction. While the documentation indicates in several places
+       (including the Design and Implementation Notes) that a FieldBundle
+       can only contain Fields that are built on the same Grid, Mesh,
+       LocStream, or XGrid, and all Fields must have the same
+       distribution, the actual FieldBundle implementation is more general
+       and supports bundling of any Fields. The documentation, however, is
+       in line with the long term plan of making the restrictive
+       FieldBundle definition the default behavior. The more general
+       bundling option would then be retained as a special case that
+       requires explicit specification by the user. There is currently no
+       functional difference in the FieldBundle implementation that
+       profits from the documented restrictive approach. In addition, the
+       general bundling option has been supported for a long time. Note
+       however that the documented restrictive behavior is the anticipated
+       long term default for FieldBundles.
+    2. No mathematical operators. The FieldBundle class does not support
+       differential or other mathematical operators. We do not anticipate
+       providing this functionality in the near future.
+    3. Limited validation and print options. We are planning to increase
+       the number of validity checks available for FieldBundles as soon as
+       possible. We also will be working on print options.
+    4. Packed data has limited supported. One of the options that we are
+       currently working on for FieldBundles is packing. Packing means
+       that the data from all the Fields that comprise the FieldBundle are
+       manipulated collectively. This operation can be done without
+       destroying the original Field data. Packing is being designed to
+       facilitate optimized regridding, data communication, and I/O
+       operations. This will reduce the latency overhead of the
+       communication.
+       CAUTION: For communication methods, the undistributed dimension
+       representing the number of fields must have identical size between
+       source and destination packed data. Communication methods do not
+       permute the order of fields in the source and destination packed
+       FieldBundle.
+    5. Interleaving Fields within a FieldBundle. Data locality is
+       important for performance on some computing platforms. An
+       interleave option will be added to allow the user to create a
+       packed FieldBundle in which Fields are either concatenated in
+       memory or in which Field elements are interleaved.
+
+25.4 Design and Implementation Notes
+
+    1. Fields in a FieldBundle reference the same Grid, Mesh, LocStream,
+       or XGrid. In order to reduce memory requirements and ensure
+       consistency, the Fields within a FieldBundle all reference the same
+       Grid, Mesh, LocStream, or XGrid object. This restriction may be
+       relaxed in the future.
+
+25.5 Class API: Basic FieldBundle Methods
+
+  25.5.1 ESMF_FieldBundleAssignment(=) - FieldBundle assignment
+
+   INTERFACE:
+   interface assignment(=)
+   fieldbundle1 = fieldbundle2
+
+   ARGUMENTS:
+   type(ESMF_FieldBundle) :: fieldbundle1
+   type(ESMF_FieldBundle) :: fieldbundle2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign fieldbundle1 as an alias to the same ESMF fieldbundle object in
+   memory as fieldbundle2. If fieldbundle2 is invalid, then fieldbundle1
+   will be equally invalid after the assignment.
+
+   The arguments are:
+
+   fieldbundle1
+          The ESMF_FieldBundle object on the left hand side of the
+          assignment.
+
+   fieldbundle2
+          The ESMF_FieldBundle object on the right hand side of the
+          assignment.
+
+  25.5.2 ESMF_FieldBundleOperator(==) - FieldBundle equality operator
+
+   INTERFACE:
+   interface operator(==)
+   if (fieldbundle1 == fieldbundle2) then ... endif
+   OR
+   result = (fieldbundle1 == fieldbundle2)
+
+   RETURN VALUE:
+   logical :: result
+
+   ARGUMENTS:
+   type(ESMF_FieldBundle), intent(in) :: fieldbundle1
+   type(ESMF_FieldBundle), intent(in) :: fieldbundle2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether fieldbundle1 and fieldbundle2 are valid aliases to the
+   same ESMF fieldbundle object in memory. For a more general comparison
+   of two ESMF FieldBundles, going beyond the simple alias test, the
+   ESMF_FieldBundleMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   fieldbundle1
+          The ESMF_FieldBundle object on the left hand side of the
+          equality operation.
+
+   fieldbundle2
+          The ESMF_FieldBundle object on the right hand side of the
+          equality operation.
+
+  25.5.3 ESMF_FieldBundleOperator(/=) - FieldBundle not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+   if (fieldbundle1 /= fieldbundle2) then ... endif
+   OR
+   result = (fieldbundle1 /= fieldbundle2)
+
+   RETURN VALUE:
+   logical :: result
+
+   ARGUMENTS:
+   type(ESMF_FieldBundle), intent(in) :: fieldbundle1
+   type(ESMF_FieldBundle), intent(in) :: fieldbundle2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether fieldbundle1 and fieldbundle2 are not valid aliases to the
+   same ESMF fieldbundle object in memory. For a more general comparison
+   of two ESMF FieldBundles, going beyond the simple alias test, the
+   ESMF_FieldBundleMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   fieldbundle1
+          The ESMF_FieldBundle object on the left hand side of the
+          non-equality operation.
+
+   fieldbundle2
+          The ESMF_FieldBundle object on the right hand side of the
+          non-equality operation.
+

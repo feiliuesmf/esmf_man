@@ -1,0 +1,770 @@
+  44.4.16 ESMF_TimeIntervalGet - Get a TimeInterval value
+
+   INTERFACE:
+       ! Private name; call using ESMF_TimeIntervalGet()
+       subroutine ESMF_TimeIntervalGetDur(timeinterval, &
+         yy, yy_i8, &
+         mm, mm_i8, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, &
+         startTime, calendar, calkindflag, &
+         timeString, timeStringISOFrac, rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in)            :: timeinterval
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(out), optional :: yy
+       integer(ESMF_KIND_I8),   intent(out), optional :: yy_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: mm
+       integer(ESMF_KIND_I8),   intent(out), optional :: mm_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: d
+       integer(ESMF_KIND_I8),   intent(out), optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: h
+       integer(ESMF_KIND_I4),   intent(out), optional :: m
+       integer(ESMF_KIND_I4),   intent(out), optional :: s
+       integer(ESMF_KIND_I8),   intent(out), optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: ms
+       integer(ESMF_KIND_I4),   intent(out), optional :: us
+       integer(ESMF_KIND_I4),   intent(out), optional :: ns
+       real(ESMF_KIND_R8),      intent(out), optional :: d_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: h_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: m_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: s_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: us_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sN
+       integer(ESMF_KIND_I8),   intent(out), optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sD
+       integer(ESMF_KIND_I8),   intent(out), optional :: sD_i8
+       type(ESMF_Time),         intent(out), optional :: startTime
+       type(ESMF_Calendar),     intent(out), optional :: calendar
+       type(ESMF_CalKind_Flag), intent(out), optional :: calkindflag
+       character (len=*),       intent(out), optional :: timeString
+       character (len=*),       intent(out), optional :: timeStringISOFrac
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets the value of timeinterval in units specified by the user via
+   Fortran optional arguments.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally from integers.
+
+   Units are bound (normalized) to the next larger unit specified. For
+   example, if a time interval is defined to be one day, then
+   ESMF_TimeIntervalGet(d = days, s = seconds) would return days = 1,
+   seconds = 0, whereas ESMF_TimeIntervalGet(s = seconds) would return
+   seconds = 86400.
+
+   For timeString, converts ESMF_TimeInterval's value into partial ISO
+   8601 format PyYmMdDThHmMs[:n/d]S. See [[551]26] and  [[552]14]. See
+   also method ESMF_TimeIntervalPrint().
+
+   For timeStringISOFrac, converts ESMF_TimeInterval's value into full ISO
+   8601 format PyYmMdDThHmMs[.f]S. See [[553]26] and  [[554]14]. See also
+   method ESMF_TimeIntervalPrint().
+
+   The arguments are:
+
+   timeinterval
+          The object instance to query.
+
+   [yy]
+          Integer year (32-bit).
+
+   [yy_i8]
+          Integer year (large, 64-bit).
+
+   [mm]
+          Integer month (32-bit).
+
+   [mm_i8]
+          Integer month (large, 64-bit).
+
+   [d]
+          Integer Julian day, or Modified Julian day (32-bit).
+
+   [d_i8]
+          Integer Julian day, or Modified Julian day (large, 64-bit).
+
+   [h]
+          Integer hour.
+
+   [m]
+          Integer minute.
+
+   [s]
+          Integer second (32-bit).
+
+   [s_i8]
+          Integer second (large, 64-bit).
+
+   [ms]
+          Integer millisecond.
+
+   [us]
+          Integer microsecond.
+
+   [ns]
+          Integer nanosecond.
+
+   [d_r8]
+          Double precision day.
+
+   [h_r8]
+          Double precision hour.
+
+   [m_r8]
+          Double precision minute.
+
+   [s_r8]
+          Double precision second.
+
+   [ms_r8]
+          Double precision millisecond.
+
+   [us_r8]
+          Double precision microsecond.
+
+   [ns_r8]
+          Double precision nanosecond.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD).
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large,
+          64-bit).
+
+   [sD]
+          Integer denominator of fractional second (sN/sD).
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8) (large,
+          64-bit).
+
+   [startTime]
+          Starting time, if set, of an absolute calendar interval (yy, mm,
+          and/or d).
+
+   [calendar]
+          Associated Calendar, if any.
+
+   [calkindflag]
+          Associated CalKind_Flag, if any.
+
+   [timeString]
+          Convert time interval value to format string
+          PyYmMdDThHmMs[:n/d]S, where n/d is numerator/denominator of any
+          fractional seconds and all other units are in ISO 8601 format.
+          See [[555]26] and  [[556]14]. See also method
+          ESMF_TimeIntervalPrint().
+
+   [timeStringISOFrac]
+          Convert time interval value to strict ISO 8601 format string
+          PyYmMdDThHmMs[.f], where f is decimal form of any fractional
+          seconds. See [[557]26] and [[558]14]. See also method
+          ESMF_TimeIntervalPrint().
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  44.4.17 ESMF_TimeIntervalGet - Get a TimeInterval value
+
+   INTERFACE:
+       ! Private name; call using ESMF_TimeIntervalGet()
+       subroutine ESMF_TimeIntervalGetDurStart(timeinterval, startTimeIn, &
+         &
+         yy, yy_i8, &
+         mm, mm_i8, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, &
+         startTime, &
+         calendar, calkindflag, &
+         timeString, timeStringISOFrac, rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in)            :: timeinterval
+       type(ESMF_Time),         intent(in)            :: startTimeIn ! Input
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(out), optional :: yy
+       integer(ESMF_KIND_I8),   intent(out), optional :: yy_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: mm
+       integer(ESMF_KIND_I8),   intent(out), optional :: mm_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: d
+       integer(ESMF_KIND_I8),   intent(out), optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: h
+       integer(ESMF_KIND_I4),   intent(out), optional :: m
+       integer(ESMF_KIND_I4),   intent(out), optional :: s
+       integer(ESMF_KIND_I8),   intent(out), optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: ms
+       integer(ESMF_KIND_I4),   intent(out), optional :: us
+       integer(ESMF_KIND_I4),   intent(out), optional :: ns
+       real(ESMF_KIND_R8),      intent(out), optional :: d_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: h_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: m_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: s_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: us_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sN
+       integer(ESMF_KIND_I8),   intent(out), optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sD
+       integer(ESMF_KIND_I8),   intent(out), optional :: sD_i8
+       type(ESMF_Time),         intent(out), optional :: startTime
+       type(ESMF_Calendar),     intent(out), optional :: calendar
+       type(ESMF_CalKind_Flag), intent(out), optional :: calkindflag
+       character (len=*),       intent(out), optional :: timeString
+       character (len=*),       intent(out), optional :: timeStringISOFrac
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets the value of timeinterval in units specified by the user via
+   Fortran optional arguments.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally from integers.
+
+   Units are bound (normalized) to the next larger unit specified. For
+   example, if a time interval is defined to be one day, then
+   ESMF_TimeIntervalGet(d = days, s = seconds) would return days = 1,
+   seconds = 0, whereas ESMF_TimeIntervalGet(s = seconds) would return
+   seconds = 86400.
+
+   For timeString, converts ESMF_TimeInterval's value into partial ISO
+   8601 format PyYmMdDThHmMs[:n/d]S. See [[559]26] and  [[560]14]. See
+   also method ESMF_TimeIntervalPrint().
+
+   For timeStringISOFrac, converts ESMF_TimeInterval's value into full ISO
+   8601 format PyYmMdDThHmMs[.f]S. See [[561]26] and  [[562]14]. See also
+   method ESMF_TimeIntervalPrint().
+
+   The arguments are:
+
+   timeinterval
+          The object instance to query.
+
+   startTimeIn
+          INPUT argument: pins a calendar interval to a specific point in
+          time to allow conversion between relative units (yy, mm, d) and
+          absolute units (d, h, m, s). Overrides any startTime and/or
+          endTime previously set. Mutually exclusive with endTimeIn and
+          calendarIn.
+
+   [yy]
+          Integer year (32-bit).
+
+   [yy_i8]
+          Integer year (large, 64-bit).
+
+   [mm]
+          Integer month (32-bit).
+
+   [mm_i8]
+          Integer month (large, 64-bit).
+
+   [d]
+          Integer Julian day, or Modified Julian day (32-bit).
+
+   [d_i8]
+          Integer Julian day, or Modified Julian day (large, 64-bit).
+
+   [h]
+          Integer hour.
+
+   [m]
+          Integer minute.
+
+   [s]
+          Integer second (32-bit).
+
+   [s_i8]
+          Integer second (large, 64-bit).
+
+   [ms]
+          Integer millisecond.
+
+   [us]
+          Integer microsecond.
+
+   [ns]
+          Integer nanosecond.
+
+   [d_r8]
+          Double precision day.
+
+   [h_r8]
+          Double precision hour.
+
+   [m_r8]
+          Double precision minute.
+
+   [s_r8]
+          Double precision second.
+
+   [ms_r8]
+          Double precision millisecond.
+
+   [us_r8]
+          Double precision microsecond.
+
+   [ns_r8]
+          Double precision nanosecond.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD).
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large,
+          64-bit).
+
+   [sD]
+          Integer denominator of fractional second (sN/sD).
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8) (large,
+          64-bit).
+
+   [startTime]
+          Starting time, if set, of an absolute calendar interval (yy, mm,
+          and/or d).
+
+   [calendar]
+          Associated Calendar, if any.
+
+   [calkindflag]
+          Associated CalKind_Flag, if any.
+
+   [timeString]
+          Convert time interval value to format string
+          PyYmMdDThHmMs[:n/d]S, where n/d is numerator/denominator of any
+          fractional seconds and all other units are in ISO 8601 format.
+          See [[563]26] and  [[564]14]. See also method
+          ESMF_TimeIntervalPrint().
+
+   [timeStringISOFrac]
+          Convert time interval value to strict ISO 8601 format string
+          PyYmMdDThHmMs[.f], where f is decimal form of any fractional
+          seconds. See [[565]26] and [[566]14]. See also method
+          ESMF_TimeIntervalPrint().
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  44.4.18 ESMF_TimeIntervalGet - Get a TimeInterval value
+
+   INTERFACE:
+       ! Private name; call using ESMF_TimeIntervalGet()
+       subroutine ESMF_TimeIntervalGetDurCal(timeinterval, calendarIn, &
+         &
+         yy, yy_i8, &
+         mm, mm_i8, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, &
+         startTime, &
+         calendar, calkindflag, &
+         timeString, timeStringISOFrac, rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in)            :: timeinterval
+       type(ESMF_Calendar),     intent(in)            :: calendarIn ! Input
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(out), optional :: yy
+       integer(ESMF_KIND_I8),   intent(out), optional :: yy_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: mm
+       integer(ESMF_KIND_I8),   intent(out), optional :: mm_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: d
+       integer(ESMF_KIND_I8),   intent(out), optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: h
+       integer(ESMF_KIND_I4),   intent(out), optional :: m
+       integer(ESMF_KIND_I4),   intent(out), optional :: s
+       integer(ESMF_KIND_I8),   intent(out), optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: ms
+       integer(ESMF_KIND_I4),   intent(out), optional :: us
+       integer(ESMF_KIND_I4),   intent(out), optional :: ns
+       real(ESMF_KIND_R8),      intent(out), optional :: d_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: h_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: m_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: s_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: us_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sN
+       integer(ESMF_KIND_I8),   intent(out), optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sD
+       integer(ESMF_KIND_I8),   intent(out), optional :: sD_i8
+       type(ESMF_Time),         intent(out), optional :: startTime
+       type(ESMF_Calendar),     intent(out), optional :: calendar
+       type(ESMF_CalKind_Flag), intent(out), optional :: calkindflag
+       character (len=*),       intent(out), optional :: timeString
+       character (len=*),       intent(out), optional :: timeStringISOFrac
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets the value of timeinterval in units specified by the user via
+   Fortran optional arguments.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally from integers.
+
+   Units are bound (normalized) to the next larger unit specified. For
+   example, if a time interval is defined to be one day, then
+   ESMF_TimeIntervalGet(d = days, s = seconds) would return days = 1,
+   seconds = 0, whereas ESMF_TimeIntervalGet(s = seconds) would return
+   seconds = 86400.
+
+   For timeString, converts ESMF_TimeInterval's value into partial ISO
+   8601 format PyYmMdDThHmMs[:n/d]S. See [[567]26] and  [[568]14]. See
+   also method ESMF_TimeIntervalPrint().
+
+   For timeStringISOFrac, converts ESMF_TimeInterval's value into full ISO
+   8601 format PyYmMdDThHmMs[.f]S. See [[569]26] and  [[570]14]. See also
+   method ESMF_TimeIntervalPrint().
+
+   The arguments are:
+
+   timeinterval
+          The object instance to query.
+
+   calendarIn
+          INPUT argument: pins a calendar interval to a specific calendar
+          to allow conversion between relative units (yy, mm, d) and
+          absolute units (d, h, m, s). Mutually exclusive with startTimeIn
+          and endTimeIn since they contain a calendar. Alternate to, and
+          mutually exclusive with, calkindflagIn below. Primarily for
+          specifying a custom calendar kind.
+
+   [yy]
+          Integer year (32-bit).
+
+   [yy_i8]
+          Integer year (large, 64-bit).
+
+   [mm]
+          Integer month (32-bit).
+
+   [mm_i8]
+          Integer month (large, 64-bit).
+
+   [d]
+          Integer Julian day, or Modified Julian day (32-bit).
+
+   [d_i8]
+          Integer Julian day, or Modified Julian day (large, 64-bit).
+
+   [h]
+          Integer hour.
+
+   [m]
+          Integer minute.
+
+   [s]
+          Integer second (32-bit).
+
+   [s_i8]
+          Integer second (large, 64-bit).
+
+   [ms]
+          Integer millisecond.
+
+   [us]
+          Integer microsecond.
+
+   [ns]
+          Integer nanosecond.
+
+   [d_r8]
+          Double precision day.
+
+   [h_r8]
+          Double precision hour.
+
+   [m_r8]
+          Double precision minute.
+
+   [s_r8]
+          Double precision second.
+
+   [ms_r8]
+          Double precision millisecond.
+
+   [us_r8]
+          Double precision microsecond.
+
+   [ns_r8]
+          Double precision nanosecond.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD).
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large,
+          64-bit).
+
+   [sD]
+          Integer denominator of fractional second (sN/sD).
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8) (large,
+          64-bit).
+
+   [startTime]
+          Starting time, if set, of an absolute calendar interval (yy, mm,
+          and/or d).
+
+   [calendar]
+          Associated Calendar, if any.
+
+   [calkindflag]
+          Associated CalKind_Flag, if any.
+
+   [timeString]
+          Convert time interval value to format string
+          PyYmMdDThHmMs[:n/d]S, where n/d is numerator/denominator of any
+          fractional seconds and all other units are in ISO 8601 format.
+          See [[571]26] and  [[572]14]. See also method
+          ESMF_TimeIntervalPrint().
+
+   [timeStringISOFrac]
+          Convert time interval value to strict ISO 8601 format string
+          PyYmMdDThHmMs[.f], where f is decimal form of any fractional
+          seconds. See [[573]26] and [[574]14]. See also method
+          ESMF_TimeIntervalPrint().
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  44.4.19 ESMF_TimeIntervalGet - Get a TimeInterval value
+
+   INTERFACE:
+       ! Private name; call using ESMF_TimeIntervalGet()
+       subroutine ESMF_TimeIntervalGetDurCalTyp(timeinterval, calkindflagIn, &
+         &
+         yy, yy_i8, &
+         mm, mm_i8, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, &
+         startTime, &
+         calendar, calkindflag, &
+         timeString, &
+         timeStringISOFrac, rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in)            :: timeinterval
+       type(ESMF_CalKind_Flag), intent(in)            :: calkindflagIn ! Input
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(out), optional :: yy
+       integer(ESMF_KIND_I8),   intent(out), optional :: yy_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: mm
+       integer(ESMF_KIND_I8),   intent(out), optional :: mm_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: d
+       integer(ESMF_KIND_I8),   intent(out), optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: h
+       integer(ESMF_KIND_I4),   intent(out), optional :: m
+       integer(ESMF_KIND_I4),   intent(out), optional :: s
+       integer(ESMF_KIND_I8),   intent(out), optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: ms
+       integer(ESMF_KIND_I4),   intent(out), optional :: us
+       integer(ESMF_KIND_I4),   intent(out), optional :: ns
+       real(ESMF_KIND_R8),      intent(out), optional :: d_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: h_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: m_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: s_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: us_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sN
+       integer(ESMF_KIND_I8),   intent(out), optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sD
+       integer(ESMF_KIND_I8),   intent(out), optional :: sD_i8
+       type(ESMF_Time),         intent(out), optional :: startTime
+       type(ESMF_Calendar),     intent(out), optional :: calendar
+       type(ESMF_CalKind_Flag), intent(out), optional :: calkindflag
+       character (len=*),       intent(out), optional :: timeString
+       character (len=*),       intent(out), optional :: timeStringISOFrac
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets the value of timeinterval in units specified by the user via
+   Fortran optional arguments.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally from integers.
+
+   Units are bound (normalized) to the next larger unit specified. For
+   example, if a time interval is defined to be one day, then
+   ESMF_TimeIntervalGet(d = days, s = seconds) would return days = 1,
+   seconds = 0, whereas ESMF_TimeIntervalGet(s = seconds) would return
+   seconds = 86400.
+
+   For timeString, converts ESMF_TimeInterval's value into partial ISO
+   8601 format PyYmMdDThHmMs[:n/d]S. See [[575]26] and  [[576]14]. See
+   also method ESMF_TimeIntervalPrint().
+
+   For timeStringISOFrac, converts ESMF_TimeInterval's value into full ISO
+   8601 format PyYmMdDThHmMs[.f]S. See [[577]26] and  [[578]14]. See also
+   method ESMF_TimeIntervalPrint().
+
+   The arguments are:
+
+   timeinterval
+          The object instance to query.
+
+   calkindflagIn
+          INPUT argument: Alternate to, and mutually exclusive with,
+          calendarIn above. More convenient way of specifying a built-in
+          calendar kind.
+
+   [yy]
+          Integer year (32-bit).
+
+   [yy_i8]
+          Integer year (large, 64-bit).
+
+   [mm]
+          Integer month (32-bit).
+
+   [mm_i8]
+          Integer month (large, 64-bit).
+
+   [d]
+          Integer Julian day, or Modified Julian day (32-bit).
+
+   [d_i8]
+          Integer Julian day, or Modified Julian day (large, 64-bit).
+
+   [h]
+          Integer hour.
+
+   [m]
+          Integer minute.
+
+   [s]
+          Integer second (32-bit).
+
+   [s_i8]
+          Integer second (large, 64-bit).
+
+   [ms]
+          Integer millisecond.
+
+   [us]
+          Integer microsecond.
+
+   [ns]
+          Integer nanosecond.
+
+   [d_r8]
+          Double precision day.
+
+   [h_r8]
+          Double precision hour.
+
+   [m_r8]
+          Double precision minute.
+
+   [s_r8]
+          Double precision second.
+
+   [ms_r8]
+          Double precision millisecond.
+
+   [us_r8]
+          Double precision microsecond.
+
+   [ns_r8]
+          Double precision nanosecond.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD).
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large,
+          64-bit).
+
+   [sD]
+          Integer denominator of fractional second (sN/sD).
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8) (large,
+          64-bit).
+
+   [startTime]
+          Starting time, if set, of an absolute calendar interval (yy, mm,
+          and/or d).
+
+   [calendar]
+          Associated Calendar, if any.
+
+   [calkindflag]
+          Associated CalKind_Flag, if any.
+
+   [timeString]
+          Convert time interval value to format string
+          PyYmMdDThHmMs[:n/d]S, where n/d is numerator/denominator of any
+          fractional seconds and all other units are in ISO 8601 format.
+          See [[579]26] and  [[580]14]. See also method
+          ESMF_TimeIntervalPrint().
+
+   [timeStringISOFrac]
+          Convert time interval value to strict ISO 8601 format string
+          PyYmMdDThHmMs[.f], where f is decimal form of any fractional
+          seconds. See [[581]26] and [[582]14]. See also method
+          ESMF_TimeIntervalPrint().
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

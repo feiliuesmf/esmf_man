@@ -1,0 +1,25 @@
+  48.5.32 ESMF_HConfigIterBegin - Iterator at the beginning
+
+   INTERFACE:
+    function ESMF_HConfigIterBegin(hconfig, rc)
+
+   RETURN VALUE:
+      type(ESMF_HConfigIter) :: ESMF_HConfigIterBegin
+
+   ARGUMENTS:
+      type(ESMF_HConfig[Iter]), intent(in)      :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return an iterator that points to the first item in hconfig.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig or ESMF_HConfigIter object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,40 @@
+  42.5.10 ESMF_CalendarIsLeapYear - Determine if given year is a leap year
+
+   INTERFACE:
+       ! Private name; call using ESMF_CalendarIsLeapYear()
+       function ESMF_CalendarIsLeapYear<kind>(calendar, yy, rc)
+
+   RETURN VALUE:
+       logical :: ESMF_CalendarIsLeapYear<kind>
+
+   ARGUMENTS:
+       type(ESMF_Calendar),       intent(in)            :: calendar
+       integer(ESMF_KIND_<kind>), intent(in)            :: yy
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                   intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Returns .true. if the given year is a leap year within the given
+   calendar, and .false. otherwise. Custom calendars do not define leap
+   years, so .false. will always be returned in this case; see
+   Section [522]42.4. See also ESMF_TimeIsLeapYear().
+
+   The arguments are:
+
+   calendar
+          ESMF_Calendar to determine leap year within.
+
+   yy
+          Year to check for leap year. The type is integer and the <kind>
+          can be either I4 or I8: ESMF_KIND_I4 or ESMF_KIND_I8.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

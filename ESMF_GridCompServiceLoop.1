@@ -1,0 +1,81 @@
+  17.4.15 ESMF_GridCompServiceLoop - Call the GridComp's service loop routine
+
+   INTERFACE:
+   recursive subroutine ESMF_GridCompServiceLoop(gridcomp, &
+     importState, exportState, clock, syncflag, port, timeout, timeoutFlag, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp),  intent(inout)           :: gridcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_State),     intent(inout), optional :: importState
+     type(ESMF_State),     intent(inout), optional :: exportState
+     type(ESMF_Clock),     intent(inout), optional :: clock
+     type(ESMF_Sync_Flag), intent(in),    optional :: syncflag
+     integer,              intent(in),    optional :: port
+     integer,              intent(in),    optional :: timeout
+     logical,              intent(out),   optional :: timeoutFlag
+     integer,              intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   Call the ServiceLoop routine for an ESMF_GridComp. This tries to
+   establish a "component tunnel" between the actual Component (calling
+   this routine) and a dual Component connecting to it through a matching
+   SetServices call.
+
+   The arguments are:
+
+   gridcomp
+          ESMF_GridComp to call service loop routine for.
+
+   [importState]
+          ESMF_State containing import data for coupling. If not present,
+          a dummy argument will be passed to the user-supplied routine.
+          The importState argument in the user code cannot be optional.
+
+   [exportState]
+          ESMF_State containing export data for coupling. If not present,
+          a dummy argument will be passed to the user-supplied routine.
+          The exportState argument in the user code cannot be optional.
+
+   [clock]
+          External ESMF_Clock for passing in time information. This is
+          generally the parent component's clock, and will be treated as
+          read-only by the child component. The child component can
+          maintain a private clock for its own internal time computations.
+          If not present, a dummy argument will be passed to the
+          user-supplied routine. The clock argument in the user code
+          cannot be optional.
+
+   [syncflag]
+          Blocking behavior of this method call. See section [271]54.57
+          for a list of valid blocking options. Default option is
+          ESMF_SYNC_VASBLOCKING which blocks PETs and their spawned off
+          threads across each VAS but does not synchronize PETs that run
+          in different VASs.
+
+   [port]
+          In case a port number is provided, the "component tunnel" is
+          established using sockets. The actual component side, i.e. the
+          side that calls into ESMF_GridCompServiceLoop(), starts to
+          listen on the specified port as the server. The valid port range
+          is [1024, 65535]. In case the port argument is not specified,
+          the "component tunnel" is established within the same executable
+          using local communication methods (e.g. MPI).
+
+   [timeout]
+          The maximum period in seconds that this call will wait for
+          communications with the dual component, before returning with a
+          timeout condition. The default is 3600, i.e. 1 hour. (NOTE:
+          Currently this option is only available for socket based
+          component tunnels.)
+
+   [timeoutFlag]
+          Returns .true. if the timeout was reached, .false. otherwise. If
+          timeoutFlag was not provided, a timeout condition will lead to a
+          return code of rc \= ESMF_SUCCESS. Otherwise the return value of
+          timeoutFlag is the sole indicator of a timeout condition.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

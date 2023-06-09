@@ -1,0 +1,75 @@
+  31.6.4 ESMF_GridAddCoord - Allocate coordinate arrays but don't set their
+  values
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridAddCoord()
+      subroutine ESMF_GridAddCoordNoValues(grid, staggerloc,  &
+        staggerEdgeLWidth, staggerEdgeUWidth, staggerAlign, &
+        staggerLBound,rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type (ESMF_StaggerLoc), intent(in),  optional :: staggerloc
+       integer,                intent(in),  optional :: staggerEdgeLWidth(:)
+       integer,                intent(in),  optional :: staggerEdgeUWidth(:)
+       integer,                intent(in),  optional :: staggerAlign(:)
+       integer,                intent(in),  optional :: staggerLBound(:)
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   When a Grid is created all of its potential stagger locations can hold
+   coordinate data, but none of them have storage allocated. This call
+   allocates coordinate storage (creates internal ESMF_Arrays and
+   associated memory) for a particular stagger location. Note that this
+   call doesn't assign any values to the storage, it only allocates it.
+   The remaining options staggerEdgeLWidth, etc. allow the user to adjust
+   the padding on the coordinate arrays.
+
+   The arguments are:
+
+   grid
+          Grid to allocate coordinate storage in.
+
+   [staggerloc]
+          The stagger location to add. Please see Section [1223]31.2.6 for
+          a list of predefined stagger locations. If not present, defaults
+          to ESMF_STAGGERLOC_CENTER.
+
+   [staggerEdgeLWidth]
+          This array should be the same dimCount as the grid. It specifies
+          the lower corner of the stagger region with respect to the lower
+          corner of the exclusive region.
+
+   [staggerEdgeUWidth]
+          This array should be the same dimCount as the grid. It specifies
+          the upper corner of the stagger region with respect to the upper
+          corner of the exclusive region.
+
+   [staggerAlign]
+          This array is of size grid dimCount. For this stagger location,
+          it specifies which element has the same index value as the
+          center. For example, for a 2D cell with corner stagger it
+          specifies which of the 4 corners has the same index as the
+          center. If this is set and either staggerEdgeUWidth or
+          staggerEdgeLWidth is not, this determines the default array
+          padding for a stagger. If not set, then this defaults to all
+          negative. (e.g. The most negative part of the stagger in a cell
+          is aligned with the center and the padding is all on the
+          positive side.)
+
+   [staggerLBound]
+          Specifies the lower index range of the memory of every DE in
+          this staggerloc in this Grid. Only used when Grid indexflag is
+          ESMF_INDEX_USER.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

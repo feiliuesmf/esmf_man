@@ -1,0 +1,74 @@
+  49.7.15 ESMF_LogWrite - Write to Log file(s)
+
+   INTERFACE:
+       recursive subroutine ESMF_LogWrite(msg, logmsgFlag, &
+                         logmsgList,      & ! DEPRECATED ARGUMENT
+                         line, file, method, log, rc)
+
+   ARGUMENTS:
+       character(len=*),      intent(in)             :: msg
+       type(ESMF_LogMsg_Flag),intent(in),optional    :: logmsgFlag
+       type(ESMF_LogMsg_Flag),intent(in),optional::logmsgList ! DEPRECATED ARG
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,               intent(in),   optional :: line
+       character(len=*),      intent(in),   optional :: file
+       character(len=*),      intent(in),   optional :: method
+       type(ESMF_Log),        intent(inout),optional :: log
+       integer,               intent(out),  optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        5.2.0rp1
+                Added argument logmsgFlag. Started to deprecate argument
+                logmsgList. This corrects inconsistent use of the List
+                suffix on the argument name. In ESMF this suffix indicates
+                one-dimensional array arguments.
+
+   DESCRIPTION:
+
+   This subroutine writes to the file associated with an ESMF_Log. A
+   message is passed in along with the logmsgFlag, line, file and method.
+   If the write to the ESMF_Log is successful, the function will return a
+   logical true. This function is the base function used by all the other
+   ESMF_Log writing methods.
+
+   The arguments are:
+
+   msg
+          User-provided message string.
+
+   [logmsgFlag]
+          The type of message. See Section [598]49.2.3 for possible
+          values. If not specified, the default is ESMF_LOGMSG_INFO.
+
+   [logmsgList]
+          DEPRECATED ARGUMENT! Please use the argument logmsgFlag instead.
+
+   [line]
+          Integer source line number. Expected to be set by using the
+          preprocessor macro __LINE__ macro.
+
+   [file]
+          User-provided source file name.
+
+   [method]
+          User-provided method string.
+
+   [log]
+          An optional ESMF_Log object that can be used instead of the
+          default Log.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

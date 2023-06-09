@@ -1,0 +1,62 @@
+  49.7.8 ESMF_LogFoundError - Check ESMF return code for error and write message
+
+   INTERFACE:
+   recursive function ESMF_LogFoundError(rcToCheck,   &
+                                   msg, line, file, method, &
+                                   rcToReturn, log) result (LogFoundError)
+
+   RETURN VALUE:
+       logical :: LogFoundError
+
+   ARGUMENTS:
+       integer,          intent(in),    optional :: rcToCheck
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character(len=*), intent(in),    optional :: msg
+       integer,          intent(in),    optional :: line
+       character(len=*), intent(in),    optional :: file
+       character(len=*), intent(in),    optional :: method
+       integer,          intent(inout), optional :: rcToReturn
+       type(ESMF_Log),   intent(inout), optional :: log
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This function returns .true. when rcToCheck indicates an return code
+   other than ESMF_SUCCESS, otherwise it returns .false.. If an error is
+   indicated, a ESMF predefined error message will be written to the
+   ESMF_Log along with a user added msg, line, file and method.
+
+   The arguments are:
+
+   [rcToCheck]
+          Return code to check. Default is ESMF_SUCCESS.
+
+   [msg]
+          User-provided message string.
+
+   [line]
+          Integer source line number. Expected to be set by using the
+          preprocessor __LINE__ macro.
+
+   [file]
+          User-provided source file name.
+
+   [method]
+          User-provided method string.
+
+   [rcToReturn]
+          If specified, when rcToCheck indicates an error, set the
+          rcToReturn to the value of rcToCheck. Otherwise, rcToReturn is
+          not modified. This is not the return code for this function; it
+          allows the calling code to do an assignment of the error code at
+          the same time it is testing the value.
+
+   [log]
+          An optional ESMF_Log object that can be used instead of the
+          default Log.
+

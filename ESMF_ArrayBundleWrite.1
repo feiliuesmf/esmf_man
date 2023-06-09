@@ -1,0 +1,117 @@
+  27.5.27 ESMF_ArrayBundleWrite - Write the Arrays into a file
+
+   INTERFACE:
+   subroutine ESMF_ArrayBundleWrite(arraybundle, fileName, &
+     convention, purpose, singleFile, overwrite, status, timeslice, iofmt, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle),     intent(in)              :: arraybundle
+     character(*),               intent(in)              :: fileName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(*),               intent(in),  optional  :: convention
+     character(*),               intent(in),  optional  :: purpose
+     logical,                    intent(in),  optional  :: singleFile
+     logical,                    intent(in),  optional  :: overwrite
+     type(ESMF_FileStatus_Flag), intent(in),  optional  :: status
+     integer,                    intent(in),  optional  :: timeslice
+     type(ESMF_IOFmt_Flag),      intent(in),  optional  :: iofmt
+     integer,                    intent(out), optional  :: rc
+
+   DESCRIPTION:
+
+   Write the Arrays into a file. For this API to be functional, the
+   environment variable ESMF_PIO should be set to either "internal" or
+   "external" when the ESMF library is built. Please see the section on
+   Data I/O, [1055]38.2.
+
+   When convention and purpose arguments are specified, NetCDF dimension
+   labels and variable attributes are written from each Array in the
+   ArrayBundle from the corresponding Attribute package. Additionally,
+   Attributes may be set on the ArrayBundle level under the same Attribute
+   package. This allows the specification of global attributes within the
+   file. As with individual Arrays, the value associated with each name
+   may be either a scalar character string, or a scalar or array of type
+   integer, real, or double precision.
+
+   Limitations:
+     * For multi-tile Arrays,all Arrays in the ArrayBundle must contain
+       the same number of tiles.
+     * Not supported in ESMF_COMM=mpiuni mode.
+
+   The arguments are:
+
+   arraybundle
+          An ESMF_ArrayBundle object.
+
+   fileName
+          The name of the output file to which array bundle data is
+          written. If the ArrayBundle contains multi-tile Arrays, then
+          fileName must contain exactly one instance of "*"; this is a
+          placeholder that will be replaced by the tile number, with each
+          tile being written to a separate file. (For example, for a
+          fileName of "myfile*.nc", tile 1 will be written to
+          "myfile1.nc", tile 2 to "myfile2.nc", etc.) (This handling of
+          the fileName for multi-tile I/O is subject to change.)
+
+   [convention]
+          Specifies an Attribute package associated with the ArrayBundle,
+          and the contained Arrays, used to create NetCDF dimension labels
+          and attributes in the file. When this argument is present, the
+          purpose argument must also be present. Use this argument only
+          with a NetCDF I/O format. If binary format is used, ESMF will
+          return an error code.
+
+   [purpose]
+          Specifies an Attribute package associated with the ArrayBundle,
+          and the contained Arrays, used to create NetCDF dimension labels
+          and attributes in the file. When this argument is present, the
+          convention argument must also be present. Use this argument only
+          with a NetCDF I/O format. If binary format is used, ESMF will
+          return an error code.
+
+   [singleFile]
+          A logical flag, the default is .true., i.e., all arrays in the
+          bundle are written in one single file. If .false., each array
+          will be written in separate files; these files are numbered with
+          the name based on the argument "file". That is, a set of files
+          are named: [file_name]001, [file_name]002, [file_name]003,...
+
+   [overwrite]
+          A logical flag, the default is .false., i.e., existing Array
+          data may not be overwritten. If .true., only the data
+          corresponding to each Array's name will be be overwritten. If
+          the timeslice option is given, only data for the given timeslice
+          may be overwritten. Note that it is always an error to attempt
+          to overwrite a NetCDF variable with data which has a different
+          shape.
+
+   [status]
+          The file status. Please see Section [1056]54.21 for the list of
+          options. If not present, defaults to ESMF_FILESTATUS_UNKNOWN.
+
+   [timeslice]
+          Some I/O formats (e.g. NetCDF) support the output of data in
+          form of time slices. The timeslice argument provides access to
+          this capability. timeslice must be positive. The behavior of
+          this option may depend on the setting of the overwrite flag:
+
+        overwrite = .false.:
+                If the timeslice value is less than the maximum time
+                already in the file, the write will fail.
+
+        overwrite = .true.:
+                Any positive timeslice value is valid.
+
+          By default, i.e. by omitting the timeslice argument, no
+          provisions for time slicing are made in the output file,
+          however, if the file already contains a time axis for the
+          variable, a timeslice one greater than the maximum will be
+          written.
+
+   [iofmt]
+          The I/O format. Please see Section [1057]54.28 for the list of
+          options. If not present, defaults to ESMF_IOFMT_NETCDF.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

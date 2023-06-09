@@ -1,0 +1,27 @@
+  46.6.10 ESMF_AlarmIsCreated - Check whether a Alarm object has been created
+
+   INTERFACE:
+   function ESMF_AlarmIsCreated(alarm, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_AlarmIsCreated
+
+   ARGUMENTS:
+     type(ESMF_Alarm), intent(in)            :: alarm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the alarm has been created. Otherwise return .false..
+   If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return
+   value of the function will also be .false..
+
+   The arguments are:
+
+   alarm
+          ESMF_Alarm queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

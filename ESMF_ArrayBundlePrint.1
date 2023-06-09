@@ -1,0 +1,29 @@
+  27.5.15 ESMF_ArrayBundlePrint - Print ArrayBundle information
+
+   INTERFACE:
+   subroutine ESMF_ArrayBundlePrint(arraybundle, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle), intent(in)            :: arraybundle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Print internal information of the specified ESMF_ArrayBundle object to
+   stdout.
+
+   The arguments are:
+
+   arraybundle
+          ESMF_ArrayBundle object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

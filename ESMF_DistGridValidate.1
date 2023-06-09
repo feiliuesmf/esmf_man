@@ -1,0 +1,31 @@
+  36.6.22 ESMF_DistGridValidate - Validate DistGrid internals
+
+   INTERFACE:
+   subroutine ESMF_DistGridValidate(distgrid, rc)
+
+   ARGUMENTS:
+     type(ESMF_DistGrid),  intent(in)            :: distgrid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,              intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Validates that the distgrid is internally consistent. The method
+   returns an error code if problems are found.
+
+   The arguments are:
+
+   distgrid
+          Specified ESMF_DistGrid object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+36.7 Class API: DistGridConnection Methods
+

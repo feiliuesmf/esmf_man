@@ -1,0 +1,196 @@
+  40.4.11 ESMF_InfoGet - Get a numeric, logical, or fixed-size character value
+
+   INTERFACE:
+  subroutine ESMF_InfoGet(info, key, value, default, idx, attnestflag, rc)
+
+   ARGUMENTS:
+    type(ESMF_Info), intent(in) :: info
+    character(len=*), intent(in) :: key
+    <value>, see below for supported value
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+    <default, optional> see below for supported default value
+    integer, intent(in), optional :: idx
+    type(ESMF_AttNest_Flag), intent(in), optional :: attnestflag
+    integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get a value from an ESMF_Info object using a key. If the key is not
+   found, rc will not equal ESMF_SUCCESS. The returned value is always a
+   copy including gets with a default.
+
+   Overloaded value for the following types:
+     * integer(kind=ESMF_KIND_I4)
+     * integer(kind=ESMF_KIND_I8)
+     * real(kind=ESMF_KIND_R4)
+     * real(kind=ESMF_KIND_R8)
+     * logical
+     * character(:)
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [490]40.2
+          for an overview of the key format.
+
+   value
+          The output value associated with the key.
+
+   [default]
+          A default value to use if the key is not present in the target
+          ESMF_Info object. Must be the same typekind and size as value.
+
+   [idx]
+          An integer index to get if the target key's value is a list.
+
+   [attnestflag]
+          Setting to ESMF_ATTNEST_ON triggers a recursive search. The
+          first instance of the key (searching by depth) will be found in
+          the hierarchy. Default is ESMF_ATTNEST_OFF.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  40.4.13 ESMF_InfoGet - Get a list
+
+   INTERFACE:
+  subroutine ESMF_InfoGet(info, key, values, itemCount, attnestflag, scalarToArr
+ay, rc)
+
+   ARGUMENTS:
+    type(ESMF_Info), intent(in) :: info
+    character(len=*), intent(in) :: key
+    <values>, see below for supported values
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+    integer, intent(out), optional :: itemCount
+    type(ESMF_AttNest_Flag), intent(in), optional :: attnestflag
+    logical, intent(in), optional :: scalarToArray
+    integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get a value list from an ESMF_Info object using a key. If the key is
+   not found, rc will not equal ESMF_SUCCESS. The returned value is always
+   a copy.
+
+   The length of values must match its length in storage.
+
+   Overloaded values for the following types:
+     * integer(kind=ESMF_KIND_I4), dimension(:)
+     * integer(kind=ESMF_KIND_I8), dimension(:)
+     * real(kind=ESMF_KIND_R4), dimension(:)
+     * real(kind=ESMF_KIND_R8), dimension(:)
+     * logical, dimension(:)
+     * character(:), dimension(:)
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [492]40.2
+          for an overview of the key format.
+
+   values
+          The output value list associated with the key.
+
+   [itemCount]
+          The number of items in values.
+
+   [attnestflag]
+          Default is ESMF_ATTNEST_OFF. Setting to ESMF_ATTNEST_ON triggers
+          a recursive search. The first instance of the key will be found
+          in the hierarchy.
+
+   [scalarToArray]
+          Default is false. If true, allow conversion of scalar values in
+          storage to single-valued lists.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  40.4.15 ESMF_InfoGet - Inquire an Info object for metadata
+
+   INTERFACE:
+   ! Private name; call using ESMF_InfoGet()
+  subroutine ESMF_InfoInquire(info, size, key, jsonType, isArray, &
+    isDirty, idx, typekind, ikey, isPresent, isStructured, isNull, rc)
+
+   ARGUMENTS:
+    type(ESMF_Info), intent(in) :: info
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+    integer, intent(out), optional :: size
+    character(len=*), intent(in), optional :: key
+    character(len=*), intent(out), optional :: jsonType
+    logical, intent(out), optional :: isArray
+    logical, intent(out), optional :: isDirty
+    integer, intent(in), optional :: idx
+    type(ESMF_TypeKind_Flag), intent(out), optional :: typekind
+    character(len=*), intent(out), optional :: ikey
+    logical, intent(out), optional :: isPresent
+    logical, intent(out), optional :: isStructured
+    logical, intent(out), optional :: isNull
+    integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Inquire an ESMF_Info object for metadata.
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   [size]
+          Returns the size of the target. The following rules apply:
+
+          + If the target is an object, return the number of key-value
+            pairs.
+          + If the target is a scalar, return 1.
+          + If the target is an array, return its length.
+
+   [key]
+          If provided, use this location as the origin instead of root.
+          See section [494]40.2 for an overview of the key format.
+
+   [jsonType]
+          Returns the JSON object type name [[495]9].
+
+   [isArray]
+          Returns true if the target is an array.
+
+   [isDirty]
+          Returns true if the ESMF_Info object should be synchronized
+          during an ESMF_InfoSync operation.
+
+   [idx]
+          An integer index to use. This will index into an object type
+          providing the primary mechanism for iteration.
+
+   [typekind]
+          Get the ESMF typekind for the target. The minimum typekind
+          required to hold the value is returned.
+
+   [ikey]
+          If present, this will be set to the key's name for the current
+          inquire. Useful when iterating using an index. This does not
+          return the full key path if nested.
+
+   [isPresent]
+          Returns true if the key exists in storage. If no key is
+          provided, this will return true.
+
+   [isStructured]
+          Returns true if the target is structured [[496]4]. This means it
+          is either an object (a map) or an array.
+
+   [isNull]
+          Returns true if the target is null [[497]7].
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

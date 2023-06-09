@@ -1,0 +1,74 @@
+  47.3.16 ESMF_ConfigLoadFile - Load resource file into Config object memory
+
+   INTERFACE:
+     subroutine ESMF_ConfigLoadFile(config, filename, &
+       delayout, & ! DEPRECATED ARGUMENT
+       unique, rc)
+
+   ARGUMENTS:
+       type(ESMF_Config),   intent(inout)         :: config
+       character(len=*),    intent(in)            :: filename
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_DELayout), intent(in),  optional :: delayout  ! DEPRECATED ARGU
+MENT
+       logical,             intent(in),  optional :: unique
+       integer,             intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        8.5.0
+                Added support for loading basic YAML files.
+                Marked argument delayout as deprecated. This argument was
+                never used internally, and it is unclear what the original
+                intention was.
+
+   DESCRIPTION:
+
+   The resource file named filename is loaded into memory. Both the
+   classic Config file format, described in this document, and the YAML
+   file format are supported. YAML support is limited to a small subset of
+   the full YAML language specification, allowing access through the
+   classic Config API. Specifically, in YAML mode, the top level is
+   expected to be a mapping (dictionary) of scalar keys to the following
+   value options:
+     * Scalars
+     * List of scalars
+     * List of lists of scalars
+
+   All other YAML constructs are silently ignored when loaded through this
+   interface. Constructs successfully ingested become available in the
+   config object, and can be accessed via the regular ESMF_Config methods.
+
+   The arguments are:
+
+   config
+          Already created ESMF_Config object.
+
+   filename
+          Name of the configuration file. Files ending in .yaml, .yml, or
+          any combination of upper and lower case letters that can be
+          mapped to these two options, are interpreted as YAML files. All
+          other names are interpreted as classic Config files.
+
+   [delayout]
+          ! DEPRECATED ARGUMENT ESMF_DELayout associated with this config
+          object. This argument is not currently used.
+
+   [unique]
+          If specified as true, uniqueness of labels are checked and error
+          code set if duplicates found.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

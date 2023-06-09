@@ -1,0 +1,27 @@
+  19.4.7 ESMF_SciCompIsCreated - Check whether a SciComp object has been created
+
+   INTERFACE:
+   function ESMF_SciCompIsCreated(scicomp, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_SciCompIsCreated
+
+   ARGUMENTS:
+     type(ESMF_SciComp), intent(in)            :: scicomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the scicomp has been created. Otherwise return
+   .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the
+   return value of the function will also be .false..
+
+   The arguments are:
+
+   scicomp
+          ESMF_SciComp queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

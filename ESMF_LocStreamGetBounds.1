@@ -1,0 +1,62 @@
+  32.4.17 ESMF_LocStreamGetBounds - Get DE-local bounds of a LocStream
+
+   INTERFACE:
+       subroutine ESMF_LocStreamGetBounds(locstream,   &
+           localDE, exclusiveLBound, exclusiveUBound, exclusiveCount,   &
+           computationalLBound, computationalUBound, computationalCount,&
+           rc)
+
+   ARGUMENTS:
+       type(ESMF_LocStream),   intent(in) :: locstream
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                intent(in),  optional :: localDE
+       integer,                intent(out), optional :: exclusiveLBound
+       integer,                intent(out), optional :: exclusiveUBound
+       integer,                intent(out), optional :: exclusiveCount
+       integer,                intent(out), optional :: computationalLBound
+       integer,                intent(out), optional :: computationalUBound
+       integer,                intent(out), optional :: computationalCount
+       integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method gets the bounds of a localDE for a locstream.
+
+   The arguments are:
+
+   locstream
+          LocStream to get the information from.
+
+   localDE
+          The local DE for which information is requested.
+          [0,..,localDECount-1]. For localDECount==1 the localDE argument
+          may be omitted, in which case it will default to localDE=0.
+
+   [exclusiveLBound]
+          Upon return this holds the lower bounds of the exclusive region.
+
+   [exclusiveUBound]
+          Upon return this holds the upper bounds of the exclusive region.
+
+   [exclusiveCount]
+          ! Upon return this holds the number of items in the exclusive
+          region
+          (i.e. exclusiveUBound-exclusiveLBound+1). exclusiveCount.
+
+   [computationalLBound]
+          Upon return this holds the lower bounds of the computational
+          region.
+
+   [computationalUBound]
+          Upon return this holds the upper bounds of the computational
+          region.
+
+   [computationalCount]
+          Upon return this holds the number of items in the computational
+          region
+          (i.e. computationalUBound-computationalLBound+1).
+          computationalCount.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,57 @@
+  28.5.27 ESMF_ArrayRead - Read Array data from a file
+
+   INTERFACE:
+   subroutine ESMF_ArrayRead(array, fileName, variableName, &
+     timeslice, iofmt, rc)
+     ! We need to terminate the strings on the way to C++
+
+   ARGUMENTS:
+     type(ESMF_Array),      intent(inout)         :: array
+     character(*),          intent(in)            :: fileName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(*),          intent(in),  optional :: variableName
+     integer,               intent(in),  optional :: timeslice
+     type(ESMF_IOFmt_Flag), intent(in),  optional :: iofmt
+     integer,               intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Read Array data from file and put it into an ESMF_Array object. For
+   this API to be functional, the environment variable ESMF_PIO should be
+   set to either "internal" or "external" when the ESMF library is built.
+   Please see the section on Data I/O, [1100]38.2.
+
+   Limitations:
+     * Not supported in ESMF_COMM=mpiuni mode.
+
+   The arguments are:
+
+   array
+          The ESMF_Array object in which the read data is returned.
+
+   fileName
+          The name of the file from which Array data is read. If this is a
+          multi-tile Array, then fileName must contain exactly one
+          instance of "*"; this is a placeholder that will be replaced by
+          the tile number, with each tile being read from a separate file.
+          (For example, for a fileName of "myfile*.nc", tile 1 will be
+          read from "myfile1.nc", tile 2 from "myfile2.nc", etc.) (This
+          handling of the fileName for multi-tile I/O is subject to
+          change.)
+
+   [variableName]
+          Variable name in the file; default is the "name" of Array. Use
+          this argument only in the I/O format (such as NetCDF) that
+          supports variable name. If the I/O format does not support this
+          (such as binary format), ESMF will return an error code.
+
+   [timeslice]
+          The time-slice number of the variable read from file.
+
+   [iofmt]
+          The I/O format. Please see Section [1101]54.28 for the list of
+          options. If not present, defaults to ESMF_IOFMT_NETCDF.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

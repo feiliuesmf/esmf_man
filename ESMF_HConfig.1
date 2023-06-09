@@ -1,0 +1,1330 @@
+          + [253]48 HConfig Class
+               o [254]48.1 Description
+               o [255]48.2 Use and Examples
+                    # [256]48.2.1 Create an empty HConfig object
+                    # [257]48.2.2 Set HConfig from string using YAML
+                      syntax
+                    # [258]48.2.3 Iterator based HConfig sequence parsing
+                    # [259]48.2.4 Index based random access HConfig
+                      sequence parsing
+                    # [260]48.2.5 Destroy a HConfig object
+                    # [261]48.2.6 Create a HConfig object directly loading
+                      from YAML string
+                    # [262]48.2.7 Iterator based HConfig map parsing
+                    # [263]48.2.8 Key based random access HConfig map
+                      parsing
+                    # [264]48.2.9 Access HConfig from Config
+                    # [265]48.2.10 Load HConfig from YAML file
+                    # [266]48.2.11 Save HConfig to YAML file
+                    # [267]48.2.12 Tags and Schemas
+                    # [268]48.2.13 Adding, Setting, and Removing elements
+                      from HConfig object
+                    # [269]48.2.14 Working with multiple YAML documents
+                    # [270]48.2.15 Sequence shortcuts for: Create, As,
+                      Add, and Set
+               o [271]48.3 Restrictions and Future Work
+               o [272]48.4 Design and Implementation Notes
+               o [273]48.5 Class API
+                    # [274]48.5.1 ESMF_HConfigOperator(==)
+                    # [275]48.5.2 ESMF_HConfigOperator(/=)
+                    # [276]48.5.3 ESMF_HConfigAdd
+                    # [277]48.5.4 ESMF_HConfigAddMapKey
+                    # [278]48.5.5 ESMF_HConfigAddMapVal
+                    # [279]48.5.6 ESMF_HConfigAs<TypeSpec>
+                    # [280]48.5.7 ESMF_HConfigAs<TypeSpec>MapKey
+                    # [281]48.5.8 ESMF_HConfigAs<TypeSpec>MapVal
+                    # [282]48.5.9 ESMF_HConfigAs<TypeSpec>Seq
+                    # [283]48.5.10 ESMF_HConfigAs<TypeSpec>SeqMapKey
+                    # [284]48.5.11 ESMF_HConfigAs<TypeSpec>SeqMapVal
+                    # [285]48.5.12 ESMF_HConfigCreate
+                    # [286]48.5.13 ESMF_HConfigCreate
+                    # [287]48.5.14 ESMF_HConfigCreate
+                    # [288]48.5.15 ESMF_HConfigCreate
+                    # [289]48.5.16 ESMF_HConfigCreateAt
+                    # [290]48.5.17 ESMF_HConfigCreateAtMapKey
+                    # [291]48.5.18 ESMF_HConfigCreateAtMapVal
+                    # [292]48.5.19 ESMF_HConfigDestroy
+                    # [293]48.5.20 ESMF_HConfigFileLoad
+                    # [294]48.5.21 ESMF_HConfigFileSave
+                    # [295]48.5.22 ESMF_HConfigGetDocCount
+                    # [296]48.5.23 ESMF_HConfigGetSize
+                    # [297]48.5.24 ESMF_HConfigGetSizeMapKey
+                    # [298]48.5.25 ESMF_HConfigGetSizeMapVal
+                    # [299]48.5.26 ESMF_HConfigGetTag
+                    # [300]48.5.27 ESMF_HConfigGetTagMapKey
+                    # [301]48.5.28 ESMF_HConfigGetTagMapVal
+                    # [302]48.5.29 ESMF_HConfigIs<NodeType>
+                    # [303]48.5.30 ESMF_HConfigIs<NodeType>MapKey
+                    # [304]48.5.31 ESMF_HConfigIs<NodeType>MapVal
+                    # [305]48.5.32 ESMF_HConfigIterBegin
+                    # [306]48.5.33 ESMF_HConfigIterBeginMapKey
+                    # [307]48.5.34 ESMF_HConfigIterBeginMapVal
+                    # [308]48.5.35 ESMF_HConfigIterEnd
+                    # [309]48.5.36 ESMF_HConfigIterEndMapKey
+                    # [310]48.5.37 ESMF_HConfigIterEndMapVal
+                    # [311]48.5.38 ESMF_HConfigIterIsMap
+                    # [312]48.5.39 ESMF_HConfigIterIsSequence
+                    # [313]48.5.40 ESMF_HConfigIterLoop
+                    # [314]48.5.41 ESMF_HConfigIterNext
+                    # [315]48.5.42 ESMF_HConfigRemove
+                    # [316]48.5.43 ESMF_HConfigSet
+                    # [317]48.5.44 ESMF_HConfigSetMapKey
+                    # [318]48.5.45 ESMF_HConfigSetMapVal
+                                48 HConfig Class
+
+48.1 Description
+
+   The ESMF HConfig class implements a hierarchical configuration facility
+   that is compatible with YAML Ain't Markup Language (YAML^TM). ESMF
+   HConfig can be understood as a Fortran interface to YAML. However, no
+   claim is made that all YAML language features are supported in their
+   entirety.
+
+   The purpose of the HConfig class under ESMF is to provide a migration
+   path toward more standard configuration management for ESMF
+   applications. To this end ESMF_HConfig integrates with the traditional
+   ESMF_Config class. Through this integration the traditional Config
+   class API offers basic access to YAML configuration files, in addition
+   to providing backward compatible support of the traditional config file
+   format. This is discussed in more detail in the Config class section.
+   For more complete YAML support, applications are encouraged to migrate
+   to the HConfig API discussed in this section.
+
+48.2 Use and Examples
+
+   The following examples demonstrate how a user typically interacts with
+   the HConfig API. The HConfig class introduces two derived types:
+     * ESMF_HConfig
+     * ESMF_HConfigIter
+
+   ESMF_HConfig objects can be created explicitly by the user, or they can
+   be accessed from an existing ESMF_Config object, e.g. queried from a
+   Component. They can play a number of roles when interacting with a
+   HConfig hierarchy:
+
+    1. The root node of the entire hierarchy. In YAML terminology, this
+       refers to a document.
+    2. Any node within the hierarchy.
+    3. Collection of hierarchies, i.e. a set of YAML documents.
+
+   ESMF_HConfigIter objects are iterators, referencing a specific node
+   within the hierarchy. They are created from ESMF_HConfig objects. The
+   iterator approach allows convenient sequential traversal of a
+   particular location in the HConfig hierarchy. There are two flavors of
+   iterators in HConfig: sequence and map iterators. Both are represented
+   by the same ESMF_HConfigIter derived type, and the distinction is made
+   at run-time.
+
+   Notice that there are redundancies built into the HConfig API, where
+   different ways are available to achieve the same goal. This is mostly
+   done for convenience, allowing the user to pick the approach most
+   suitable to their needs.
+
+   For instance, while it can be convenient to use iterators in some
+   cases, in others, it might be more appropriate to access elements
+   directly by index (for sequences) or key (for maps). Both options are
+   available.
+
+  48.2.1 Create an empty HConfig object
+
+   By default, ESMF_HConfigCreate() creates an empty HConfig object.
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate(rc=rc)
+
+  48.2.2 Set HConfig from string using YAML syntax
+
+   An empty HConfig object can be set directly from a string using YAML
+   syntax.
+
+  call ESMF_HConfigSet(hconfig, content="[1, 2, 3, abc, b, TRUE]", rc=rc)
+
+   This sets hconfig as a sequence of six scalar members.
+
+  48.2.3 Iterator based HConfig sequence parsing
+
+   One way to parse the elements contained in hconfig is to use the
+   iterator pattern known from laguages such as C++ or Python. HConfig
+   iterators are implemented as regular type(ESMF_HConfig) objects that
+   are initialized using one of the HConfigIter*() methods. An iterator
+   can then be used to traverse the elements in a sequence or map by
+   calling the ESMF_HConfigIterNext() method, taking one step forward each
+   time the method is called.
+
+   Being a HConfig object, an iterator can be passed into any of the usual
+   HConfig methods. The operation is applied to the element that the
+   iterator is currently referencing.
+
+   Notice that iterators are merely references, not associated with their
+   own deep allocation. This is reflected in the fact that iterators are
+   not created by an assignment that has a Create() call on the right hand
+   side. As such, HConfig iterators need not be destroyed explicitly when
+   done.
+
+   Two special HConfig iterators are defined, referencing the beginning
+   and the end of a HConfig sequence or map object.
+
+  ! type(ESMF_HConfigIter) :: hconfigIterBegin, hconfigIterEnd
+  hconfigIterBegin = ESMF_HConfigIterBegin(hconfig, rc=rc)
+
+  hconfigIterEnd = ESMF_HConfigIterEnd(hconfig, rc=rc)
+
+   In analogy to the C++ iterator pattern, hconfigIterBegin points to the
+   first element in hconfig, while hconfigIterEnd points one step beyond
+   the last element. Using these elements together, an iterator loop can
+   be written in the following intuitive way, using hconfigIter as the
+   loop variable.
+
+  ! type(ESMF_HConfigIter) :: hconfigIter
+  hconfigIter = hconfigIterBegin
+  do while (hconfigIter /= hconfigIterEnd)
+
+    ! Code here that uses hconfigIter
+    ! to access the currently referenced
+    ! element in hconfig.  .......
+
+    call ESMF_HConfigIterNext(hconfigIter, rc=rc)
+
+  enddo
+
+   One major concern with the above iterator loop implementation is when
+   Fortran cycle statements are introduced. In orde to make the above loop
+   cycle-safe, each such cycle statement needs to be matched with its own
+   call to ESMF_HConfigIterNext(). This needs to be done to prevent
+   endless-loop conditions, where the exit condition of the do while is
+   never reached.
+
+   The cycle-safe alternative implementation of the iterator loop
+   leverages the ESMF_HConfigIterLoop() function instead of
+   ESMF_HConfigIterNext(). This approach is more akin to the C++
+     for (element : container){
+       ...
+     }
+
+   or the Python
+     for element in container:
+       ...
+
+   approach. It is the preferable way to write HConfig iterator loops due
+   to its simplicity and inherent cycle-safety.
+
+   The ESMF_HConfigIterLoop() function takes three required arguments. The
+   first is the loop iterator, followed by the begin and end iterators.
+   The loop iterator must enter equal to the begin iterator at the start
+   of the loop. Each time the ESMF_HConfigIterLoop() function is called,
+   the loop iterator is stepped forward as appropriate, and the exit
+   condition of having reached the end iterator is checked. Having both
+   the stepping and exit logic in one place provided by the HConfig API
+   simplifies the usage. In addition, the approach is cycle-safe: no
+   matter where a cycle statement is inserted in the loop body, it always
+   brings the execution back to the top of the while loop, which in turn
+   calls the ESMF_HConfigIterLoop() function.
+
+  ! type(ESMF_HConfigIter) :: hconfigIter
+  hconfigIter = hconfigIterBegin
+  do while (ESMF_HConfigIterLoop(hconfigIter, hconfigIterBegin, hconfigIterEnd,
+rc=rc))
+
+    ! Check whether the current element is a scalar.
+    ! logical :: isScalar
+    isScalar = ESMF_HConfigIsScalar(hconfigIter, rc=rc)
+
+    if (isScalar) then
+
+      ! Any scalar can be accessed as a string.
+      ! character(len=:), allocatable :: string
+      string = ESMF_HConfigAsString(hconfigIter, rc=rc)
+
+      ! The attempt can be made to interpret the scalar as any of the other
+      ! supported data types. By default, if the scalar cannot be interpreted
+      ! as the requested data type, rc /= ESMF_SUCCESS is returned. To prevent
+      ! such error condition, the optional, intent(out) argument "asOkay" can
+      ! be provided. If asOkay == .true. is returned, the interpretation was
+      ! successful. Otherwise asOkay == .false. is returned.
+
+      ! logical :: asOkay
+
+      ! integer(ESMF_KIND_I4) :: valueI4
+      valueI4 = ESMF_HConfigAsI4(hconfigIter, asOkay=asOkay, rc=rc)
+
+      ! integer(ESMF_KIND_I8) :: valueI8
+      valueI8 = ESMF_HConfigAsI8(hconfigIter, asOkay=asOkay, rc=rc)
+
+      ! real(ESMF_KIND_R4) :: valueR4
+      valueR4 = ESMF_HConfigAsR4(hconfigIter, asOkay=asOkay, rc=rc)
+
+      ! real(ESMF_KIND_R8) :: valueR8
+      valueR8 = ESMF_HConfigAsR8(hconfigIter, asOkay=asOkay, rc=rc)
+
+      ! logical :: valueL
+      valueL = ESMF_HConfigAsLogical(hconfigIter, asOkay=asOkay, rc=rc)
+
+    else
+      ! Possible recursive iteration over the current hconfigIter element.
+    endif
+
+  enddo
+
+  48.2.4 Index based random access HConfig sequence parsing
+
+   An alternative way to loop over the elements contained in hconfig, and
+   parsing them, is to use an index variable. For this approach the size
+   of hconfig is queried.
+
+  ! integer :: size
+  size = ESMF_HConfigGetSize(hconfig, rc=rc)
+
+   Then looping over the elements is done with a simple do loop. Index
+   based access allows random order of access, versus the iterator
+   approach that only supports begin to end iteration. This is
+   demonstrated here by writing the do loop in reverse order.
+
+  ! integer :: i
+  do i=size, 1, -1
+
+    ! Check whether the current element is a scalar.
+    ! logical :: isScalar
+    isScalar = ESMF_HConfigIsScalar(hconfig, index=i, rc=rc)
+
+    if (isScalar) then
+
+      ! Any scalar can be accessed as a string.
+      ! character(len=:), allocatable :: string
+      string = ESMF_HConfigAsString(hconfig, index=i, rc=rc)
+
+      ! The attempt can be made to interpret the scalar as any of the other
+      ! supported data types. By default, if the scalar cannot be interpreted
+      ! as the requested data type, rc /= ESMF_SUCCESS is returned. To prevent
+      ! such error condition, the optional, intent(out) argument "asOkay" can
+      ! be provided. If asOkay == .true. is returned, the interpretation was
+      ! successful. Otherwise asOkay == .false. is returned.
+      ! logical :: asOkay
+
+      ! integer(ESMF_KIND_I4) :: valueI4
+      valueI4 = ESMF_HConfigAsI4(hconfig, index=i, asOkay=asOkay, rc=rc)
+
+      ! integer(ESMF_KIND_I8) :: valueI8
+      valueI8 = ESMF_HConfigAsI8(hconfig, index=i, asOkay=asOkay, rc=rc)
+
+      ! real(ESMF_KIND_R4) :: valueR4
+      valueR4 = ESMF_HConfigAsR4(hconfig, index=i, asOkay=asOkay, rc=rc)
+
+      ! real(ESMF_KIND_R8) :: valueR8
+      valueR8 = ESMF_HConfigAsR8(hconfig, index=i, asOkay=asOkay, rc=rc)
+
+      ! logical :: valueL
+      valueL = ESMF_HConfigAsLogical(hconfig, index=i, asOkay=asOkay, rc=rc)
+
+    else
+      ! Possible recursive iteration over the current index=i element.
+    endif
+  enddo
+
+   The above loop is safe with respect to index potentially being
+   specified with an out-of-range value. This is because
+   ESMF_HConfigIsScalar() returns .false. in this case. There are only
+   four valid options of what type a valid HConfig element can be. Each
+   has an associated Is method:
+     * Null: ESMF_HConfigIsNull()
+     * Scalar: ESMF_HConfigIsScalar()
+     * Sequence: ESMF_HConfigIsSequence()
+     * Map: ESMF_HConfigIsMap()
+
+   The general check to see whether an index points to a valid element is
+   provided by ESMF_HConfigIsDefined().
+
+  ! logical :: isDefined
+  isDefined = ESMF_HConfigIsDefined(hconfig, index=10, rc=rc)
+
+   This returns isDefined == .false. because for hconfig a value of
+   index=10 is out of range.
+
+  48.2.5 Destroy a HConfig object
+
+   When done with hconfig, it should be destroyed in the usual manner.
+
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+  48.2.6 Create a HConfig object directly loading from YAML string
+
+   The ESMF_HConfigCreate() method supports loading contents from string
+   using YAML syntax directly via the optional content argument.
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate(content="{car: red, bike: 22, plane: TRUE}", rc=r
+c)
+
+   Here a map is created. In this case, all of the keys are scalars (car,
+   bike, plane), as are all of the associated values (red, 22, TRUE).
+
+  48.2.7 Iterator based HConfig map parsing
+
+   The elements of the map contained in hconfig can be iterated over
+   analogous to the sequence case demonstrated earlier. Again the begin
+   and end iterator variables are defined.
+
+  ! type(ESMF_HConfigIter) :: hconfigIterBegin, hconfigIterEnd
+  hconfigIterBegin = ESMF_HConfigIterBegin(hconfig, rc=rc)
+
+  hconfigIterEnd = ESMF_HConfigIterEnd(hconfig, rc=rc)
+
+   Then iterate over the elements in hconfig using an iterator loop
+   variable as before.
+
+   The difference of the code below, compared to the sequence case, is
+   that all the As access methods here are either of the form As*MapKey or
+   As*MapVal. This is necessary to selectively access the map key or map
+   value, respectively.
+
+  hconfigIter = hconfigIterBegin
+  do while (ESMF_HConfigIterLoop(hconfigIter, hconfigIterBegin, hconfigIterEnd,
+rc=rc))
+
+    ! Check whether the current element is a scalar both for the map key
+    ! and the map value.
+    ! logical :: isScalar
+    isScalar = ESMF_HConfigIsScalarMapKey(hconfigIter, rc=rc)
+
+    isScalar = isScalar .and. ESMF_HConfigIsScalarMapVal(hconfigIter, rc=rc)
+
+    if (isScalar) then
+
+      ! Any scalar can be accessed as a string. Use this for the map key.
+      ! character(len=:), allocatable :: stringKey
+      stringKey = ESMF_HConfigAsStringMapKey(hconfigIter, rc=rc)
+
+      ! Now access the map value. Again first access as a string, which
+      ! always works.
+      ! character(len=:), allocatable :: string
+      string = ESMF_HConfigAsStringMapVal(hconfigIter, rc=rc)
+
+      ! The attempt can be made to interpret the scalar as any of the other
+      ! supported data types. By default, if the scalar cannot be interpreted
+      ! as the requested data type, rc /= ESMF_SUCCESS is returned. To prevent
+      ! such error condition, the optional, intent(out) argument "asOkay" can
+      ! be provided. If asOkay == .true. is returned, the interpretation was
+      ! successful. Otherwise asOkay == .false. is returned.
+      ! logical :: asOkay
+
+      ! integer(ESMF_KIND_I4) :: valueI4
+      valueI4 = ESMF_HConfigAsI4MapVal(hconfigIter, asOkay=asOkay, rc=rc)
+
+      ! integer(ESMF_KIND_I8) :: valueI8
+      valueI8 = ESMF_HConfigAsI8MapVal(hconfigIter, asOkay=asOkay, rc=rc)
+
+      ! real(ESMF_KIND_R4) :: valueR4
+      valueR4 = ESMF_HConfigAsR4MapVal(hconfigIter, asOkay=asOkay, rc=rc)
+
+      ! real(ESMF_KIND_R8) :: valueR8
+      valueR8 = ESMF_HConfigAsR8MapVal(hconfigIter, asOkay=asOkay, rc=rc)
+
+      ! logical :: valueL
+      valueL = ESMF_HConfigAsLogicalMapVal(hconfigIter, asOkay=asOkay, rc=rc)
+
+    else
+      ! Deal with case where either key or value are not scalars themselves.
+    endif
+
+  enddo
+
+  48.2.8 Key based random access HConfig map parsing
+
+   The map values stored in hconfig can be accessed in random order
+   providing the map key.
+
+   To demonstrate this, a temporary array holding keys in random order is
+   defined.
+
+  ! character(5) :: keyList(3)
+  keyList = ["bike ", "plane", "car  "]
+
+   Then loop over the elements of keyList and use them as map key to
+   access the map values in hconfig.
+
+  ! integer :: i
+  do i=1,3
+
+    ! Ensure that all white space padding is removed.
+    ! character :: stringKey
+    stringKey = trim(keyList(i))
+
+    ! Check whether the accessed map value is a scalar.
+    ! logical :: isScalar
+    isScalar = ESMF_HConfigIsScalar(hconfig, keyString=stringKey, rc=rc)
+
+    if (isScalar) then
+
+      ! Access as a string always works.
+      ! character(len=:), allocatable :: string
+      string = ESMF_HConfigAsString(hconfig, keyString=stringKey, rc=rc)
+
+      ! The attempt can be made to interpret the scalar as any of the other
+      ! supported data types. By default, if the scalar cannot be interpreted
+      ! as the requested data type, rc /= ESMF_SUCCESS is returned. To prevent
+      ! such error condition, the optional, intent(out) argument "asOkay" can
+      ! be provided. If asOkay == .true. is returned, the interpretation was
+      ! successful. Otherwise asOkay == .false. is returned.
+      ! logical :: asOkay
+
+      ! integer(ESMF_KIND_I4) :: valueI4
+      valueI4 = ESMF_HConfigAsI4(hconfig, keyString=stringKey, asOkay=asOkay, rc
+=rc)
+
+      ! integer(ESMF_KIND_I8) :: valueI8
+      valueI8 = ESMF_HConfigAsI8(hconfig, keyString=stringKey, asOkay=asOkay, rc
+=rc)
+
+      ! real(ESMF_KIND_R4) :: valueR4
+      valueR4 = ESMF_HConfigAsR4(hconfig, keyString=stringKey, asOkay=asOkay, rc
+=rc)
+
+      ! real(ESMF_KIND_R8) :: valueR8
+      valueR8 = ESMF_HConfigAsR8(hconfig, keyString=stringKey, asOkay=asOkay, rc
+=rc)
+
+      ! logical :: valueL
+      valueL = ESMF_HConfigAsLogical(hconfig, keyString=stringKey, asOkay=asOkay
+, rc=rc)
+
+    else
+      ! Deal with case where either key or value are not scalars themselves.
+    endif
+
+  enddo
+
+   The above loop is safe with respect to stringKey potentially specifying
+   a value that is not a valid map key. This is because
+   ESMF_HConfigIsScalar() returns .false. in this case.
+
+   The general check to see whether a map key refers to a valid element is
+   provided by ESMF_HConfigIsDefined().
+
+  ! logical :: isDefined
+  isDefined = ESMF_HConfigIsDefined(hconfig, keyString="bad-key", rc=rc)
+
+   This returns isDefined == .false. because hconfig does not contain
+   "bad-key" as one of its valid map keys.
+
+   Finally destroy hconfig when done.
+
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+  48.2.9 Access HConfig from Config
+
+   The ESMF_Config class can be queried for a HConfig object. This allows
+   the use of the HConfig API to access information contained in a Config
+   object.
+
+  ! type(ESMF_Config) :: config
+  ! type(ESMF_HConfig) :: hconfig
+  call ESMF_ConfigGet(config, hconfig=hconfig, rc=rc)
+
+   The hconfig obtained this way is indistinguishable from an explicitly
+   created HConfig instance. E.g. it can be queried for its type using the
+   Is methods:
+
+  ! logical :: isDefined
+  isDefined = ESMF_HConfigIsDefined(hconfig, rc=rc)
+
+  ! logical :: isNull
+  isNull = ESMF_HConfigIsNull(hconfig, rc=rc)
+
+  ! logical :: isSequence
+  isSequence = ESMF_HConfigIsSequence(hconfig, rc=rc)
+
+  ! logical :: isMap
+  isMap = ESMF_HConfigIsMap(hconfig, rc=rc)
+
+   Once done with hconfig it must not be destroyed explicitly by the user.
+   The hconfig is still owned by the config object, and will be destroyed
+   automatically when the config object is destroyed. This follows the
+   simple rule that a user only owns those objects created explicitly by
+   calling a Create() method.
+
+  48.2.10 Load HConfig from YAML file
+
+   One option to load a YAML file is to first create an empty HConfig
+   object, followed by calling ESMF_HConfigFileLoad().
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate(rc=rc)
+
+  call ESMF_HConfigFileLoad(hconfig, filename="example.yaml", rc=rc)
+
+  ! When done destroy as usual.
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+   The alternative option is to create and load the HConfig object in a
+   single call to ESMF_HConfigCreate() using the optional filename
+   argument to specify the YAML file.
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate(filename="example.yaml", rc=rc)
+
+  ! And again destroy hconfig when done with it.
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+  48.2.11 Save HConfig to YAML file
+
+   A HConfig object can be saved to a YAML file by calling the
+   ESMF_HConfigFileSave() method. To demonstrate this, a YAML file
+   containing:
+   # An example of YAML configuration file
+
+   simple_list: [1, 2, 3, abc, b, TRUE]
+   simple_map:
+     car: red
+     [bike, {p1: 10, p2: 20}]: [bmx, mountain, street]
+     plane: [TRUE, FALSE]
+
+   is loaded to create the hconfig object:
+
+  hconfig = ESMF_HConfigCreate(filename="example.yaml", rc=rc)
+
+   Now the hconfig object can be saved to file using the
+   ESMF_HConfigFileSave() method.
+
+  call ESMF_HConfigFileSave(hconfig, filename="saveMe.yml", rc=rc)
+
+   Notice that the resulting contents of file saveMe.yml does not contain
+   the comments of the original file. The YAML structure is saved.
+   simple_list: [1, 2, 3, abc, b, TRUE]
+   simple_map:
+     car: red
+     [bike, {p1: 10, p2: 20}]: [bmx, mountain, street]
+     plane: [TRUE, FALSE]
+
+   The object specified in ESMF_HConfigFileSave() can be a regular node
+   (of any type) or a sequence iterator. In either case the file written
+   represents the YAML hierarchy with the specified object as the root
+   node.
+
+   In the case of a map iterator, it is necessary to first create an
+   appropriate root node utilizing the appropriate CreateAt method. This
+   allows saving either the map key or map value node at the current
+   iterator. This is demonstrated below.
+
+   In the current example, where hconfig is a map with two elements, a map
+   iterator can be set to the beginning using the following call.
+
+  ! type(ESMF_HConfigIter) :: hconfigIter
+  hconfigIter = ESMF_HConfigIterBegin(hconfig, rc=rc)
+
+   Here hconfigIter cannot be saved to file directly. To write the key
+   node, first create a HConfig object for it using method
+   ESMF_HConfigCreateAtMapKey().
+
+  ! type(ESMF_HConfig) :: hconfigTemp
+  hconfigTemp = ESMF_HConfigCreateAtMapKey(hconfigIter, rc=rc)
+
+   Then save it.
+
+  call ESMF_HConfigFileSave(hconfigTemp, filename="mapKeyBegin.yaml", rc=rc)
+
+   And finally destroy hconfigTemp again.
+
+  call ESMF_HConfigDestroy(hconfigTemp, rc=rc)
+
+   Similarly, to write the value node to file, first create a HConfig
+   object for it using method ESMF_HConfigCreateAtMapVal().
+
+  ! type(ESMF_HConfig) :: hconfigTemp
+  hconfigTemp = ESMF_HConfigCreateAtMapVal(hconfigIter, rc=rc)
+
+   Then save it.
+
+  call ESMF_HConfigFileSave(hconfigTemp, filename="mapValBegin.yaml", rc=rc)
+
+   And destroy it.
+
+  call ESMF_HConfigDestroy(hconfigTemp, rc=rc)
+
+   Since hconfig is a map node, it is also possible to directly create a
+   value node by calling ESMF_HConfigCreateAt() on it, using the desired
+   key.
+
+  ! type(ESMF_HConfig) :: hconfigTemp
+  hconfigTemp = ESMF_HConfigCreateAt(hconfig, keyString="simple_map", rc=rc)
+
+   Now hconfigTemp points to the value node, that is associated with the
+   "simple_map" key, which is in turn a map:
+   car: red
+   [bike, {p1: 10, p2: 20}]: [bmx, mountain, street]
+   plane: [TRUE, FALSE]
+
+   It can be saved to file as usual.
+
+  call ESMF_HConfigFileSave(hconfigTemp, filename="mapValAtKey.yaml", rc=rc)
+
+   Any of the value nodes of hconfigTemp can be accessed through recursive
+   usage of the ESMF_HConfigCreateAt() method. For example, the following
+   call accesses the value node that is associated with keyString="[bike,
+   p1: 10, p2: 20]". Here the keyString is interpreted as YAML syntax, for
+   which an internal HConfig representation is created, and finally the
+   map held by hconfigTemp is searched for a matching key.
+
+  ! type(ESMF_HConfig) :: hconfigTemp2
+  hconfigTemp2 = ESMF_HConfigCreateAt(hconfigTemp, &
+    keyString="[bike, {p1: 10, p2: 20}]", rc=rc)
+
+   Now hconfigTemp2 points to the sequence node with contents [bmx,
+   mountain, street]. It, too, can be saved to file.
+
+  call ESMF_HConfigFileSave(hconfigTemp2, filename="mapValRecursive.yaml", rc=rc
+)
+
+   Finally hconfigTemp2, hconfigTemp and hconfig should be destroyed.
+
+  call ESMF_HConfigDestroy(hconfigTemp2, rc=rc)
+
+  call ESMF_HConfigDestroy(hconfigTemp, rc=rc)
+
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+  48.2.12 Tags and Schemas
+
+   The HConfig class implements tags to identify a node's data type
+   according to the YAML standard. The combination of a set of defined
+   tags and a mechanism to resolve non-specific tags is called a schema
+   under YAML. The HConfig class implements the YAML Core schema, which is
+   an extension of the JSON schema.
+
+   This example starts with an empty HConfig object.
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate(rc=rc)
+
+   Method ESMF_HConfigGetTag() is used to query the tag.
+
+  ! character(len=:), allocatable :: tag
+  tag = ESMF_HConfigGetTag(hconfig, rc=rc)
+
+    48.2.12.1 Null
+
+   The hconfig is an empty object, in other words it is associated with
+   NULL. The Core schema tag for this situation is tag:yaml.org,2002:null.
+
+   Next, file exampleWithTags.yaml is loaded.
+
+  call ESMF_HConfigFileLoad(hconfig, filename="exampleWithTags.yaml", rc=rc)
+
+   The file contains the following YAML:
+   value_one:    {word1: this, word2: is, word3: a, word4: map}
+   value_two:    [this, is, a, list]
+   value_three:            123
+   value_four:   !!float   123
+   value_five:             2.5
+   value_six:    !!str     2.5
+   value_seven:            False
+   value_eight:  !!str     true
+   value_nine:             0x234
+   value_ten:              Null
+   value_eleven:
+   value_twelve:  !myStuff xyz
+
+   The value associated with map key "value_ten" is explicitly set to
+   Null. The associated tag for this node can be obtained directly by
+   supplying the keyString argument.
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_ten", rc=rc)
+
+   The resolved Core schema tag is again tag:yaml.org,2002:null. There are
+   four special values that resolve to this tag: null, Null, NULL, and
+   $\sim$ . In addition to those special values, an empty value, as
+   demonstrated by key "value_eleven", also automatically resolves to
+   tag:yaml.org,2002:null.
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_eleven", rc=rc)
+
+    48.2.12.2 Map
+
+   On the top level, after loading the YAML file, hconfig is a map.
+   Querying again for the tag of hconfig,
+
+  tag = ESMF_HConfigGetTag(hconfig, rc=rc)
+
+   results in the Core schema tag of tag:yaml.org,2002:map.
+
+    48.2.12.3 Sequence
+
+   The value associated with map key "value_two" in the current hconfig
+   object is a sequence. The tag for this node can be obtained directly by
+   supplying the keyString argument.
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_two", rc=rc)
+
+   The resolved Core schema tag for a sequence is tag:yaml.org,2002:seq.
+
+    48.2.12.4 String
+
+   All of the keys of the currently loaded hconfig object are strings. To
+   obtain the tag that is associated with the first key node, an iterator
+   is used to access the map nodes individually.
+
+  ! type(ESMF_HConfigIter) :: hconfigIter
+  hconfigIter = ESMF_HConfigIterBegin(hconfig, rc=rc)
+
+   Now the ESMF_HConfigGetTagMapKey() method can be used to obtain the tag
+   for the first key node.
+
+  tag = ESMF_HConfigGetTagMapKey(hconfigIter, rc=rc)
+
+   Here the Core schema tag resolves to tag:yaml.org,2002:str.
+
+    48.2.12.5 Integer
+
+   The value associated with map key "value_three" in the current hconfig
+   object is an integer number. The tag for this node can be obtained as
+   before by directly supplying the keyString argument.
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_three", rc=rc)
+
+   The Core schema tag resolves to tag:yaml.org,2002:int.
+
+   The value associated with map key "value_nine" in the current hconfig
+   object is an integer number in hex. The tag for this node can be
+   obtained as before by directly supplying the keyString argument.
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_nine", rc=rc)
+
+   The Core schema tag resolves to tag:yaml.org,2002:int.
+
+    48.2.12.6 Floating Point
+
+   The value associated with map key "value_five" in the current hconfig
+   object is a floating point number. The tag for this node can be
+   obtained as before by directly supplying the keyString argument.
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_five", rc=rc)
+
+   The Core schema tag resolves to tag:yaml.org,2002:float.
+
+    48.2.12.7 Boolean
+
+   The value associated with map key "value_seven" in the current hconfig
+   object is a boolean. The tag for this node can be obtained as before by
+   directly supplying the keyString argument.
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_seven", rc=rc)
+
+   The Core schema tag resolves to tag:yaml.org,2002:bool. The supported
+   boolean values are true, True, TRUE, false, False, and FALSE.
+
+    48.2.12.8 Explicit standard tags
+
+   Standard short-hand tags can be specified to change the default
+   resolution. This is demonstrated for map keys "value_four",
+   "value_six", and "value_eight".
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_four", rc=rc)
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_six", rc=rc)
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_eight", rc=rc)
+
+   The default resolution of these three keys would be
+   tag:yaml.org,2002:int, tag:yaml.org,2002:float, and
+   tag:yaml.org,2002:bool, respectively. However, with the explict tags in
+   place, they are resolved to tag:yaml.org,2002:float,
+   tag:yaml.org,2002:str, tag:yaml.org,2002:str, instead.
+
+    48.2.12.9 Explicit custom tags
+
+   The HConfig class supports application-specific local tags as per the
+   YAML standard. These are tags that are not known by the Core schema. If
+   such a tag is encountered on a node, it is preserved and no further
+   automatic tag resolution is performed.
+
+   The value associated with map key "value_twelve" in the current hconfig
+   object has a custom tag. The tag for this node can be obtained as
+   before by directly supplying the keyString argument.
+
+  tag = ESMF_HConfigGetTag(hconfig, keyString="value_twelve", rc=rc)
+
+   The returned tag is !myStuff.
+
+   Finally clean up hconfig.
+
+  ! Destroy hconfig when done with it.
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+  48.2.13 Adding, Setting, and Removing elements from HConfig object
+
+   After creating a HConfig object without specifying content or filename,
+   it is empty.
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate(rc=rc)
+
+   Now the ESMF_HConfigAdd() method can be used to add new elements to an
+   existing HConfig object. The Add() interfaces are heavily overloaded,
+   each specific entry point featuring a number of optional arguments. The
+   two fundamentally different ways of using Add() are: (1) adding an
+   element at the end of a sequence or (2) adding an element to a map.
+   Here, where hconfig is empty, either option is possible. The way the
+   first element is added determines whether hconfig is a sequence or a
+   map.
+
+   The following call adds an element to hconfig without specifying the
+   addKey or addKeyString argument. This indicates that a sequence element
+   is added to the end, and as a consequence rendering hconfig a sequence.
+
+  call ESMF_HConfigAdd(hconfig, "first added item", rc=rc)
+
+   Additional elements can be added at the end of hconfig.
+
+  call ESMF_HConfigAdd(hconfig, 12.57_ESMF_KIND_R8, rc=rc)
+
+   At this point, the content of hconfig is a sequence with two elements.
+   - first added item
+   - 12.5700000000
+
+   It is also possible to add an entire HConfig structure as an item to
+   the existing sequence. One way to do this is to use standar YAML syntax
+   when adding the element. Here a map is added to the end of hconfig.
+
+  call ESMF_HConfigAdd(hconfig, "{k1: 7, k2: 25}", rc=rc)
+
+   This results in the following content, where the third element of the
+   sequence is the map that was just added.
+   - first added item
+   - 12.5700000000
+   - {k1: 7, k2: 25}
+
+   A HConfig structure can even be loaded from file and added to the end
+   of hconfig. This requires a temporary HConfig object.
+
+  ! type(ESMF_HConfig) :: hconfigTemp
+  hconfigTemp = ESMF_HConfigCreate(filename="example.yaml", rc=rc)
+
+  call ESMF_HConfigAdd(hconfig, hconfigTemp, rc=rc)
+
+  call ESMF_HConfigDestroy(hconfigTemp, rc=rc)
+
+   The result is the following content for hconfig.
+   - first added item
+   - 12.5700000000
+   - {k1: 7, k2: 25}
+   - simple_list: [1, 2, 3, abc, b, TRUE]
+     simple_map:
+       car: red
+       [bike, {p1: 10, p2: 20}]: [bmx, mountain, street]
+       plane: [TRUE, FALSE]
+
+   Using the CreateAt() method, it is easy to gain access to any specific
+   element in hconfig. Since hconfig is a sequence, the proper access is
+   by index.
+
+  ! type(ESMF_HConfig) :: hconfigTemp
+  hconfigTemp = ESMF_HConfigCreateAt(hconfig, index=3, rc=rc)
+
+   This creates a temporary HConfig object that references the 3rd element
+   of the sequence stored by hconfig. If hconfigTemp were to be saved to
+   file, it would have the following content.
+   {k1: 7, k2: 25}
+
+   Using the Set() methods, contents in hconfigTemp, and thus in the 3rd
+   element of hconfig can be modified. The content of hconfigTemp is a
+   map, and the proper access is by map key. Here key "k2" is being
+   modified.
+
+  call ESMF_HConfigSet(hconfigTemp, 12.5, keyString="k2", rc=rc)
+
+   The hconfigTemp is a reference to a map, and new elements can be added
+   using the addKeyString argument.
+
+  call ESMF_HConfigAdd(hconfigTemp, .true., addKeyString="k3", rc=rc)
+
+  call ESMF_HConfigDestroy(hconfigTemp, rc=rc)
+
+   After these operations, the content of hconfig has changed to
+   - first added item
+   - 12.5700000000
+   - {k1: 7, k2: 12.5000000000, k3: True}
+   - simple_list: [1, 2, 3, abc, b, TRUE]
+     simple_map:
+       car: red
+       [bike, {p1: 10, p2: 20}]: [bmx, mountain, street]
+       plane: [TRUE, FALSE]
+
+   Notice that while hconfigTemp should be destroyed explicitly, as in the
+   example above, doing so does not affect the referenced node inside the
+   hconfig object. In other words, hconfigTemp was a reference, and not a
+   deep copy of the node! There is some allocated memory associated with
+   the hconfigTemp reference that gets cleaned up with the Destroy() call,
+   but it does not affect the reference itself.
+
+   The Set() method can also be used to edit the element referenced
+   itself. Here the 4th element in the hconfig sequence is set to be a
+   simple scalar string value using this approach.
+
+  ! type(ESMF_HConfig) :: hconfigTemp
+  hconfigTemp = ESMF_HConfigCreateAt(hconfig, index=4, rc=rc)
+
+  call ESMF_HConfigSet(hconfigTemp, "Simple scalar string value", rc=rc)
+
+  call ESMF_HConfigDestroy(hconfigTemp, rc=rc)
+
+   The content of hconfig has been updated as below.
+   - first added item
+   - 12.5700000000
+   - {k1: 7, k2: 12.5000000000, k3: True}
+   - Simple scalar string value
+
+   There is a simpler alternative for direct element editing in an HConfig
+   object via the Set() method. Using the index or keyString argument, a
+   sequence or map element, respectively, can be edited directly. For
+   instance,
+
+  call ESMF_HConfigSet(hconfig, "[a, b, c]", index=4, rc=rc)
+
+   sets the 4th element of hconfig directly, without the need of a
+   temporary HConfig variable. This updates the content to:
+   - first added item
+   - 12.5700000000
+   - {k1: 7, k2: 12.5000000000, k3: True}
+   - [a, b, c]
+
+   Elements can be deleted from a HConfig object holding a sequence or map
+   using the Remove() method, specifying the index or map key,
+   respectively. Here the 2nd element of the sequence held by hconfig is
+   removed.
+
+  call ESMF_HConfigRemove(hconfig, index=2, rc=rc)
+
+   The result is a sequence with only three remaining elements.
+   - first added item
+   - {k1: 7, k2: 12.5000000000, k3: True}
+   - [a, b, c]
+
+   To demonstrate removal of an element from a map, the second hconfig
+   element is referenced by a temporary HConfig object. The element with
+   key "k2" is then removed using the respective Remove() method.
+
+  ! type(ESMF_HConfig) :: hconfigTemp
+  hconfigTemp = ESMF_HConfigCreateAt(hconfig, index=2, rc=rc)
+
+  call ESMF_HConfigRemove(hconfigTemp, keyString="k2", rc=rc)
+
+  call ESMF_HConfigDestroy(hconfigTemp, rc=rc)
+
+   The resulting hconfig content is as expected.
+   - first added item
+   - {k1: 7, k3: True}
+   - [a, b, c]
+
+   Finally the entire contents of hconfig can be deleted by setting the
+   node itself to one of the special NULL values.
+
+  call ESMF_HConfigSet(hconfig, "NULL", rc=rc)
+
+   If saved to file, the contents of hconfig shows up as a simple tilde
+   character, indicating its NULL value.
+   ~
+
+   At this point hconfig is neither a sequence nor a map. It is NULL.
+   Adding a map element, i.e. an element with a key, turns hconfig into a
+   map.
+
+  call ESMF_HConfigAdd(hconfig, "first added item", addKeyString="item1", rc=rc)
+
+   The contents of hconfig now is a map with a single entry: character,
+   indicating its NULL value.
+   item1: first added item
+
+   As in other contexts before, the content as well as the specified
+   addKeyString can be of any legal YAML syntax. This is demonstrated in
+   the following Add() calls.
+
+  ! Add YAML sequence content with simple scalar key.
+  call ESMF_HConfigAdd(hconfig, "[2, added, item]", addKeyString="item2", rc=rc)
+
+  ! Add simple scalar content with a YAML map as key.
+  call ESMF_HConfigAdd(hconfig, "third added item", addKeyString="{item: 3}", &
+    rc=rc)
+
+  ! Add complex YAML content with YAML sequence as key.
+  call ESMF_HConfigAdd(hconfig, "{4th: item, 5th: [true, false]}", &
+    addKeyString="[1, 2, 3, 4]", rc=rc)
+
+   Resulting in the final contents of hconfig:
+   item1: first added item
+   item2: [2, added, item]
+   {item: 3}: third added item
+   [1, 2, 3, 4]: {4th: item, 5th: [true, false]}
+
+   Finally clean up hconfig.
+
+  ! Destroy hconfig when done with it.
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+  48.2.14 Working with multiple YAML documents
+
+   The YAML standard supports multiple documents in a single file by
+   separating each document with a line containing three dashes (--).
+   Optionally the end of each document may be indicated by three periods
+   (...). For example, the following YAML file contains three documents
+   (notice the optional usage of the document end marker):
+   ---
+   - This
+   - is
+   - the
+   - first document.
+   ...
+   ---
+   - And
+   - a second document.
+   ---
+   - And
+   - finally a
+   - third document.
+
+   All of the documents contained in a YAML file can be loaded into a
+   single HConfig object all at once.
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate(filename="multiDoc.yaml", rc=rc)
+
+   The number of documents held by hconfig can be queried.
+
+  ! integer :: docCount
+  docCount = ESMF_HConfigGetDocCount(hconfig, rc=rc)
+
+   When saving hconfig, a multi-document YAML file will be written.
+
+  call ESMF_HConfigFileSave(hconfig, filename="multi_00.yaml", rc=rc)
+
+   The ESMF_HConfigFileSave() method implements strict usage of both
+   document markers when saving a multi-document HConfig object.
+   ---
+   - This
+   - is
+   - the
+   - first document.
+   ...
+   ---
+   - And
+   - a second document.
+   ...
+   ---
+   - And
+   - finally a
+   - third document.
+   ...
+
+   The optional doc argument can be specified when saving the
+   multi-document hconfig to file. Only the specified document, by index,
+   is written to file.
+
+  call ESMF_HConfigFileSave(hconfig, filename="multi_01.yaml", doc=2, rc=rc)
+
+   This operation results in a single document file:
+   - And
+   - a second document.
+
+   The ESMF_HConfigFileLoad() method also accepts the optional doc
+   argument. When specified, the result is a single-document hconfig
+   object, holding the content of the indicated document within the loaded
+   file.
+
+  call ESMF_HConfigFileLoad(hconfig, filename="multiDoc.yaml", doc=3, rc=rc)
+
+   Saving hconfig to file shows the expected situation.
+
+  call ESMF_HConfigFileSave(hconfig, filename="multi_02.yaml", rc=rc)
+
+   Resulting in:
+   - And
+   - finally a
+   - third document.
+
+   Most HConfig methods provide the optional doc argument. If present, the
+   method applies to the specified document. The default for when the doc
+   argument is not present, for most methods is to use the first document
+   in the object. The exceptions to this rule are the
+   ESMF_HConfigFileSave() and ESMF_HConfigFileLoad() methods. Here the
+   default is to apply the operation to all documents.
+
+   When done, clean up hconfig as usual.
+
+  ! Destroy hconfig when done with it.
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+  48.2.15 Sequence shortcuts for: Create, As, Add, and Set
+
+   The HConfig class offers shortcut methods for the sake of convenience
+   when working with sequences where all elements are of the same
+   typekind. In these cases a sequence can be represented as a
+   one-dimensional Fortran array. The interfaces are overloaded for
+   one-dimensional string, logical, I4, I8, R4, and R8 typekinds.
+
+   Using a Fortran array constructor for the actual argument, a sequence
+   of I4 data is created.
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate([1,2,3], rc=rc)
+
+   The content of hconfig can be accessed in the usual manner, via
+   iterators or indexed access. Alternatively, the sequence of I4 elements
+   can be retrieved in a single call using a one-dimensional allocatable
+   Fortran array of the appropriate typekind.
+
+  ! integer(ESMF_KIND_I4), allocatable :: valueI4Seq(:)
+  valueI4Seq = ESMF_HConfigAsI4Seq(hconfig, rc=rc)
+
+   The optional, intent(out) argument asOkay is available as in the scalar
+   access methods. If specified, errors triggered by unsupported typekind
+   conversion exceptions are suppressed, and instead asOkay == .false. is
+   returned by the call.
+
+   Here an attempt is made to access the content of hconfig as a sequence
+   of logicals. This is not supported, and will be flagged in the return
+   value of asOkay.
+
+  ! logical, allocatable :: valueLSeq(:)
+  valueLSeq = ESMF_HConfigAsLogicalSeq(hconfig, asOkay=asOkay, rc=rc)
+
+   Finally the content of hconfig is accessed as a sequence of strings.
+   This is always supported since every typekind can be represented in
+   string form.
+
+  ! character(len=:), allocatable :: valueSSeq(:)
+  valueSSeq = ESMF_HConfigAsStringSeq(hconfig, stringLen=10, asOkay=asOkay, rc=r
+c)
+
+   Next hconfig is cleaned up before re-creating it as an empty HConfig
+   object.
+
+  ! Clean up hconfig.
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+  ! type(ESMF_HConfig) :: hconfig
+  hconfig = ESMF_HConfigCreate(rc=rc)
+
+   Sequences can be added to hconfig conveniently using the overloaded
+   Add() interfaces that accept one-dimensional Fortran arrays. Here a
+   sequence of strings is added as the value of a map entry with key
+   string "k1".
+
+  call ESMF_HConfigAdd(hconfig, ["aaa","bbb","ccc"], addKeyString="k1", rc=rc)
+
+   Next a sequence of R4 values is added to the map held by hconfig, under
+   key string "k2".
+
+  call ESMF_HConfigAdd(hconfig, [1.0,1.25,1.5], addKeyString="k2", rc=rc)
+
+   At this point hconfig contains the following information:
+   k1:
+     - aaa
+     - bbb
+     - ccc
+   k2:
+     - 1
+     - 1.25
+     - 1.5
+
+   The Set() interfaces are also overloaded to accept one-dimensional
+   Fortran arrays as input. This makes it easy to set any node to a
+   sequence that is available as Fortran array. Here the value associated
+   with key "k1" is changed to a list of two logicals.
+
+  call ESMF_HConfigSet(hconfig, [.true.,.false.], keyString="k1", rc=rc)
+
+   This changes the content of hconfig as expected.
+   k1:
+     - True
+     - False
+   k2:
+     - 1
+     - 1.25
+     - 1.5
+
+   Finally clean up hconfig as usual.
+
+  ! Destroy hconfig when done with it.
+  call ESMF_HConfigDestroy(hconfig, rc=rc)
+
+48.3 Restrictions and Future Work
+
+     * The YAML Core schema, which is an extension of the JSON schema, is
+       implemented and used to resolve non-specific tags under HConfig.
+       There is currently no mechanism implemented to switch to a
+       different schema for tag resolution.
+     * Currently the only available removal method for HConfig map objects
+       requires that keys be simple scalar strings.
+     * There is currently no method implemented that allows setting of
+       tags from from the API.
+
+48.4 Design and Implementation Notes
+
+   The ESMF HConfig class is implemented on top of YAML-CPP
+   (https://github.com/jbeder/yaml-cpp). A copy of YAML-CPP is included in
+   the ESMF source tree under ./src/prologue/yaml-cpp. It is used by a
+   number of ESMF/NUOPC functions, including HConfig.
+
+48.5 Class API
+
+  48.5.1 ESMF_HConfigOperator(==) - HConfig equality operator
+
+   INTERFACE:
+   interface operator(==)
+     if (hconfig1 == hconfig2) then ... endif
+               OR
+     result = (hconfig1 == hconfig2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_HConfig), intent(in) :: hconfig1
+     type(ESMF_HConfig), intent(in) :: hconfig2
+
+   DESCRIPTION:
+
+   Test whether hconfig1 and hconfig2 are valid aliases to the same ESMF
+   HConfig object in memory. For a more general comparison of two ESMF
+   HConfigs, going beyond the simple alias test, the ESMF_HConfigMatch()
+   function (not yet fully implemented) must be used.
+
+   The arguments are:
+
+   hconfig1
+          The ESMF_HConfig object on the left hand side of the equality
+          operation.
+
+   hconfig2
+          The ESMF_HConfig object on the right hand side of the equality
+          operation.
+
+  48.5.2 ESMF_HConfigOperator(/=) - HConfig not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (hconfig1 /= hconfig2) then ... endif
+               OR
+     result = (hconfig1 /= hconfig2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_HConfig), intent(in) :: hconfig1
+     type(ESMF_HConfig), intent(in) :: hconfig2
+
+   DESCRIPTION:
+
+   Test whether hconfig1 and hconfig2 are not valid aliases to the same
+   ESMF HConfig object in memory. For a more general comparison of two
+   ESMF HConfigs, going beyond the simple alias test, the
+   ESMF_HConfigMatch() function (not yet fully implemented) must be used.
+
+   The arguments are:
+
+   hconfig1
+          The ESMF_HConfig object on the left hand side of the
+          non-equality operation.
+
+   hconfig2
+          The ESMF_HConfig object on the right hand side of the
+          non-equality operation.
+

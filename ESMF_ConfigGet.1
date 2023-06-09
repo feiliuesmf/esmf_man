@@ -1,0 +1,26 @@
+  47.3.9 ESMF_ConfigGet - Generic accessor method
+
+   INTERFACE:
+   subroutine ESMF_ConfigGet(config, hconfig, rc)
+
+   ARGUMENTS:
+     type(ESMF_Config),  intent(inout)          :: config
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_HConfig), intent(out),  optional :: hconfig
+     integer,            intent(out),  optional :: rc
+
+   DESCRIPTION:
+
+   Access Config internals.
+
+   The arguments are:
+
+   config
+          Already created ESMF_Config object.
+
+   [hconfig]
+          Internally kept ESMF_HConfig object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

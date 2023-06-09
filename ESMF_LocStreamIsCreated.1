@@ -1,0 +1,28 @@
+  32.4.21 ESMF_LocStreamIsCreated - Check whether a LocStream object has been
+  created
+
+   INTERFACE:
+   function ESMF_LocStreamIsCreated(locstream, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_LocStreamIsCreated
+
+   ARGUMENTS:
+     type(ESMF_LocStream), intent(in)            :: locstream
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the locstream has been created. Otherwise return
+   .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the
+   return value of the function will also be .false..
+
+   The arguments are:
+
+   locstream
+          ESMF_LocStream queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

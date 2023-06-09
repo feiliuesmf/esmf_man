@@ -1,0 +1,345 @@
+  31.6.41 ESMF_GridGetCoord - Get a DE-local Fortran array pointer to Grid coord
+  data and coord bounds
+
+   INTERFACE:
+        subroutine ESMF_GridGetCoord<rank><type><kind>(grid, coordDim,    &
+          staggerloc, localDE, farrayPtr, datacopyflag,                  &
+          exclusiveLBound, exclusiveUBound, exclusiveCount,              &
+          computationalLBound, computationalUBound, computationalCount,  &
+          totalLBound, totalUBound, totalCount, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),       intent(in)              :: grid
+       integer,               intent(in)              :: coordDim
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type (ESMF_StaggerLoc) intent(in),    optional :: staggerloc
+       integer,               intent(in),    optional :: localDE
+       <type> (ESMF_KIND_<kind>), pointer             :: farrayPtr(<rank>)
+       type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+       integer,               intent(out),   optional :: exclusiveLBound(:)
+       integer,               intent(out),   optional :: exclusiveUBound(:)
+       integer,               intent(out),   optional :: exclusiveCount(:)
+       integer,               intent(out),   optional :: computationalLBound(:)
+       integer,               intent(out),   optional :: computationalUBound(:)
+       integer,               intent(out),   optional :: computationalCount(:)
+       integer,               intent(out),   optional :: totalLBound(:)
+       integer,               intent(out),   optional :: totalUBound(:)
+       integer,               intent(out),   optional :: totalCount(:)
+       integer,               intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method gets a Fortran pointer to the piece of memory which holds
+   the coordinate data on the local DE for the given coordinate dimension
+   and stagger locations. This is useful, for example, for setting the
+   coordinate values in a Grid, or for reading the coordinate values.
+   Currently this method supports up to three coordinate dimensions, of
+   either R4 or R8 datatype. See below for specific supported values. If
+   the coordinates that you are trying to retrieve are of higher
+   dimension, use the ESMF_GetCoord() interface that returns coordinate
+   values in an ESMF_Array instead. That interface supports the retrieval
+   of coordinates up to 7D.
+
+   Supported values for the farrayPtr argument are:
+
+          real(ESMF_KIND_R4), pointer :: farrayPtr(:)
+
+          real(ESMF_KIND_R4), pointer :: farrayPtr(:,:)
+
+          real(ESMF_KIND_R4), pointer :: farrayPtr(:,:,:)
+
+          real(ESMF_KIND_R8), pointer :: farrayPtr(:)
+
+          real(ESMF_KIND_R8), pointer :: farrayPtr(:,:)
+
+          real(ESMF_KIND_R8), pointer :: farrayPtr(:,:,:)
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   coordDim
+          The coordinate dimension to get the data from (e.g. 1=x).
+
+   [staggerloc]
+          The stagger location to get the information for. Please see
+          Section [1377]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   [localDE]
+          The local DE for which information is requested.
+          [0,..,localDECount-1]. For localDECount==1 the localDE argument
+          may be omitted, in which case it will default to localDE=0.
+
+   farrayPtr
+          The pointer to the coordinate data.
+
+   [datacopyflag]
+          If not specified, default to ESMF_DATACOPY_REFERENCE, in this
+          case farrayPtr is a reference to the data in the Grid coordinate
+          arrays. Please see Section [1378]54.12 for further description
+          and a list of valid values.
+
+   [exclusiveLBound]
+          Upon return this holds the lower bounds of the exclusive region.
+          exclusiveLBound must be allocated to be of size equal to the
+          coord dimCount.
+
+   [exclusiveUBound]
+          Upon return this holds the upper bounds of the exclusive region.
+          exclusiveUBound must be allocated to be of size equal to the
+          coord dimCount.
+
+   [exclusiveCount]
+          Upon return this holds the number of items,
+          exclusiveUBound-exclusiveLBound+1, in the exclusive region per
+          dimension. exclusiveCount must be allocated to be of size equal
+          to the coord dimCount. Please see Section [1379]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalLBound]
+          Upon return this holds the lower bounds of the stagger region.
+          computationalLBound must be allocated to be of size equal to the
+          coord dimCount. Please see Section [1380]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalUBound]
+          Upon return this holds the upper bounds of the stagger region.
+          exclusiveUBound must be allocated to be of size equal to the
+          coord dimCount. Please see Section [1381]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalCount]
+          Upon return this holds the number of items in the computational
+          region per dimension (i.e.
+          computationalUBound-computationalLBound+1). computationalCount
+          must be allocated to be of size equal to the coord dimCount.
+          Please see Section [1382]31.3.19 for a description of the
+          regions and their associated bounds and counts.
+
+   [totalLBound]
+          Upon return this holds the lower bounds of the total region.
+          totalLBound must be allocated to be of size equal to the coord
+          dimCount. Please see Section [1383]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [totalUBound]
+          Upon return this holds the upper bounds of the total region.
+          totalUBound must be allocated to be of size equal to the coord
+          dimCount. Please see Section [1384]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [totalCount]
+          Upon return this holds the number of items in the total region
+          per dimension (i.e. totalUBound-totalLBound+1). totalCount must
+          be allocated to be of size equal to the coord dimCount. Please
+          see Section [1385]31.3.19 for a description of the regions and
+          their associated bounds and counts.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.42 ESMF_GridGetCoord - Get coordinates and put into an Array
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGetCoord()
+       subroutine ESMF_GridGetCoordIntoArray(grid, coordDim, staggerloc, &
+         array, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       integer,                intent(in)            :: coordDim
+       type (ESMF_StaggerLoc), intent(in),  optional :: staggerloc
+       type(ESMF_Array),       intent(out)           :: array
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method allows the user to get access to the ESMF Array holding
+   coordinate data at a particular stagger location. This is useful, for
+   example, to set the coordinate values. To have an Array to access, the
+   coordinate Arrays must have already been allocated, for example by
+   ESMF_GridAddCoord or ESMF_GridSetCoord.
+
+   The arguments are:
+
+   grid
+          The grid to get the coord array from.
+
+   coordDim
+          The coordinate dimension to get the data from (e.g. 1=x).
+
+   [staggerloc]
+          The stagger location from which to get the arrays. Please see
+          Section [1386]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   array
+          An array into which to put the coordinate information.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.43 ESMF_GridGetCoord - Get DE-local coordinates from a specific index
+  location in a Grid
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGetCoord()
+       subroutine ESMF_GridGetCoordR4(grid, staggerloc, localDE, &
+         index, coord, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       type (ESMF_StaggerLoc), intent(in),  optional :: staggerloc
+       integer,                intent(in),  optional :: localDE
+       integer,                intent(in)            :: index(:)
+       real(ESMF_KIND_R4),     intent(out)           :: coord(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Given a specific index location in a Grid, this method returns the full
+   set of coordinates from that index location. This method should work no
+   matter what the factorization of the Grid's coordinate components.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   [staggerloc]
+          The stagger location to get the information for. Please see
+          Section [1387]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   [localDE]
+          The local DE for which information is requested.
+          [0,..,localDECount-1]. For localDECount==1 the localDE argument
+          may be omitted, in which case it will default to localDE=0.
+
+   index
+          This array holds the index location to be queried in the Grid.
+          This array must at least be of the size Grid rank.
+
+   coord
+          This array will be filled with the coordinate data. This array
+          must at least be of the size Grid rank.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.44 ESMF_GridGetCoord - Get DE-local coordinates from a specific index
+  location in a Grid
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGetCoord()
+       subroutine ESMF_GridGetCoordR8(grid, staggerloc, localDE, &
+         index, coord, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       type (ESMF_StaggerLoc), intent(in),  optional :: staggerloc
+       integer,                intent(in),  optional :: localDE
+       integer,                intent(in)            :: index(:)
+       real(ESMF_KIND_R8),     intent(out)           :: coord(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Given a specific index location in a Grid, this method returns the full
+   set of coordinates from that index location. This method should work no
+   matter what the factorization of the Grid's coordinate components.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   [staggerloc]
+          The stagger location to get the information for. Please see
+          Section [1388]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   [localDE]
+          The local DE for which information is requested.
+          [0,..,localDECount-1]. For localDECount==1 the localDE argument
+          may be omitted, in which case it will default to localDE=0.
+
+   index
+          This array holds the index location to be queried in the Grid.
+          This array must at least be of the size Grid rank.
+
+   coord
+          This array will be filled with the coordinate data. This array
+          must at least be of the size Grid rank.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.45 ESMF_GridGetCoord - Get information about the coordinates at a
+  particular stagger location
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGetCoord()
+       subroutine ESMF_GridGetCoordInfo(grid, &
+         staggerloc, isPresent, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),           intent(in)            :: grid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type (ESMF_StaggerLoc),    intent(in),  optional :: staggerloc
+       logical,                   intent(out), optional :: isPresent
+       integer,                   intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method allows the user to get information about the coordinates on
+   a given stagger.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   [staggerloc]
+          The stagger location from which to get information. Please see
+          Section [1389]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   [isPresent]
+          If .true. then coordinates have been added on this staggerloc.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

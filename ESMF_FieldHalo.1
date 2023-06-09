@@ -1,0 +1,66 @@
+  26.6.55 ESMF_FieldHalo - Execute a FieldHalo operation
+
+   INTERFACE:
+   subroutine ESMF_FieldHalo(field, routehandle,  &
+                             routesyncflag, finishedflag, checkflag, rc)
+
+   ARGUMENTS:
+     type(ESMF_Field),          intent(inout)          :: field
+     type(ESMF_RouteHandle),    intent(inout)          :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_RouteSync_Flag), intent(in),  optional  :: routesyncflag
+     logical,                   intent(out), optional  :: finishedflag
+     logical,                   intent(in),  optional  :: checkflag
+     integer,                   intent(out), optional  :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Execute a precomputed Field halo operation for field. The field
+   argument must match the Field used during ESMF_FieldHaloStore() in
+   type, kind, and memory layout of the gridded dimensions. However, the
+   size, number, and index order of ungridded dimensions may be different.
+   See section [957]37.2.5 for a more detailed discussion of RouteHandle
+   reusability.
+
+   See ESMF_FieldHaloStore() on how to precompute routehandle.
+
+   This call is collective across the current VM.
+
+   field
+          ESMF_Field containing data to be haloed.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [routesyncflag]
+          Indicate communication option. Default is
+          ESMF_ROUTESYNC_BLOCKING, resulting in a blocking operation. See
+          section [958]54.51 for a complete list of valid settings.
+
+   [finishedflag]
+          Used in combination with routesyncflag =
+          ESMF_ROUTESYNC_NBTESTFINISH. Returned finishedflag equal to
+          .true. indicates that all operations have finished. A value of
+          .false. indicates that there are still unfinished operations
+          that require additional calls with routesyncflag =
+          ESMF_ROUTESYNC_NBTESTFINISH, or a final call with routesyncflag
+          = ESMF_ROUTESYNC_NBWAITFINISH. For all other routesyncflag
+          settings the returned value in finishedflag is always .true..
+
+   [checkflag]
+          If set to .TRUE. the input Field pair will be checked for
+          consistency with the precomputed operation provided by
+          routehandle. If set to .FALSE. (default) only a very basic input
+          check will be performed, leaving many inconsistencies
+          undetected. Set checkflag to .FALSE. to achieve highest
+          performance.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

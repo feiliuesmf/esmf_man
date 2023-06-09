@@ -1,0 +1,30 @@
+  40.4.20 ESMF_InfoIsSet - Check if a value is null
+
+   INTERFACE:
+ function ESMF_InfoIsSet(info, key, rc) result(is_set)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(in) :: info
+   character(len=*), intent(in) :: key
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(out), optional :: rc
+
+   RETURN VALUE:
+   logical :: is_set
+
+   DESCRIPTION:
+
+   Returns true if the target value is not null [[502]7].
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [503]40.2
+          for an overview of the key format.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,49 @@
+  45.5.17 ESMF_ClockPrint - Print Clock information
+
+   INTERFACE:
+       subroutine ESMF_ClockPrint(clock, options, preString, unit, rc)
+
+   ARGUMENTS:
+       type(ESMF_Clock),  intent(in)            :: clock
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character (len=*), intent(in),  optional :: options
+       character(*),      intent(in),  optional :: preString
+       character(*),      intent(out), optional :: unit
+       integer,           intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Prints out an ESMF_Clock's properties to stdout, in support of testing
+   and debugging. The options control the type of information and level of
+   detail.
+
+   The arguments are:
+
+   clock
+          ESMF_Clock to be printed out.
+
+   [options]
+          Print options. If none specified, prints all clock property
+          values.
+          "advanceCount" - print the number of times the clock has been
+          advanced.
+          "alarmCount" - print the number of alarms in the clock's list.
+          "alarmList" - print the clock's alarm list.
+          "currTime" - print the current clock time.
+          "direction" - print the clock's timestep direction.
+          "name" - print the clock's name.
+          "prevTime" - print the previous clock time.
+          "refTime" - print the clock's reference time.
+          "startTime" - print the clock's start time.
+          "stopTime" - print the clock's stop time.
+          "timeStep" - print the clock's time step.
+
+   [preString]
+          Optionally prepended string. Default to empty string.
+
+   [unit]
+          Internal unit, i.e. a string. Default to printing to stdout.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

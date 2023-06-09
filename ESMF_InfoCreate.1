@@ -1,0 +1,108 @@
+  40.4.5 ESMF_InfoCreate - Create a new Info object
+
+   INTERFACE:
+   ! Private name; call using ESMF_InfoCreate()
+ function ESMF_InfoCreateEmpty(rc)
+
+   ARGUMENTS:
+   integer, intent(out), optional :: rc
+
+   RETURN VALUE:
+   type(ESMF_Info) :: ESMF_InfoCreateEmpty
+
+   DESCRIPTION:
+
+   Create an ESMF_Info object. This object must be destroyed using
+   ESMF_InfoDestroy to free its memory allocation
+
+   The arguments are:
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  40.4.6 ESMF_InfoCreate - Create a new Info object using a key
+
+   INTERFACE:
+   ! Private name; call using ESMF_InfoCreate()
+ function ESMF_InfoCreateByKey(info, key, rc)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(in) :: info
+   character(len=*), intent(in) :: key
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(out), optional :: rc
+
+   RETURN VALUE:
+   type(ESMF_Info) :: ESMF_InfoCreateByKey
+
+   DESCRIPTION:
+
+   Create an ESMF_Info object from a location in info defined by key.
+   Returned object is a deep copy. The value associated with key must be a
+   nested object (i.e. a collection of key/value pairs).
+
+   The arguments are:
+
+   info
+          The ESMF_Info object providing source data.
+
+   key
+          String key to access in ESMF_Info storage. See section [488]40.2
+          for an overview of the key format.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  40.4.7 ESMF_InfoCreate - Create an Info object from another Info object
+
+   INTERFACE:
+   ! Private name; call using ESMF_InfoCreate()
+ function ESMF_InfoCreateFromInfo(info, rc)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(in) :: info
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(out), optional :: rc
+
+   RETURN VALUE:
+   type(ESMF_Info) :: ESMF_InfoCreateFromInfo
+
+   DESCRIPTION:
+
+   Create an ESMF_Info object from another ESMF_Info object. The returned
+   object is a deep copy of the source object.
+
+   The arguments are:
+
+   info
+          The ESMF_Info object acting as the source data.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  40.4.8 ESMF_InfoCreate - Create a new Info object by string parsing
+
+   INTERFACE:
+   ! Private name; call using ESMF_InfoCreate()
+ function ESMF_InfoCreateByParse(jsonString, rc)
+
+   ARGUMENTS:
+   character(len=*), intent(in) :: jsonString
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(out), optional :: rc
+
+   RETURN VALUE:
+   type(ESMF_Info) :: ESMF_InfoCreateByParse
+
+   DESCRIPTION:
+
+   Create an ESMF_Info object by parsing a JSON-formatted string.
+
+   The arguments are:
+
+   jsonString
+          The string to parse.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

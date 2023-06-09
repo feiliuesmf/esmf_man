@@ -1,0 +1,124 @@
+  35.2.1 ESMF_GeomCreate - Create a Geom from a Grid
+
+   INTERFACE:
+   ! Private name; call using ESMF_GeomCreate()
+       function ESMF_GeomCreateGrid(grid,staggerloc, rc)
+
+   RETURN VALUE:
+       type(ESMF_Geom) :: ESMF_GeomCreateGrid
+
+   ARGUMENTS:
+        type(ESMF_Grid),       intent(in)             :: grid
+        type(ESMF_StaggerLoc), intent(in), optional   :: staggerloc
+        integer,               intent(out), optional  :: rc
+
+   DESCRIPTION:
+
+   Create an ESMF_Geom object from an ESMF_Grid object.
+
+   The arguments are:
+
+   grid
+          ESMF_Grid object from which to create the Geom.
+
+   [staggerloc]
+          Stagger location of data in grid cells. For valid predefined
+          values see section [1497]31.2.6. If not specified, defaults to
+          ESMF_STAGGERLOC_CENTER.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  35.2.2 ESMF_GeomCreate - Create a Geom from a Mesh
+
+   INTERFACE:
+   ! Private name; call using ESMF_GeomCreate()
+       function ESMF_GeomCreateMesh(mesh, meshLoc, rc)
+
+   RETURN VALUE:
+       type(ESMF_Geom) :: ESMF_GeomCreateMesh
+
+   ARGUMENTS:
+        type(ESMF_Mesh),       intent(in)              :: mesh
+        type(ESMF_MeshLoc),    intent(in),  optional   :: meshLoc
+        integer,               intent(out), optional   :: rc
+
+   DESCRIPTION:
+
+   Create an ESMF_Geom object from an ESMF_Mesh object.
+
+   The arguments are:
+
+   mesh
+          ESMF_Mesh object from which to create the Geom.
+
+   [meshloc]
+          The part of the Mesh on which to build the Field. For valid
+          predefined values see Section [1498]54.39. If not set, defaults
+          to ESMF_MESHLOC_NODE.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  35.2.3 ESMF_GeomCreate - Create a Geom from a LocStream
+
+   INTERFACE:
+   ! Private name; call using ESMF_GeomCreate()
+       function ESMF_GeomCreateLocStream(locstream, rc)
+
+   RETURN VALUE:
+       type(ESMF_Geom) :: ESMF_GeomCreateLocStream
+
+   ARGUMENTS:
+        type(ESMF_LocStream),  intent(in)              :: locstream
+        integer,               intent(out),  optional  :: rc
+
+   DESCRIPTION:
+
+   Create an ESMF_Geom object from an ESMF_LocStream object.
+
+   The arguments are:
+
+   locstream
+          ESMF_LocStream object from which to create the Geom.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  35.2.4 ESMF_GeomCreate - Create a Geom from an XGrid
+
+   INTERFACE:
+   ! Private name; call using ESMF_GeomCreate()
+       function ESMF_GeomCreateXGrid(xgrid, xgridside, gridIndex, rc)
+
+   RETURN VALUE:
+       type(ESMF_Geom) :: ESMF_GeomCreateXGrid
+
+   ARGUMENTS:
+        type(ESMF_XGrid),     intent(in)                :: xgrid
+        type(ESMF_XGridSide_Flag), intent(in), optional :: xgridSide
+        integer,              intent(in), optional      :: gridIndex
+        integer,              intent(out),optional      :: rc
+
+   DESCRIPTION:
+
+   Create an ESMF_Geom object from an ESMF_XGrid object.
+
+   The arguments are:
+
+   xgrid
+          ESMF_XGrid object from which to create the Geom.
+
+   [xgridSide]
+          Which side of the XGrid to create the Field on (either
+          ESMF_XGRIDSIDE_A, ESMF_XGRIDSIDE_B, or ESMF_XGRIDSIDE_BALANCED).
+          If not specified, then defaults to ESMF_XGRIDSIDE_BALANCED.
+
+   [gridindex]
+          If xgridSide is ESMF_XGRIDSIDE_A or ESMF_XGRIDSIDE_B then this
+          index tells which Grid or Mesh on that side is being referred
+          to. If not provided, defaults to 1.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

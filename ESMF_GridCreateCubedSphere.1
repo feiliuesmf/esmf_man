@@ -1,0 +1,215 @@
+  31.6.27 ESMF_GridCreateCubedSphere - Create a multi-tile cubed sphere Grid
+  with regular decomposition
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridCreateCubedSphere()
+   function ESMF_GridCreateCubedSphereReg(tileSize,&
+         regDecompPTile, decompflagPTile,                        &
+         coordSys, coordTypeKind,                                &
+         deLabelList, staggerLocList,                            &
+         delayout, indexflag, name, transformArgs, rc)
+
+   RETURN VALUE:
+     type(ESMF_Grid) :: ESMF_GridCreateCubedSphereReg
+
+   ARGUMENTS:
+     integer,                        intent(in)            :: tilesize
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                        intent(in),  optional :: regDecompPTile(:,:
+)
+     type(ESMF_Decomp_Flag), target, intent(in),  optional :: decompflagPTile(:,
+:)
+     type(ESMF_CoordSys_Flag),       intent(in),  optional :: coordSys
+     type(ESMF_TypeKind_Flag),       intent(in),  optional :: coordTypeKind
+     integer,                        intent(in),  optional :: deLabelList(:)
+     type(ESMF_StaggerLoc),          intent(in),  optional :: staggerLocList(:)
+     type(ESMF_DELayout),            intent(in),  optional :: delayout
+     type(ESMF_Index_Flag),          intent(in),  optional :: indexflag
+     character(len=*),               intent(in),  optional :: name
+     type(ESMF_CubedSphereTransform_Args), intent(in),  optional :: transformArg
+s
+     integer,                        intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a six-tile ESMF_Grid for a Cubed Sphere grid using regular
+   decomposition. Each tile can have different decomposition. The grid
+   coordinates are generated based on the algorithm used by GEOS-5, The
+   tile resolution is defined by tileSize.
+
+   The arguments are:
+
+   tilesize
+          The number of elements on each side of the tile of the Cubed
+          Sphere grid.
+
+   [regDecompPTile]
+          List of DE counts for each dimension. The second index steps
+          through the tiles. The total deCount is determined as the sum
+          over the products of regDecompPTile elements for each tile. By
+          default every tile is decomposed in the same way. If the total
+          PET count is less than 6, one tile will be assigned to one DE
+          and the DEs will be assigned to PETs sequentially, therefore,
+          some PETs may have more than one DE. If the total PET count is
+          greater than 6, the total number of DEs will be a multiple of 6
+          and less than or equal to the total PET count. For instance, if
+          the total PET count is 16, the total DE count will be 12 with
+          each tile decomposed into 1x2 blocks. The 12 DEs are mapped to
+          the first 12 PETs and the remaining 4 PETs have no DEs locally,
+          unless an optional delayout is provided.
+
+   [decompflagPTile]
+          List of decomposition flags indicating how each dimension of
+          each tile is to be divided between the DEs. The default setting
+          is ESMF_DECOMP_BALANCED in all dimensions for all tiles. See
+          section [1330]54.13 for a list of valid decomposition flag
+          options. The second index indicates the tile number.
+
+   [deLabelList]
+          List assigning DE labels to the default sequence of DEs. The
+          default sequence is given by the column major order of the
+          regDecompPTile elements in the sequence as they appear following
+          the tile index.
+
+   [staggerLocList]
+          The list of stagger locations to fill with coordinates. Only
+          ESMF_STAGGERLOC_CENTER and ESMF_STAGGERLOC_CORNER are supported.
+          If not present, no coordinates will be added or filled.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. Only
+          ESMF_COORDSYS_SPH_DEG and ESMF_COORDSYS_SPH_RAD are supported.
+          If not specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. Only ESMF_TYPEKIND_R4
+          and ESMF_TYPEKIND_R8 are supported. If not specified then
+          defaults to ESMF_TYPEKIND_R8.
+
+   [delayout]
+          Optional ESMF_DELayout object to be used. By default a new
+          DELayout object will be created with as many DEs as there are
+          PETs, or tiles, which ever is greater. If a DELayout object is
+          specified, the number of DEs must match regDecompPTile, if
+          present. In the case that regDecompPTile was not specified, the
+          deCount must be at least that of the default DELayout. The
+          regDecompPTile will be constructed accordingly.
+
+   [indexflag]
+          Indicates the indexing scheme to be used in the new Grid. Please
+          see Section [1331]54.27 for the list of options. If not present,
+          defaults to ESMF_INDEX_DELOCAL.
+
+   [name]
+          ESMF_Grid name.
+
+   [transformArgs]
+          A data type containing the stretch factor, target longitude, and
+          target latitude to perform a Schmidt transformation on the
+          Cubed-Sphere grid. See section [1332]31.3.11 for details.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.28 ESMF_GridCreateCubedSphere - Create a multi-tile cubed sphere Grid
+  with irregular decomposition
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridCreateCubedSphere()
+   function ESMF_GridCreateCubedSphereIReg(tileSize,             &
+         countsPerDEDim1PTile, countsPerDEDim2PTile,             &
+                                                &
+         coordSys, coordTypeKind,                                &
+         deLabelList, staggerLocList,                            &
+         delayout, indexflag, name, transformArgs, rc)
+
+   RETURN VALUE:
+     type(ESMF_Grid) :: ESMF_GridCreateCubedSphereIReg
+
+   ARGUMENTS:
+     integer,                        intent(in)            :: tilesize
+     integer,                        intent(in)            :: countsPerDEDim1PTi
+le(:,:)
+     integer,                        intent(in)            :: countsPerDEDim2PTi
+le(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_CoordSys_Flag),       intent(in),  optional :: coordSys
+     type(ESMF_TypeKind_Flag),       intent(in),  optional :: coordTypeKind
+     integer,                        intent(in),  optional :: deLabelList(:)
+     type(ESMF_StaggerLoc),          intent(in),  optional :: staggerLocList(:)
+     type(ESMF_DELayout),            intent(in),  optional :: delayout
+     type(ESMF_Index_Flag),          intent(in),  optional :: indexflag
+     character(len=*),               intent(in),  optional :: name
+     type(ESMF_CubedSphereTransform_Args), intent(in),  optional :: transformArg
+s
+     integer,                        intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a six-tile ESMF_Grid for a Cubed Sphere grid using irregular
+   decomposition. Each tile can have different decomposition. The grid
+   coordinates are generated based on the algorithm used by GEOS-5, The
+   tile resolution is defined by tileSize.
+
+   The arguments are:
+
+   tilesize
+          The number of elements on each side of the tile of the Cubed
+          Sphere grid.
+
+   countsPerDEDim1PTile
+          This array specifies the number of cells per DE for index
+          dimension 1 for the center stagger location. The second index
+          steps through the tiles. If each tile is decomposed into
+          different number of DEs, the first dimension is the maximal DEs
+          of all the tiles.
+
+   countsPerDEDim2PTile
+          This array specifies the number of cells per DE for index
+          dimension 2 for the center stagger location. The second index
+          steps through the tiles. If each tile is decomposed into
+          different number of DEs, the first dimension is the maximal DEs
+          of all the tiles.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. Only
+          ESMF_COORDSYS_SPH_DEG and ESMF_COORDSYS_SPH_RAD are supported.
+          If not specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. Only ESMF_TYPEKIND_R4
+          and ESMF_TYPEKIND_R8 are supported. If not specified then
+          defaults to ESMF_TYPEKIND_R8.
+
+   [deLabelList]
+          List assigning DE labels to the default sequence of DEs. The
+          default sequence is given by the column major order in the
+          sequence as they appear in countsPerDEDim1PTile, followed by
+          countsPerDEDim2PTile, then the tile index.
+
+   [staggerLocList]
+          The list of stagger locations to fill with coordinates. Only
+          ESMF_STAGGERLOC_CENTER and ESMF_STAGGERLOC_CORNER are supported.
+          If not present, no coordinates will be added or filled.
+
+   [delayout]
+          Optional ESMF_DELayout object to be used. If a delayout object
+          is specified, the number of DEs must match with the total DEs
+          defined in countsPerDEDim1PTile and countsPerDEDim2PTile.
+
+   [indexflag]
+          Indicates the indexing scheme to be used in the new Grid. Please
+          see Section [1333]54.27 for the list of options. If not present,
+          defaults to ESMF_INDEX_DELOCAL.
+
+   [name]
+          ESMF_Grid name.
+
+   [transformArgs]
+          A data type containing the stretch factor, target longitude, and
+          target latitude to perform a Schmidt transformation on the
+          Cubed-Sphere grid. See section [1334]31.3.11 for details.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

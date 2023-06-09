@@ -1,0 +1,42 @@
+  40.4.18 ESMF_InfoGetArrayMeta - Retrieve array metadata information
+
+   INTERFACE:
+ subroutine ESMF_InfoGetArrayMeta(info, key, isArray, size, attnestflag, rc)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(in) :: info
+   character(len=*), intent(in) :: key
+   logical, intent(out) :: isArray
+   integer(C_INT), intent(out) :: size
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_AttNest_Flag), intent(in), optional :: attnestflag
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return a value's array status and size using a key.
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [499]40.2
+          for an overview of the key format.
+
+   isArray
+          Set to true if the target is an array in storage.
+
+   size
+          Set to the size of the target object in storage (i.e. length of
+          the array).
+
+   [attnestflag]
+          Setting to ESMF_ATTNEST_ON triggers a recursive search for
+          keyParent. The first instance of the key will be found in the
+          hierarchy. Default is ESMF_ATTNEST_OFF.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

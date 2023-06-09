@@ -1,0 +1,86 @@
+  49.7.13 ESMF_LogSet - Set Log parameters
+
+   INTERFACE:
+     subroutine ESMF_LogSet(log,  &
+         flush,  &
+         logmsgAbort, maxElements, logmsgList,  &
+         errorMask, trace, highResTimestampFlag, indentCount,  &
+         noPrefix, rc)
+
+   ARGUMENTS:
+       type(ESMF_Log),         intent(inout), optional :: log
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       logical,                intent(in),    optional :: flush
+       type(ESMF_LogMsg_Flag), intent(in),    optional :: logmsgAbort(:)
+       integer,                intent(in),    optional :: maxElements
+       type(ESMF_LogMsg_Flag), intent(in),    optional :: logmsgList(:)
+       integer,                intent(in),    optional :: errorMask(:)
+       logical,                intent(in),    optional :: trace
+       logical,                intent(in),    optional :: highResTimestampFlag
+       integer,                intent(in),    optional :: indentCount
+       logical,                intent(in),    optional :: noPrefix
+       integer,                intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   This subroutine sets the properties for the Log object.
+
+   The arguments are:
+
+   [log]
+          An optional ESMF_Log object. The default is to use the default
+          log that was opened at ESMF_Initialize time.
+
+   [flush]
+          If set to .true., flush log messages immediately, rather than
+          buffering them. Default is to flush after maxElements messages.
+
+   [logmsgAbort]
+          Sets the condition on which ESMF aborts. The array can contain
+          any combination of ESMF_LOGMSG named constants. These named
+          constants are described in section [596]49.2.3. Default is to
+          always continue processing.
+
+   [maxElements]
+          Maximum number of elements in the Log buffer before flushing
+          occurs. Default is to flush when 10 messages have been
+          accumulated.
+
+   [logmsgList]
+          An array of message types that will be logged. Log write
+          requests not matching the list will be ignored. If an empty
+          array is provided, no messages will be logged. See section
+          [597]49.2.3 for a list of valid message types. By default, all
+          non-trace messages will be logged.
+
+   [errorMask]
+          List of error codes that will not be logged as errors. Default
+          is to log all error codes.
+
+   [trace]
+          If set to .true., calls such as ESMF_LogFoundError(),
+          ESMF_LogFoundAllocError(), and ESMF_LogFoundDeallocError() will
+          be logged in the default log files. This option is intended to
+          be used as a tool for debugging and program flow tracing within
+          the ESMF library. Voluminous output may appear in the log, with
+          a consequent slowdown in performance. Therefore, it is
+          recommended that this option only be enabled before a
+          problematic call to a ESMF method, and disabled afterwards.
+          Default is to not trace these calls.
+
+   [highResTimestampFlag]
+          Sets the extended elapsed timestamp flag. If set to .true., a
+          timestamp from ESMF_VMWtime will be included in each log
+          message. Default is to not add the additional timestamps.
+
+   [indentCount]
+          Number of leading white spaces.
+
+   [noPrefix]
+          If set to .false., log messages are prefixed with time stamps,
+          message type and PET number. If set to .true. the messages will
+          be written without the prefixes.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

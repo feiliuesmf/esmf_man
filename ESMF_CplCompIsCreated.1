@@ -1,0 +1,28 @@
+  18.4.10 ESMF_CplCompIsCreated - Check whether a CplComp object has been
+  created
+
+   INTERFACE:
+   function ESMF_CplCompIsCreated(cplcomp, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_CplCompIsCreated
+
+   ARGUMENTS:
+     type(ESMF_CplComp), intent(in)            :: cplcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the cplcomp has been created. Otherwise return
+   .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the
+   return value of the function will also be .false..
+
+   The arguments are:
+
+   cplcomp
+          ESMF_CplComp queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

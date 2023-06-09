@@ -1,0 +1,187 @@
+  48.5.28 ESMF_HConfigGetTagMapVal - Get tag of map key node
+
+   INTERFACE:
+   function ESMF_HConfigGetTagMapVal(hconfig, index, keyString, &
+     doc, rc)
+
+   RETURN VALUE:
+     character(len=:), allocatable :: ESMF_HConfigGetTagMapVal
+
+   ARGUMENTS:
+     type(ESMF_HConfigIter), intent(in)        :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(in),  optional :: index
+     character(*),       intent(in),  optional :: keyString
+     integer,            intent(in),  optional :: doc
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return tag string of map key of the hconfig node.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfigIter object.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          keyString.
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index.
+
+   [doc]
+          The doc index. Defaults to the first document.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  48.5.29 ESMF_HConfigIs<NodeType> - Check for HConfig node type
+
+   INTERFACE:
+    function ESMF_HConfigIs<NodeType>(hconfig, index, keyString, &
+      doc, rc)
+
+   RETURN VALUE:
+      logical :: ESMF_HConfigIs<NodeType>
+
+   ARGUMENTS:
+      type(ESMF_HConfig[Iter]), intent(in)      :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,            intent(in),  optional :: index
+      character(*),       intent(in),  optional :: keyString
+      integer,            intent(in),  optional :: doc
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the hconfig node is of node type <NodeType>. Otherwise
+   return .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS is
+   returned, the return value of the function will be .false..
+
+   The supported <NodeType> options are:
+     * Defined
+     * Null
+     * Map
+     * Scalar
+     * Sequence
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig or ESMF_HConfigIter object.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          keyString.
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index.
+
+   [doc]
+          The doc index. Defaults to the first document.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  48.5.30 ESMF_HConfigIs<NodeType>MapKey - Check for HConfig MapKey node type
+
+   INTERFACE:
+    function ESMF_HConfigIs<NodeType>MapKey(hconfig, index, keyString, &
+      doc, rc)
+
+   RETURN VALUE:
+      logical :: ESMF_HConfigIs<NodeType>MapKey
+
+   ARGUMENTS:
+      type(ESMF_HConfigIter), intent(in)       :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,            intent(in),  optional :: index
+      character(*),       intent(in),  optional :: keyString
+      integer,            intent(in),  optional :: doc
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the hconfig MapKey node is of node type <NodeType>.
+   Otherwise return .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS
+   is returned, the return value of the function will be .false..
+
+   The supported <NodeType> options are:
+     * Defined
+     * Null
+     * Map
+     * Scalar
+     * Sequence
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfigIter object.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          keyString.
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index.
+
+   [doc]
+          The doc index. Defaults to the first document.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  48.5.31 ESMF_HConfigIs<NodeType>MapVal - Check for HConfig MapVal node type
+
+   INTERFACE:
+    function ESMF_HConfigIs<NodeType>MapVal(hconfig, index, keyString, &
+      doc, rc)
+
+   RETURN VALUE:
+      logical :: ESMF_HConfigIs<NodeType>MapVal
+
+   ARGUMENTS:
+      type(ESMF_HConfigIter), intent(in)       :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,            intent(in),  optional :: index
+      character(*),       intent(in),  optional :: keyString
+      integer,            intent(in),  optional :: doc
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the hconfig MapVal node is of node type <NodeType>.
+   Otherwise return .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS
+   is returned, the return value of the function will be .false..
+
+   The supported <NodeType> options are:
+     * Defined
+     * Null
+     * Map
+     * Scalar
+     * Sequence
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfigIter object.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          keyString.
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index.
+
+   [doc]
+          The doc index. Defaults to the first document.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

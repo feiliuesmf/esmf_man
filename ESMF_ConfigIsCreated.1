@@ -1,0 +1,27 @@
+  47.3.15 ESMF_ConfigIsCreated - Check whether a Config object has been created
+
+   INTERFACE:
+   function ESMF_ConfigIsCreated(config, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_ConfigIsCreated
+
+   ARGUMENTS:
+     type(ESMF_Config), intent(in)            :: config
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,           intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the config has been created. Otherwise return .false..
+   If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return
+   value of the function will also be .false..
+
+   The arguments are:
+
+   config
+          ESMF_Config queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

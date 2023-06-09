@@ -1,0 +1,67 @@
+  25.5.20 ESMF_FieldBundleRedist - Execute a FieldBundle redistribution
+
+   INTERFACE:
+   subroutine ESMF_FieldBundleRedist(srcFieldBundle, dstFieldBundle, &
+     routehandle, checkflag, rc)
+
+   ARGUMENTS:
+         type(ESMF_FieldBundle), intent(in), optional :: srcFieldBundle
+         type(ESMF_FieldBundle), intent(inout), optional :: dstFieldBundle
+         type(ESMF_RouteHandle), intent(inout) :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+         logical, intent(in), optional :: checkflag
+         integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Execute a precomputed redistribution from srcFieldBundle to
+   dstFieldBundle. Both srcFieldBundle and dstFieldBundle must match the
+   respective FieldBundles used during ESMF_FieldBundleRedistStore() in
+   type, kind, and memory layout of the gridded dimensions. However, the
+   size, number, and index order of ungridded dimensions may be different.
+   See section [741]37.2.5 for a more detailed discussion of RouteHandle
+   reusability.
+
+   The srcFieldBundle and dstFieldBundle arguments are optional in support
+   of the situation where srcFieldBundle and/or dstFieldBundle are not
+   defined on all PETs. The srcFieldBundle and dstFieldBundle must be
+   specified on those PETs that hold source or destination DEs,
+   respectively, but may be omitted on all other PETs. PETs that hold
+   neither source nor destination DEs may omit both arguments.
+
+   It is erroneous to specify the identical FieldBundle object for
+   srcFieldBundle and dstFieldBundle arguments.
+
+   See ESMF_FieldBundleRedistStore() on how to precompute routehandle.
+
+   This call is collective across the current VM.
+
+   For examples and associated documentation regarding this method see
+   Section [742]25.2.9.
+
+   [srcFieldBundle]
+          ESMF_FieldBundle with source data.
+
+   [dstFieldBundle]
+          ESMF_FieldBundle with destination data.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [checkflag]
+          If set to .TRUE. the input FieldBundle pair will be checked for
+          consistency with the precomputed operation provided by
+          routehandle. If set to .FALSE. (default) only a very basic input
+          check will be performed, leaving many inconsistencies
+          undetected. Set checkflag to .FALSE. to achieve highest
+          performance.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,163 @@
+  21.7.20 ESMF_StateWrite - Write items from a State to file
+
+   INTERFACE:
+       subroutine ESMF_StateWrite(state, fileName, rc)
+
+   ARGUMENTS:
+       type(ESMF_State),  intent(in)            :: state
+       character (len=*), intent(in)            :: fileName
+       integer,           intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Currently limited to write out all Arrays of a State object to a netCDF
+   file. Future releases will enable more item types of a State to be
+   written to files of various formats.
+
+   Writing is currently limited to PET 0; future versions of ESMF will
+   allow parallel writing, as well as parallel reading.
+
+   See Section [306]21.3.7 for an example.
+
+   Note that the third party NetCDF library must be installed. For more
+   details, see the "ESMF Users Guide", "Building and Installing the ESMF,
+   Third Party Libraries, NetCDF" and the website
+   http://www.unidata.ucar.edu/software/netcdf.
+
+   The arguments are:
+
+   state
+          The ESMF_State from which to write items. Currently limited to
+          Arrays.
+
+   fileName
+          File to be written.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors. Equals
+          ESMF_RC_LIB_NOT_PRESENT if the NetCDF library is not present.
+
+                             22 Attachable Methods
+
+22.1 Description
+
+   ESMF allows user methods to be attached to Components and States.
+   Providing this capability supports a more object oriented way of model
+   design.
+
+   Attachable methods on Components can be used to implement the concept
+   of generic Components where the specialization requires attaching
+   methods with well defined names. This methods are then called by the
+   generic Component code.
+
+   Attaching methods to States can be used to supply data operations along
+   with the data objects inside of a State object. This can be useful
+   where a producer Component not only supplies a data set, but also the
+   associated processing functionality. This can be more efficient than
+   providing all of the possible sets of derived data.
+
+22.2 Use and Examples
+
+   The following examples demonstrate how a producer Component attaches a
+   user defined method to a State, and how it implements the method. The
+   attached method is then executed by the consumer Component.
+
+  22.2.1 Producer Component attaches user defined method
+
+   The producer Component attaches a user defined method to exportState
+   during the Component's initialize method. The user defined method is
+   attached with label finalCalculation by which it will become accessible
+   to the consumer Component.
+
+  subroutine init(gcomp, importState, exportState, clock, rc)
+    ! arguments
+    type(ESMF_GridComp):: gcomp
+    type(ESMF_State):: importState, exportState
+    type(ESMF_Clock):: clock
+    integer, intent(out):: rc
+
+    rc = ESMF_SUCCESS
+    call ESMF_MethodAdd(exportState, label="finalCalculation", &
+      userRoutine=finalCalc, rc=rc)
+    if (rc /= ESMF_SUCCESS) return
+
+    ! just for testing purposes add the same method with a crazy string label
+    call ESMF_MethodAdd(exportState, label="Somewhat of a SILLY @$^@_ label", &
+      userRoutine=finalCalc, rc=rc)
+    if (rc /= ESMF_SUCCESS) return
+
+  end subroutine !--------------------------------------------------------------
+
+  22.2.2 Producer Component implements user defined method
+
+   The producer Component implements the attached, user defined method
+   finalCalc. Strict interface rules apply for the user defined method.
+
+  subroutine finalCalc(state, rc)
+    ! arguments
+    type(ESMF_State):: state
+    integer, intent(out):: rc
+
+    rc = ESMF_SUCCESS
+
+    ! access data objects in state and perform calculation
+    print *, "dummy output from attached method "
+
+  end subroutine !--------------------------------------------------------------
+
+  22.2.3 Consumer Component executes user defined method
+
+   The consumer Component executes the user defined method on the
+   importState.
+
+  subroutine init(gcomp, importState, exportState, clock, rc)
+    ! arguments
+    type(ESMF_GridComp):: gcomp
+    type(ESMF_State):: importState, exportState
+    type(ESMF_Clock):: clock
+    integer, intent(out):: rc
+
+    integer:: userRc, i
+    logical:: isPresent
+    character(len=:), allocatable :: labelList(:)
+
+    rc = ESMF_SUCCESS
+
+   The importState can be queried for a list of all the attached methods.
+
+    call ESMF_MethodGet(importState, labelList=labelList, rc=rc)
+    if (rc /= ESMF_SUCCESS) return
+
+    ! print the labels
+    do i=1, size(labelList)
+      print *, labelList(i)
+    enddo
+
+   It is also possible to check the importState whether a specific method
+   is attached. This allows the consumer code to implement alternatives in
+   case the method is not available.
+
+    call ESMF_MethodGet(importState, label="finalCalculation", &
+      isPresent=isPresent, rc=rc)
+    if (rc /= ESMF_SUCCESS) return
+
+   Finally call into the attached method from the consumer side.
+
+    call ESMF_MethodExecute(importState, label="finalCalculation", &
+      userRc=userRc, rc=rc)
+    if (rc /= ESMF_SUCCESS) return
+    rc = userRc
+    if (rc /= ESMF_SUCCESS) return
+
+  end subroutine !--------------------------------------------------------------
+
+22.3 Restrictions and Future Work
+
+    1. Not reconciled. Attachable Methods are PET-local settings on an
+       object. Currently Attachable Methods cannot be reconciled (i.e.
+       ignored during ESMF_StateReconcile()).
+    2. No copy nor move. Currently Attachable Methods cannot be copied or
+       moved between objects.
+
+22.4 Class API
+

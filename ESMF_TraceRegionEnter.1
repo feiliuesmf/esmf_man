@@ -1,0 +1,26 @@
+  52.4.1 ESMF_TraceRegionEnter - Trace user-defined region entry event
+
+   INTERFACE:
+   subroutine ESMF_TraceRegionEnter(name, rc)
+
+   ARGUMENTS:
+     character(len=*), intent(in) :: name
+     integer, intent(out), optional  :: rc
+
+   DESCRIPTION:
+
+   Record an event in the trace for this PET indicating entry into a
+   user-defined region with the given name. This call must be paired with
+   a call to ESMF_TraceRegionExit() with a matching name parameter.
+   User-defined regions may be nested. If tracing is disabled on the
+   calling PET or for the application as a whole, no event will be
+   recorded and the call will return immediately.
+
+   The arguments are:
+
+   name
+          A user-defined name for the region of code being entered
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

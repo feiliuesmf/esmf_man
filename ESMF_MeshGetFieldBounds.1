@@ -1,0 +1,99 @@
+  26.7.3 ESMF_MeshGetFieldBounds - Get precomputed DE-local Fortran data array
+  bounds for creating a Field from a Mesh and a Fortran array
+
+   INTERFACE:
+     subroutine ESMF_MeshGetFieldBounds(mesh, &
+         meshloc, &
+         localDe, gridToFieldMap, &
+         ungriddedLBound, ungriddedUBound, &
+         totalLBound, totalUBound, totalCount, rc)
+
+   ARGUMENTS:
+     type(ESMF_Mesh), intent(in)            :: mesh
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_MeshLoc),intent(in),optional :: meshloc
+     integer,         intent(in),  optional :: localDe
+     integer,         intent(in),  optional :: gridToFieldMap(:)
+     integer,         intent(in),  optional :: ungriddedLBound(:)
+     integer,         intent(in),  optional :: ungriddedUBound(:)
+     integer,         intent(out), optional :: totalLBound(:)
+     integer,         intent(out), optional :: totalUBound(:)
+     integer,         intent(out), optional :: totalCount(:)
+     integer,         intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Compute the lower and upper bounds of Fortran data array that can later
+   be used in FieldCreate interface to create a ESMF_Field from a
+   ESMF_Mesh and the Fortran data array. For an example and associated
+   documentation using this method see section [1037]26.3.9.
+
+   The arguments are:
+
+   mesh
+          ESMF_Mesh.
+
+   [meshloc]
+          Which part of the mesh to build the Field on. Can be set to
+          either ESMF_MESHLOC_NODE or ESMF_MESHLOC_ELEMENT. If not set,
+          defaults to ESMF_MESHLOC_NODE.
+
+   [localDe]
+          Local DE for which information is requested.
+          [0,..,localDeCount-1]. For localDeCount==1 the localDe argument
+          may be omitted, in which case it will default to localDe=0.
+
+   [gridToFieldMap]
+          List with number of elements equal to the grid|s dimCount. The
+          list elements map each dimension of the grid to a dimension in
+          the field by specifying the appropriate field dimension index.
+          The default is to map all of the grid|s dimensions against the
+          lowest dimensions of the field in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). The values of all gridToFieldMap entries must
+          be greater than or equal to one and smaller than or equal to the
+          field rank. It is erroneous to specify the same gridToFieldMap
+          entry multiple times. The total ungridded dimensions in the
+          field are the total field dimensions less the dimensions in the
+          grid. Ungridded dimensions must be in the same order they are
+          stored in the field.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [totalLBound]
+          The relative lower bounds of Fortran data array to be used later
+          in ESMF_FieldCreate from ESMF_Mesh and Fortran data array. This
+          is an output variable from this user interface.
+
+   [totalUBound]
+          The relative upper bounds of Fortran data array to be used later
+          in ESMF_FieldCreate from ESMF_Mesh and Fortran data array. This
+          is an output variable from this user interface.
+
+   [totalCount]
+          Number of elements need to be allocated for Fortran data array
+          to be used later in ESMF_FieldCreate from ESMF_Mesh and Fortran
+          data array. This is an output variable from this user interface.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

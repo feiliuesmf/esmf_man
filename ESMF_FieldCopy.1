@@ -1,0 +1,27 @@
+  26.6.4 ESMF_FieldCopy - Copy data from one Field object to another
+
+   INTERFACE:
+   subroutine ESMF_FieldCopy(fieldOut, fieldIn, rc)
+
+   ARGUMENTS:
+        type(ESMF_Field), intent(inout) :: fieldOut
+        type(ESMF_Field), intent(in) :: fieldIn
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Copy data from one ESMF_Field object to another.
+
+   The arguments are:
+
+   fieldOut
+          ESMF_Field object into which to copy the data. The incoming
+          fieldOut must already references a matching memory allocation.
+
+   fieldIn
+          ESMF_Field object that holds the data to be copied.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

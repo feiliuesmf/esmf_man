@@ -1,0 +1,92 @@
+  49.7.11 ESMF_LogOpen - Open Log file(s)
+
+   INTERFACE:
+     subroutine ESMF_LogOpen(log, filename,  &
+         appendflag, logkindflag, noPrefix, rc)
+
+   ARGUMENTS:
+     type(ESMF_Log),          intent(inout)         :: log
+     character(len=*),        intent(in)            :: filename
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                 intent(in),  optional :: appendFlag
+     type(ESMF_LogKind_Flag), intent(in),  optional :: logkindFlag
+     logical,                 intent(in),  optional :: noPrefix
+     integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This routine opens a file named filename and associates it with the
+   ESMF_Log. When logkindflag is set to ESMF_LOGKIND_MULTI or
+   ESMF_LOGKIND_MULTI_ON_ERROR the file name is prepended with PET number
+   identification. If the incoming log is already open, an error is
+   returned.
+
+   The arguments are:
+
+   log
+          An ESMF_Log object.
+
+   filename
+          Name of log file to be opened.
+
+   [appendFlag]
+          If the log file exists, setting to .false. will set the file
+          position to the beginning of the file. Otherwise, new records
+          will be appended to the end of the file. If not specified,
+          defaults to .true..
+
+   [logkindFlag]
+          Set the logkindflag. See section [594]49.2.2 for a list of valid
+          options. When the ESMF_LOGKIND_MULTI_ON_ERROR is selected, the
+          log opening is deferred until a ESMF_LogWrite with log message
+          of type ESMF_LOGMSG_ERROR is written. If not specified, defaults
+          to ESMF_LOGKIND_MULTI.
+
+   [noPrefix]
+          Set the noPrefix flag. If set to .false., log messages are
+          prefixed with time stamps, message type, and PET number. If set
+          to .true. the messages will be written without prefixes. If not
+          specified, defaults to .false..
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  49.7.12 ESMF_LogOpen - Open Default Log file(s)
+
+   INTERFACE:
+   ! Private name; call using ESMF_LogOpen ()
+     subroutine ESMF_LogOpenDefault (filename,  &
+         appendflag, logkindflag, rc)
+
+   ARGUMENTS:
+     character(len=*),        intent(in)            :: filename
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                 intent(in),  optional :: appendflag
+     type(ESMF_LogKind_Flag), intent(in),  optional :: logkindflag
+     integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This routine opens a file named filename and associates it with the
+   default log. When logkindflag is set to ESMF_LOGKIND_MULTI the file
+   name is prepended with PET number identification. If the incoming
+   default log is already open, an error is returned.
+
+   The arguments are:
+
+   filename
+          Name of DEFAULT log file to be opened.
+
+   [appendflag]
+          If the log file exists, setting to .false. will set the file
+          position to the beginning of the file. Otherwise, new records
+          will be appended to the end of the file. If not specified,
+          defaults to .true..
+
+   [logkindflag]
+          Set the logkindflag. See section [595]49.2.2 for a list of valid
+          options. If not specified, defaults to ESMF_LOGKIND_MULTI.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

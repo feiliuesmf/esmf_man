@@ -1,0 +1,39 @@
+  28.5.48 ESMF_SparseMatrixWrite - Write a sparse matrix to file
+
+   INTERFACE:
+   subroutine ESMF_SparseMatrixWrite(factorList, factorIndexList, fileName, &
+     rc)
+
+   ARGUMENTS:
+     real(ESMF_KIND_R8),    intent(in)            :: factorList(:)
+     integer(ESMF_KIND_I4), intent(in)            :: factorIndexList(:,:)
+     character(*),          intent(in)            :: fileName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,               intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Write the factorList and factorIndexList into a NetCDF file. The data
+   is stored in SCRIP format documented under section  ([1169]12.9).
+
+   Limitations:
+     * Only real(ESMF_KIND_R8) factorList and integer(ESMF_KIND_I4)
+       factorIndexList supported.
+     * Not supported in ESMF_COMM=mpiuni mode.
+
+   The arguments are:
+
+   factorList
+          The sparse matrix factors to be written.
+
+   factorIndexList
+          The sparse matrix sequence indices to be written.
+
+   fileName
+          The name of the output file to be written.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+28.6 Class API: DynamicMask Methods
+

@@ -1,0 +1,37 @@
+  33.4.20 ESMF_MeshSet - Set some Mesh information
+
+   INTERFACE:
+       subroutine ESMF_MeshSet(mesh, &
+            elementMask, elementArea, rc)
+
+   RETURN VALUE:
+
+   ARGUMENTS:
+     type(ESMF_Mesh),          intent(in)            :: mesh
+     integer,                  intent(in), optional :: elementMask(:)
+     real(ESMF_KIND_R8),       intent(in), optional :: elementArea(:)
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call allows the user to change the set of information that it's
+   legal to alter after a mesh has been created. Currently, this call
+   requires that the information has already been added to the mesh during
+   creation. For example, you can only change the element mask
+   information, if the mesh was initially created with element masking.
+
+   The arguments are:
+
+   mesh
+
+   [elementMask]
+          An array of mask values for each local element in the mesh. The
+          elementMask array should be of size elementCount.
+
+   [elementArea]
+          An array of area values for each local element in the mesh. The
+          elementArea array should be of size elementCount.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

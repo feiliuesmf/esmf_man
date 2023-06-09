@@ -1,0 +1,206 @@
+  21.7.8 ESMF_StateGet - Get object-wide information from a State
+
+   INTERFACE:
+       ! Private name; call using ESMF_StateGet()
+       subroutine ESMF_StateGetInfo(state, &
+             itemSearch, itemorderflag, nestedFlag, &
+             stateIntent, itemCount, itemNameList, itemTypeList, name, rc)
+
+   ARGUMENTS:
+       type(ESMF_State), intent(in) :: state
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character (len=*), intent(in), optional :: itemSearch
+       type(ESMF_ItemOrder_Flag), intent(in), optional :: itemorderflag
+       logical, intent(in), optional :: nestedFlag
+       type(ESMF_StateIntent_Flag), intent(out), optional :: stateIntent
+       integer, intent(out), optional :: itemCount
+       character (len=*), intent(out), optional :: itemNameList(:)
+       type(ESMF_StateItem_Flag), intent(out), optional :: itemTypeList(:)
+       character (len=*), intent(out), optional :: name
+       integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument itemorderflag. The new argument gives the
+                user control over the order in which the items are
+                returned.
+
+   DESCRIPTION:
+
+   Returns the requested information about this ESMF_State. The optional
+   itemSearch argument may specify the name of an individual item to
+   search for. When used in conjunction with the nestedFlag, nested States
+   will also be searched.
+
+   Typically, an ESMF_StateGet() information request will be performed
+   twice. The first time, the itemCount argument will be used to query the
+   size of arrays that are needed. Arrays can then be allocated to the
+   correct size for itemNameList and itemtypeList as needed. A second call
+   to ESMF_StateGet() will then fill in the values.
+
+   The arguments are:
+
+   state
+          An ESMF_State object to be queried.
+
+   [itemSearch]
+          Query objects by name in the State. When the nestedFlag option
+          is set to .true., all nested States will also be searched for
+          the specified name.
+
+   [itemorderflag]
+          Specifies the order of the returned items in the itemNameList
+          and itemTypeList. The default is ESMF_ITEMORDER_ABC. See
+          [299]54.32 for a full list of options.
+
+   [nestedFlag]
+          When set to .false., returns information at the current State
+          level only (default) When set to .true., additionally returns
+          information from nested States
+
+   [stateIntent]
+          The intent, e.g. Import, Export, or Internal, of this
+          ESMF_State. Possible values are listed in Section [300]21.2.1.
+
+   [itemCount]
+          Count of items in this ESMF_State. When the nestedFlag option is
+          set to .true., the count will include items present in nested
+          States. When using itemSearch, it will count the number of items
+          matching the specified name.
+
+   [itemNameList]
+          Array of item names in this ESMF_State. When the nestedFlag
+          option is set to .true., the list will include items present in
+          nested States. When using itemSearch, it will return the names
+          of items matching the specified name. itemNameList must be at
+          least itemCount long.
+
+   [itemTypeList]
+          Array of possible item object types in this ESMF_State. When the
+          nestedFlag option is set to .true., the list will include items
+          present in nested States. When using itemSearch, it will return
+          the types of items matching the specified name. Must be at least
+          itemCount long. Return values are listed in Section [301]21.2.2.
+
+   [name]
+          Returns the name of this ESMF_State.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  21.7.9 ESMF_StateGet - Get information about an item in a State by item name
+
+   INTERFACE:
+       ! Private name; call using ESMF_StateGet()
+       subroutine ESMF_StateGetItemInfo(state, itemName, itemType, rc)
+
+   ARGUMENTS:
+       type(ESMF_State), intent(in) :: state
+       character (len=*), intent(in) :: itemName
+       type(ESMF_StateItem_Flag), intent(out) :: itemType
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Returns the type for the item named name in this ESMF_State. If no item
+   with this name exists, the value ESMF_STATEITEM_NOTFOUND will be
+   returned and the error code will not be set to an error. Thus this
+   routine can be used to safely query for the existence of items by name
+   whether or not they are expected to be there. The error code will be
+   set in case of other errors, for example if the ESMF_State itself is
+   invalid.
+
+   The arguments are:
+
+   state
+          ESMF_State to be queried.
+
+   itemName
+          Name of the item to return information about.
+
+   itemType
+          Returned item types for the item with the given name, including
+          placeholder names. Options are listed in Section [302]21.2.2. If
+          no item with the given name is found, ESMF_STATEITEM_NOTFOUND
+          will be returned and rc will not be set to an error.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  21.7.10 ESMF_StateGet - Get an item from a State by item name
+
+   INTERFACE:
+   subroutine ESMF_StateGet(state, itemName, <item>, rc)
+
+   ARGUMENTS:
+   type(ESMF_State), intent(in) :: state
+   character (len=*), intent(in) :: itemName
+   <item>, see below for supported values
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Returns an <item> from an ESMF_State by item name. If the ESMF_State
+   contains the <item> directly, only itemName is required.
+
+   If the state contains nested ESMF_States, the itemName argument may
+   specify a fully qualified name to access the desired item with a single
+   call. This is performed using the '/' character to separate the names
+   of the intermediate State names leading to the desired item. (E.g.,
+   itemName='state1/state12/item').
+
+   Supported values for <item> are:
+
+          type(ESMF_Array), intent(out) :: array
+
+          type(ESMF_ArrayBundle), intent(out) :: arraybundle
+
+          type(ESMF_Field), intent(out) :: field
+
+          type(ESMF_FieldBundle), intent(out) :: fieldbundle
+
+          type(ESMF_RouteHandle), intent(out) :: routehandle
+
+          type(ESMF_State), intent(out) :: nestedState
+
+   The arguments are:
+
+   state
+          State to query for an <item> named itemName.
+
+   itemName
+          Name of <item> to be returned. This name may be fully qualified
+          in order to access nested State items.
+
+   <item>
+          Returned reference to the <item>.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,120 @@
+  48.5.12 ESMF_HConfigCreate - Create HConfig object from YAML string or file
+
+   INTERFACE:
+   ! Private name; call using ESMF_HConfigCreate()
+   function ESMF_HConfigCreateDefault(content, filename, rc)
+
+   RETURN VALUE:
+     type(ESMF_HConfig) :: ESMF_HConfigCreateDefault
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len=*),   intent(in),  optional :: content
+     character(len=*),   intent(in),  optional :: filename
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a new HConfig object. The object is empty unless either the
+   content or filename argument is specified.
+
+   The arguments are:
+
+   [content]
+          String containing the YAML text. Mutually exclusive with
+          filename argument.
+
+   [filename]
+          Name of the YAML file to be loaded. Mutually exclusive with
+          content argument.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  48.5.13 ESMF_HConfigCreate - Create HConfig object from HConfig object
+
+   INTERFACE:
+   ! Private name; call using ESMF_HConfigCreate()
+   function ESMF_HConfigCreateHConfig(content, rc)
+
+   RETURN VALUE:
+     type(ESMF_HConfig) :: ESMF_HConfigCreateHConfig
+
+   ARGUMENTS:
+     type(ESMF_HConfig), intent(in)            :: content
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a new HConfig object from existing HConfig object as a deep
+   copy.
+
+   The arguments are:
+
+   content
+          HConfig content.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  48.5.14 ESMF_HConfigCreate - Create HConfig object from <Type> content
+
+   INTERFACE:
+    function ESMF_HConfigCreate(content, rc)
+
+   RETURN VALUE:
+      type(ESMF_HConfig) :: ESMF_HConfigCreate
+
+   ARGUMENTS:
+      <Type>,  intent(in)            :: content[(:)]
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a new HConfig object from content of type <Type>. All <Type>
+   options support the sequence array variant (:) in addition to the
+   scalar variant.
+
+   The supported <Type> options are:
+     * integer(ESMF_KIND_I4)
+     * integer(ESMF_KIND_I8)
+     * logical
+     * real(ESMF_KIND_R4)
+     * real(ESMF_KIND_R8)
+
+   The arguments are:
+
+   content
+          Content of type <Type>.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  48.5.15 ESMF_HConfigCreate - Create HConfig object from String sequence array
+
+   INTERFACE:
+   ! Private name; call using ESMF_HConfigCreate()
+   function ESMF_HConfigCreateStringSeq(content, rc)
+
+   RETURN VALUE:
+     type(ESMF_HConfig) :: ESMF_HConfigCreateStringSeq
+
+   ARGUMENTS:
+     character(len=*),   intent(in)            :: content(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a new HConfig object.
+
+   The arguments are:
+
+   content
+          String content.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

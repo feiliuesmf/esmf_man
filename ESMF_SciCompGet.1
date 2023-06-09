@@ -1,0 +1,26 @@
+  19.4.6 ESMF_SciCompGet - Get SciComp information
+
+   INTERFACE:
+   subroutine ESMF_SciCompGet(scicomp, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_SciComp),       intent(in)            :: scicomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len=*),         intent(out), optional :: name
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get information about an ESMF_SciComp object.
+
+   The arguments are:
+
+   scicomp
+          The ESMF_SciComp object being queried.
+
+   [name]
+          Return the name of the ESMF_SciComp.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

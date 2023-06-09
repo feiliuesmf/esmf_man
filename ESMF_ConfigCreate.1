@@ -1,0 +1,67 @@
+  47.3.4 ESMF_ConfigCreate - Instantiate a Config object
+
+   INTERFACE:
+       ! Private name; call using ESMF_ConfigCreate()
+       type(ESMF_Config) function ESMF_ConfigCreateEmpty(rc)
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,intent(out), optional              :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Instantiates an ESMF_Config object for use in subsequent calls.
+
+   The arguments are:
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  47.3.5 ESMF_ConfigCreate - Instantiate a new Config object from a Config
+  section
+
+   INTERFACE:
+     ! Private name; call using ESMF_ConfigCreate()
+     type(ESMF_Config) function ESMF_ConfigCreateFromSection(config, &
+       openlabel, closelabel, rc)
+
+   ARGUMENTS:
+       type(ESMF_Config)             :: config
+       character(len=*),  intent(in) :: openlabel, closelabel
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Instantiates an ESMF_Config object from a section of an existing
+   ESMF_Config object delimited by openlabel and closelabel. An error is
+   returned if neither of the input labels is found in input config.
+
+   Note that a section is intended as the content of a given ESMF_Config
+   object delimited by two distinct labels. Such content, as well as each
+   of the surrounding labels, are still within the scope of the parent
+   ESMF_Config object. Therefore, including in a section labels used
+   outside that section should be done carefully to prevent parsing
+   conflicts.
+
+   The arguments are:
+
+   config
+          The input ESMF_Config object.
+
+   openlabel
+          Label marking the beginning of a section in config.
+
+   closelabel
+          Label marking the end of a section in config.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if a section is found and a new
+          ESMF_Config object returned.
+

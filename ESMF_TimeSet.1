@@ -1,0 +1,234 @@
+  43.4.15 ESMF_TimeSet - Initialize or set a Time
+
+   INTERFACE:
+   ! Private name; call using ESMF_TimeSet()
+       subroutine ESMF_TimeSetDefault(time, &
+         yy, yy_i8, &
+         mm, dd, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, &
+         calendar, calkindflag, &
+         timeZone, rc)
+
+   ARGUMENTS:
+       type(ESMF_Time),         intent(inout)         :: time
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(in),  optional :: yy
+       integer(ESMF_KIND_I8),   intent(in),  optional :: yy_i8
+       integer,                 intent(in),  optional :: mm
+       integer,                 intent(in),  optional :: dd
+       integer(ESMF_KIND_I4),   intent(in),  optional :: d
+       integer(ESMF_KIND_I8),   intent(in),  optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: h
+       integer(ESMF_KIND_I4),   intent(in),  optional :: m
+       integer(ESMF_KIND_I4),   intent(in),  optional :: s
+       integer(ESMF_KIND_I8),   intent(in),  optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ms
+       integer(ESMF_KIND_I4),   intent(in),  optional :: us
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ns
+       real(ESMF_KIND_R8),      intent(in),  optional :: d_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: h_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: m_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: s_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: us_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sN
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sD
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sD_i8
+       type(ESMF_Calendar),     intent(in),  optional :: calendar
+       type(ESMF_CalKind_Flag), intent(in),  optional :: calkindflag
+       integer,                 intent(in),  optional :: timeZone ! not imp
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Initializes an ESMF_Time with a set of user-specified units via Fortran
+   optional arguments.
+
+   The range of valid values for mm and dd depend on the calendar used.
+   For Gregorian, Julian, and No-Leap calendars, mm is [1-12] and dd is
+   [1-28,29,30, or 31], depending on the value of mm and whether yy or
+   yy_i8 is a leap year. For the 360-day calendar, mm is [1-12] and dd is
+   [1-30]. For Julian Day, Modified Julian Day, and No-Calendar, yy,
+   yy_i8, mm, and dd are invalid inputs, since these calendars do not
+   define them. When valid, the yy and yy_i8 arguments should be fully
+   specified, e.g. 2003 instead of 03. yy and yy_i8 ranges are only
+   limited by machine word size, except for the Gregorian and Julian
+   calendars, where the lowest (proleptic) date limits are 3/1/-4800 and
+   3/1/-4712, respectively. This is a limitation of the Gregorian
+   date-to-Julian day and Julian date-to-Julian day conversion algorithms
+   used to convert Gregorian and Julian dates to the internal
+   representation of seconds. See [[541]22] for a description of the
+   Gregorian date-to-Julian day algorithm and [[542]25] for a description
+   of the Julian date-to-Julian day algorithm. The Custom calendar will
+   have user-defined values for yy, yy_i8, mm, and dd.
+
+   The Julian day specifier, d or d_i8, can only be used with the Julian
+   Day and Modified Julian Day calendars, and has a valid range depending
+   on the word size. For a signed 32-bit d, the range for Julian day is
+   [+/- 24855]. For a signed 64-bit d_i8, the valid range for Julian day
+   is [+/- 106,751,991,167,300]. The Julian day number system adheres to
+   the conventional standard where the reference day of d=0 corresponds to
+   11/24/-4713 in the proleptic Gregorian calendar and 1/1/-4712 in the
+   proleptic Julian calendar. See [[543]30] and  [[544]12].
+
+   The Modified Julian Day system, introduced by space scientists in the
+   late 1950's, is defined as Julian Day - 2400000.5. See [[545]34].
+
+   Note that d and d_i8 are not valid for the No-Calendar. To remain
+   consistent with non-Earth calendars added to ESMF in the future, ESMF
+   requires a calendar to be planet-specific. Hence the No-Calendar does
+   not know what a day is; it cannot assume an Earth day of 86400 seconds.
+
+   Hours, minutes, seconds, and sub-seconds can be used with any calendar,
+   since they are standardized units that are the same for any planet.
+
+   Time manager represents and manipulates time internally with integers
+   to maintain precision. Hence, user-specified floating point values are
+   converted internally to integers. Sub-second values are represented
+   internally with an integer numerator and denominator fraction (sN/sD).
+   The smallest required resolution is nanoseconds (denominator). For
+   example, pi can be represented as s=3, sN=141592654, sD=1000000000.
+   However, via sN_i8 and sD_i8, larger values can be used. If specifying
+   a constant floating point value, be sure to provide at least 16 digits
+   to take full advantage of double precision, for example
+   s_r8=2.718281828459045d0 for 'e' seconds.
+
+   The arguments are:
+
+   time
+          The object instance to initialize.
+
+   [yy]
+          Integer year (32-bit). Default = 0.
+
+   [yy_i8]
+          Integer year (large, 64-bit). Default = 0.
+
+   [mm]
+          Integer month. Default = 1.
+
+   [dd]
+          Integer day of the month. Default = 1.
+
+   [d]
+          Integer Julian Day, or Modified Julian Day (32-bit). Must not be
+          specified with Gregorian calendars. Default = 0.
+
+   [d_i8]
+          Integer Julian Day, or Modified Julian Day (large, 64-bit). Must
+          not be specified with Gregorian calendars. Default = 0.
+
+   [h]
+          Integer hour. Default = 0.
+
+   [m]
+          Integer minute. Default = 0.
+
+   [s]
+          Integer second (32-bit). Default = 0.
+
+   [s_i8]
+          Integer second (large, 64-bit). Default = 0.
+
+   [ms]
+          Integer millisecond. Default = 0.
+
+   [us]
+          Integer microsecond. Default = 0.
+
+   [ns]
+          Integer nanosecond. Default = 0.
+
+   [d_r8]
+          Double precision day. Default = 0.0.
+
+   [h_r8]
+          Double precision hour. Default = 0.0.
+
+   [m_r8]
+          Double precision minute. Default = 0.0.
+
+   [s_r8]
+          Double precision second. Default = 0.0.
+
+   [ms_r8]
+          Double precision millisecond. Default = 0.0.
+
+   [us_r8]
+          Double precision microsecond. Default = 0.0.
+
+   [ns_r8]
+          Double precision nanosecond. Default = 0.0.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD). Default = 0.
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large,
+          64-bit). Default = 0.
+
+   [sD]
+          Integer denominator of fractional second (sN/sD). Default = 1.
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8) (large,
+          64-bit). Default = 1.
+
+   [calendar]
+          Associated Calendar. Defaults to calendar
+          ESMF_CALKIND_NOCALENDAR or default specified in
+          ESMF_Initialize() or ESMF_CalendarSetDefault(). Alternate to,
+          and mutually exclusive with, calkindflag below. Primarily for
+          specifying a custom calendar kind.
+
+   [calkindflag]
+          Alternate to, and mutually exclusive with, calendar above. More
+          convenient way of specifying a built-in calendar kind.
+
+   [timeZone]
+          Associated timezone (hours offset from UTC, e.g. EST = -5).
+          Default = 0 (UTC). (Not implemented yet).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  43.4.16 ESMF_TimeSet - Initialize or set a Time from ISO format string
+
+   INTERFACE:
+   ! Private name; call using ESMF_TimeSet()
+       subroutine ESMF_TimeSetString(time, timeString, rc)
+
+   ARGUMENTS:
+       type(ESMF_Time),         intent(inout)         :: time
+       character(*),            intent(in)            :: timeString
+       integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Initializes an ESMF_Time with a set of user-specified string.
+
+   The arguments are:
+
+   time
+          The object instance to initialize.
+
+   timeString
+          ISO format time string. E.g. 2012-10-24T18:00:00.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

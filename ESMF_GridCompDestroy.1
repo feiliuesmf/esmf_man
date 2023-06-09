@@ -1,0 +1,59 @@
+  17.4.5 ESMF_GridCompDestroy - Release resources associated with a GridComp
+
+   INTERFACE:
+   recursive subroutine ESMF_GridCompDestroy(gridcomp, &
+     timeout, timeoutFlag, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(inout)          :: gridcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(in),   optional :: timeout
+     logical,             intent(out),  optional :: timeoutFlag
+     integer,             intent(out),  optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        5.3.0
+                Added argument timeout. Added argument timeoutFlag. The
+                new arguments provide access to the fault-tolerant
+                component features.
+
+   DESCRIPTION:
+
+   Destroys an ESMF_GridComp, releasing the resources associated with the
+   object.
+
+   The arguments are:
+
+   gridcomp
+          Release all resources associated with this ESMF_GridComp and
+          mark the object as invalid. It is an error to pass this object
+          into any other routines after being destroyed.
+
+   [timeout]
+          The maximum period in seconds that this call will wait in
+          communications with the actual component, before returning with
+          a timeout condition. The default is 3600, i.e. 1 hour. The
+          timeout argument is only supported for connected dual
+          components.
+
+   [timeoutFlag]
+          Returns .true. if the timeout was reached, .false. otherwise. If
+          timeoutFlag was not provided, a timeout condition will lead to a
+          return code of rc \= ESMF_SUCCESS. Otherwise the return value of
+          timeoutFlag is the sole indicator of a timeout condition.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

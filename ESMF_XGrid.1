@@ -1,0 +1,861 @@
+          + [561]34 XGrid Class
+               o [562]34.1 Description
+               o [563]34.2 Constants
+                    # [564]34.2.1 ESMF_XGRIDSIDE
+               o [565]34.3 Use and Examples
+                    # [566]34.3.1 Create an XGrid from Grids then use it
+                      for regridding
+                    # [567]34.3.2 Using XGrid in Earth System modeling
+                    # [568]34.3.3 Create an XGrid from user input data
+                      then use it for regridding
+                    # [569]34.3.4 Query the XGrid for its internal
+                      information
+                    # [570]34.3.5 Destroying the XGrid and other resources
+               o [571]34.4 Restrictions and Future Work
+                    # [572]34.4.1 Restrictions and Future Work
+               o [573]34.5 Design and Implementation Notes
+               o [574]34.6 Class API
+                    # [575]34.6.1 ESMF_XGridAssignment(=)
+                    # [576]34.6.2 ESMF_XGridOperator(==)
+                    # [577]34.6.3 ESMF_XGridOperator(/=)
+                    # [578]34.6.4 ESMF_XGridCreate
+                    # [579]34.6.5 ESMF_XGridCreateFromSparseMat
+                    # [580]34.6.6 ESMF_XGridIsCreated
+                    # [581]34.6.7 ESMF_XGridDestroy
+                    # [582]34.6.8 ESMF_XGridGet
+                                 34 XGrid Class
+
+34.1 Description
+
+   An exchange grid represents the 2D boundary layer usually between the
+   atmosphere on one side and ocean and land on the other in an Earth
+   system model. There are dynamical and thermodynamical processes on
+   either side of the boundary layer and on the boundary layer itself. The
+   boundary layer exchanges fluxes from either side and adjusts boundary
+   conditions for the model components involved. For climate modeling, it
+   is critical that the fluxes transferred by the boundary layer are
+   conservative.
+
+   The ESMF exchange grid is implemented as the ESMF_XGrid class.
+   Internally it's represented by a collection of the intersected cells
+   between atmosphere and ocean/land[[1485]17] grids. These polygonal
+   cells can have irregular shapes and can be broken down into triangles
+   facilitating a finite element approach.
+
+   There are two ways to create an ESMF_XGrid object from user supplied
+   information. The first way to create an ESMF_XGrid takes two lists of
+   ESMF_Grid or ESMF_Mesh that represent the model component grids on
+   either side of the exchange grid. From the two lists of ESMF_Grid or
+   ESMF_Mesh, information required for flux exchange calculation between
+   any pair of the model components from either side of the exchange grid
+   is computed. In addition, the internal representation of the ESMF_XGrid
+   is computed and can be optionally stored as an ESMF_Mesh. This internal
+   representation is the collection of the intersected polygonal cells as
+   a result of merged ESMF_Meshes from both sides of the exchange grid.
+   ESMF_Field can be created on the ESMF_XGrid and used for weight
+   generation and regridding as the internal representation in the
+   ESMF_XGrid has a complete geometrical description of the exchange grid.
+
+   The second way to create an ESMF_XGrid requires users to supply all
+   necessary information to compute communication routehandle. A later
+   call to ESMF_FieldRegridStore() with the xgrid and source and
+   destination ESMF_Fields computes the ESMF_Routehandle object for matrix
+   multiply operation used in model remapping.
+
+   ESMF_XGrid deals with 2 distinctive kinds of fraction for each Grid or
+   Mesh cell involved in its creation. The following description applies
+   to both ESMF_Grid and ESMF_Mesh involved in the ESMF_XGrid creation
+   process. The first fraction quantity $f_1$ is the same as defined in
+   direct Field regrid between a source and destination ESMF_Field pair,
+   namely the fraction of a total Grid cell area $A$ that is used in
+   weight generation. The second fraction quantity $f_2$ is a result of
+   the Grid merging process when multiple ESMF_Grids or model components
+   exist on one side of the exchange grid. To compute XGrid, the multiple
+   ESMF_Grids are first merged together to form a super mesh. During the
+   merging process, Grids that are of a higher priority clips into lower
+   priority Grids, creating fractional cells in the lower priority Grids.
+   Priority is a mechanism to resolve the claim of a surface region by
+   multiple Grids. To conserve flux, any surface area can only be claimed
+   by a unique Grid. This is a typical practice in earth system modelling,
+   e.g. to handle land and ocean boundary.
+
+   In addition to the matrix multiply communication routehandle,
+   ESMF_XGrid exports both $f_1$ and $f_2$ to the user through the
+   ESMF_FieldRegridStore() method because each remapping pair has
+   different $f_1$ and $f_2$ associated with it. $f_2$ from source Grid is
+   folded directly in the calculated weight matrices since its used to
+   calculate destination point flux density $F$ . The global source flux
+   is defined as $\sum_{g=1}^{g=n\_srcgrid}\sum_{s=1}^{s=n\_srccell}{
+   f_{1s} f_{2s} A_s F_s }$ . The global destination flux is defined as:
+   $\sum_{g=1}^{g=n\_dstgrid}\sum_{d=1}^{d=n\_dstcell}{
+   \sum_{s=1}^{s=n\_intersect}(w_{sd} F_s) f_{2d} A_d}$ , $w_{sd}$ is the
+   $f_2$ modified weight intersecting s-th source Grid cell with d-th
+   destination Grid cell. It can be proved that this formulation of the
+   fractions and weight calculation ensures first order global
+   conservation of flux $\mathcal{F}$ transferred from source grids to
+   exchange grid, and from exchange grid to destination grids.
+
+34.2 Constants
+
+  34.2.1 ESMF_XGRIDSIDE
+
+   DESCRIPTION:
+   Specify which side of the ESMF_XGrid the current operation is taking
+   place.
+
+   The type of this flag is:
+
+   type(ESMF_XGridSide_Flag)
+
+   The valid values are:
+
+   ESMF_XGRIDSIDE_A
+          A side of the eXchange Grid, corresponding to the A side of the
+          Grids used to create an XGrid.
+
+   ESMF_XGRIDSIDE_B
+          B side of the eXchange Grid, corresponding to the B side of the
+          Grids used to create an XGrid.
+
+   ESMF_XGRIDSIDE_BALANCED
+          The internally generated balanced side of the eXchange Grid in
+          the middle.
+
+34.3 Use and Examples
+
+  34.3.1 Create an XGrid from Grids then use it for regridding
+
+   An ESMF_XGrid object can be created from Grids on either side of the
+   exchange grid. Internally the weight matrices and index mapping are
+   computed and stored in the XGrid, along with other necessary
+   information for flux exchange calculation between any pair of model
+   components used for the XGrid creation.
+
+   In this example, we create an XGrid from overlapping Grids on either
+   side of the XGrid. Then we perform a flux exchange from one side to the
+   other side of the XGrid.
+
+   We start by creating the Grids on both sides and associate coordinates
+   with the Grids on the corner stagger. The Grids use global indexing and
+   padding for coordinates on the corner stagger.
+
+   For details of Grid creation and coordinate use, please refer to Grid
+   class documentation: [1486]31.3.2.
+
+    ! First Grid on side A
+    sideA(1) = ESMF_GridCreateNoPeriDim(maxIndex=(/20, 20/), &
+      indexflag=ESMF_INDEX_GLOBAL, &
+      gridEdgeLWidth=(/0,0/), gridEdgeUWidth=(/1,1/), &
+      name='source Grid 1 on side A', rc=localrc)
+
+    ! Second Grid on side A
+    sideA(2) = ESMF_GridCreateNoPeriDim(maxIndex=(/20, 10/), &
+      indexflag=ESMF_INDEX_GLOBAL, &
+      gridEdgeLWidth=(/0,0/), gridEdgeUWidth=(/1,1/), &
+      name='source Grid 2 on side A', rc=localrc)
+
+    ! Allocate coordinates for Grid corner stagger
+    do i = 1, 2
+      call ESMF_GridAddCoord(sideA(i), staggerloc=ESMF_STAGGERLOC_CORNER, &
+          rc=localrc)
+
+    enddo
+
+   Assign coordinate for the Grids on sideA at corner stagger.
+
+    ! SideA first grid spans (0-20, 0-20) with 1.0x1.0 degree resolution
+    ! X corner
+    call ESMF_GridGetCoord(sideA(1), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CORNER, coordDim=1, &
+        farrayPtr=coordX, rc=localrc)
+
+    ! Y corner
+    call ESMF_GridGetCoord(sideA(1), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CORNER, coordDim=2, &
+        farrayPtr=coordY, rc=localrc)
+
+    do i = lbound(coordX,1), ubound(coordX,1)
+      do j = lbound(coordX, 2), ubound(coordX, 2)
+        coordX(i,j) = (i-1)*1.0
+        coordY(i,j) = (j-1)*1.0
+      enddo
+    enddo
+
+    ! SideA second grid spans (14.3-24.3, 14.2-24.2) with 0.5x1.0 degree
+    ! resolution X corner
+    call ESMF_GridGetCoord(sideA(2), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CORNER, coordDim=1, &
+        farrayPtr=coordX, rc=localrc)
+
+    ! Y corner
+    call ESMF_GridGetCoord(sideA(2), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CORNER, coordDim=2, &
+        farrayPtr=coordY, rc=localrc)
+
+    do i = lbound(coordX,1), ubound(coordX,1)
+      do j = lbound(coordX, 2), ubound(coordX, 2)
+        coordX(i,j) = 14.3+(i-1)*0.5
+        coordY(i,j) = 14.2+(j-1)*1.0
+      enddo
+    enddo
+
+   Create the destination grid on side B, only one Grid exists on side B.
+   Also associate coordinate with the Grid:
+
+    sideB(1) = ESMF_GridCreateNoPeriDim(maxIndex=(/30, 30/), &
+      indexflag=ESMF_INDEX_GLOBAL, &
+      gridEdgeLWidth=(/0,0/), gridEdgeUWidth=(/1,1/), &
+      name='source Grid 1 on side B', rc=localrc)
+
+    do i = 1, 1
+      call ESMF_GridAddCoord(sideB(i), staggerloc=ESMF_STAGGERLOC_CORNER, &
+          rc=localrc)
+
+    enddo
+
+    ! SideB grid spans (0-30, 0-30) with 1.0x1.0 degree resolution
+    ! X corner
+    call ESMF_GridGetCoord(sideB(1), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CORNER, coordDim=1, &
+        farrayPtr=coordX, rc=localrc)
+
+    ! Y corner
+    call ESMF_GridGetCoord(sideB(1), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CORNER, coordDim=2, &
+        farrayPtr=coordY, rc=localrc)
+
+    do i = lbound(coordX,1), ubound(coordX,1)
+      do j = lbound(coordX, 2), ubound(coordX, 2)
+        coordX(i,j) = (i-1)*1.0
+        coordY(i,j) = (j-1)*1.0
+      enddo
+    enddo
+
+   Create an ESMF_XGrid object from the two lists of Grids on side A and
+   B. In this example both Grids on side A overlaps with the Grid on side
+   B. It's an error to have a Grid on either side that is spatially
+   disjoint with the XGrid. Neither of the Grid on side A is identical to
+   the Grid on side B. Calling the ESMF_XGridCreate() method is
+   straightforward:
+
+    xgrid = ESMF_XGridCreate(sideAGrid=sideA, sideBGrid=sideB, rc=localrc)
+
+   Create an ESMF_Field on the XGrid:
+
+    field = ESMF_FieldCreate(xgrid, typekind=ESMF_TYPEKIND_R8, &
+                rc=localrc)
+
+   Query the Field for its Fortran data pointer and its exclusive bounds:
+
+    call ESMF_FieldGet(field, farrayPtr=xfarrayPtr, &
+        exclusiveLBound=xlb, exclusiveUBound=xub, rc=localrc)
+
+   Create src and dst Fields on side A and side B Grids.
+
+    do i = 1, 2
+        srcField(i) = ESMF_FieldCreate(sideA(i), &
+                typekind=ESMF_TYPEKIND_R8, rc=localrc)
+
+    enddo
+    do i = 1, 1
+        dstField(i) = ESMF_FieldCreate(sideB(i), &
+                typekind=ESMF_TYPEKIND_R8, rc=localrc)
+
+    enddo
+
+   The current implementation requires that Grids used to generate the
+   XGrid must not match, i.e. they are different either topologically or
+   geometrically or both. In this example, the first source Grid is
+   topologically identical to the destination Grid but their geometric
+   coordinates are different.
+
+   First we compute the regrid routehandles, these routehandles can be
+   used repeatedly afterwards. Then we initialize the values in the
+   Fields. Finally we execute the Regrid.
+
+    ! Compute regrid routehandles. The routehandles can be used
+    ! repeatedly afterwards.
+    ! From A -> X
+    do i = 1, 2
+      call ESMF_FieldRegridStore(xgrid, srcField(i), field, &
+        routehandle=rh_src2xgrid(i), rc = localrc)
+
+    enddo
+    ! from X -> B, retrieve the destination fraction Fields.
+    do i = 1, 1
+      call ESMF_FieldRegridStore(xgrid, field, dstField(i), &
+        dstFracField=dstFrac, dstMergeFracField=dstFrac2, &
+        routehandle=rh_xgrid2dst(i), rc = localrc)
+
+    enddo
+
+    ! Initialize values in the source Fields on side A
+    do i = 1, 2
+      call ESMF_FieldGet(srcField(i), farrayPtr=farrayPtr, rc=localrc)
+
+      farrayPtr = i
+    enddo
+    ! Initialize values in the destination Field on XGrid
+    xfarrayPtr = 0.0
+    ! Initialize values in the destination Field on Side B
+    do i = 1, 1
+      call ESMF_FieldGet(dstField(i), farrayPtr=farrayPtr, rc=localrc)
+
+      farrayPtr = 0.0
+    enddo
+
+   First we regrid from the Fields on side A to the Field on the XGrid:
+
+    ! Execute regrid from A -> X
+    do i = 1, 2
+      call ESMF_FieldRegrid(srcField(i), field, &
+        routehandle=rh_src2xgrid(i), &
+        zeroregion=ESMF_REGION_SELECT, rc = localrc)
+
+    enddo
+
+   Next we regrid from the Field on XGrid to the destination Field on side
+   B:
+
+    ! Execute the regrid store
+    do i = 1, 1
+      call ESMF_FieldRegrid(field, dstField(i), &
+        routehandle=rh_xgrid2dst(i), &
+        rc = localrc)
+
+    enddo
+
+   After the regridding calls, the routehandle can be released by calling
+   the ESMF_FieldRegridRelease() method.
+
+    do i = 1, 2
+      call ESMF_FieldRegridRelease(routehandle=rh_src2xgrid(i), rc=localrc)
+
+    enddo
+    call ESMF_FieldRegridRelease(routehandle=rh_xgrid2dst(1), rc=localrc)
+
+   In the above example, we first set up all the required parameters to
+   create an XGrid from user supplied input. Then we create Fields on the
+   XGrid and the Grids on either side. Finally we use the
+   ESMF_FieldRegrid() interface to perform a flux exchange from the source
+   side to the destination side.
+
+  34.3.2 Using XGrid in Earth System modeling
+
+   A typical application in Earth System Modeling is to calculate flux
+   exchange through the planetary boundary layer that can be represented
+   by ESMF_XGrid. Atmosphere is above the planetary boundary layer while
+   land and ocean are below the boundary layer. To create an XGrid, the
+   land and ocean Grids that are usually different in resolution need to
+   be merged first to create a super Mesh. This merging process is enabled
+   through the support of masking.
+
+   The global land and ocean Grids need to be created with masking
+   enabled. In practice, each Grid cell has an integer masking value
+   attached to it. For examples using masking in ESMF_Grid please refer to
+   section [1487]31.3.17.
+
+   When calling the ESMF_XGridCreate() method, user can supply the
+   optional arguments sideAMaskValues and sideBMaskValues. These arguments
+   are one dimensional Fortran integer arrays. If any of the
+   sideAMaskValues entry matches the masking value used in sideA Grid, the
+   sideA Grid cell is masked out, vice versa for sideB. Thus by specifying
+   different regions of a land and ocean Grids to be masked out, the two
+   global Grids can be merged into a new global Mesh covering the entire
+   Earth.
+
+   The following call shows how to use the ESMF_XGridCreate() method with
+   the optional arguments sideAMaskValues and sideBMaskValues.
+
+    xgrid = ESMF_XGridCreate(sideAGrid=sideA, sideBGrid=sideB, &
+      sideAMaskValues=(/2/), sideBMaskValues=(/3,4/), rc=localrc)
+
+  34.3.3 Create an XGrid from user input data then use it for regridding
+
+   Alternatively, XGrid can be created from Grids on either side, area and
+   centroid information of XGrid cells, sparse matrix matmul information.
+   The functionalities provided by the XGrid object is constrained by the
+   user supplied input during its creation time.
+
+   In this example, we will set up a simple XGrid from overlapping Grids
+   on either side of the XGrid. Then we perform a flux exchange from one
+   side to the other side of the XGrid. The Grids are laid out in the
+   following figure:
+
+   CAPTION: Figure 20: Grid layout for simple XGrid creation example.
+   Overlapping of 3 Grids (Green 2x2, Red 2x1, Blue 2x2). Green and red
+   Grids on side A, blue Grid on side B, black indicates the resulting
+   XGrid. Color coded sequence indices are shown. Physical coordinates are
+   the tuples in parenthesis, e.g. at the four corners of rectangular
+   computational domain.
+
+                 \scalebox{0.6}{\includegraphics{XGridEx1}}
+
+   We start by creating the Grids on both sides and associate coordinates
+   with the Grids. For details of Grid creation and coordinate use, please
+   refer to Grid class documentation.
+
+    sideA(1) = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/2,2/), &
+        coordDep1=(/1/), &
+        coordDep2=(/2/), &
+        name='source Grid 1 on side A', rc=localrc)
+
+    sideA(2) = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/2,1/), &
+        coordDep1=(/1/), &
+        coordDep2=(/2/), &
+        name='source Grid 2 on side A', rc=localrc)
+
+    do i = 1, 2
+        call ESMF_GridAddCoord(sideA(i), staggerloc=ESMF_STAGGERLOC_CENTER, &
+            rc=localrc)
+
+    enddo
+
+   Coordinate for the Grids on sideA, refer to the Grid layout diagram for
+   the interpretation of the coordinate values:
+
+    ! SideA first grid
+    centroidA1X=(/0.5, 1.5/)
+    centroidA1Y=(/0.5, 1.5/)
+    call ESMF_GridGetCoord(sideA(1), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CENTER, coordDim=1, &
+        farrayPtr=coordX, rc=localrc)
+
+    coordX = centroidA1X
+    call ESMF_GridGetCoord(sideA(1), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CENTER, coordDim=2, &
+        farrayPtr=coordY, rc=localrc)
+
+    coordY = centroidA1Y
+
+    ! SideA second grid
+    centroidA2X=(/0.5, 1.5/)
+    centroidA2Y=(/2.5/)
+    call ESMF_GridGetCoord(sideA(2), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CENTER, coordDim=1, &
+        farrayPtr=coordX, rc=localrc)
+
+    coordX = centroidA2X
+    call ESMF_GridGetCoord(sideA(2), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CENTER, coordDim=2, &
+        farrayPtr=coordY, rc=localrc)
+
+    coordY = centroidA2Y
+
+   Create the destination grid on side B, only one Grid exists on side B.
+   Also associate coordinate with the Grid:
+
+    sideB(1) = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/2,2/), &
+        coordDep1=(/1/), coordDep2=(/2/), &
+        name='destination Grid on side B', rc=localrc)
+
+    do i = 1, 1
+        call ESMF_GridAddCoord(sideB(i), staggerloc=ESMF_STAGGERLOC_CENTER, &
+            rc=localrc)
+
+    enddo
+
+    ! SideB grid
+    centroidBX=(/0.75, 1.75/)
+    centroidBY=(/0.75, 2.25/)
+    call ESMF_GridGetCoord(sideB(1), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CENTER, coordDim=1, farrayPtr=coordX, &
+                rc=localrc)
+
+    coordX = centroidBX
+    call ESMF_GridGetCoord(sideB(1), localDE=0, &
+        staggerLoc=ESMF_STAGGERLOC_CENTER, coordDim=2, farrayPtr=coordY, &
+                rc=localrc)
+
+    coordY = centroidBY
+
+   Set up the mapping indices and weights from A side to the XGrid. For
+   details of sequence indices, factorIndexList, and factorList, please
+   see section [1488]28.2.18 in the reference manual. Please refer to the
+   figure above for interpretation of the sequence indices used here.
+
+   In order to compute the destination flux on sideB through the XGrid as
+   an mediator, we need to set up the factorList (weights) and
+   factorIndexList (indices) for sparse matrix multiplication in this
+   formulation: dst_flux = W'*W*src_flux, where W' is the weight matrix
+   from the XGrid to destination; and W is the weight matrix from source
+   to the XGrid. The weight matrix is generated using destination area
+   weighted algorithm. Please refer to figure [1489]20 for details.
+
+    ! Set up mapping from A1 -> X
+    sparseMatA2X(1)%factorIndexList(1,1)=1    ! src seq index (green)
+    sparseMatA2X(1)%factorIndexList(1,2)=2    ! src seq index (green)
+    sparseMatA2X(1)%factorIndexList(1,3)=2    ! src seq index (green)
+    sparseMatA2X(1)%factorIndexList(1,4)=3    ! src seq index (green)
+    sparseMatA2X(1)%factorIndexList(1,5)=4    ! src seq index (green)
+    sparseMatA2X(1)%factorIndexList(1,6)=4    ! src seq index (green)
+    sparseMatA2X(1)%factorIndexList(1,7)=3    ! src seq index (green)
+    sparseMatA2X(1)%factorIndexList(1,8)=4    ! src seq index (green)
+    sparseMatA2X(1)%factorIndexList(1,9)=4    ! src seq index (green)
+
+    sparseMatA2X(1)%factorIndexList(2,1)=1    ! dst seq index (black)
+    sparseMatA2X(1)%factorIndexList(2,2)=2    ! dst seq index (black)
+    sparseMatA2X(1)%factorIndexList(2,3)=3    ! dst seq index (black)
+    sparseMatA2X(1)%factorIndexList(2,4)=4    ! dst seq index (black)
+    sparseMatA2X(1)%factorIndexList(2,5)=5    ! dst seq index (black)
+    sparseMatA2X(1)%factorIndexList(2,6)=6    ! dst seq index (black)
+    sparseMatA2X(1)%factorIndexList(2,7)=7    ! dst seq index (black)
+    sparseMatA2X(1)%factorIndexList(2,8)=8    ! dst seq index (black)
+    sparseMatA2X(1)%factorIndexList(2,9)=9    ! dst seq index (black)
+
+    ! Set up mapping from A2 -> X
+    sparseMatA2X(2)%factorIndexList(1,1)=1    ! src seq index (red)
+    sparseMatA2X(2)%factorIndexList(1,2)=2    ! src seq index (red)
+    sparseMatA2X(2)%factorIndexList(1,3)=2    ! src seq index (red)
+
+    sparseMatA2X(2)%factorIndexList(2,1)=10   ! dst seq index (black)
+    sparseMatA2X(2)%factorIndexList(2,2)=11   ! dst seq index (black)
+    sparseMatA2X(2)%factorIndexList(2,3)=12   ! dst seq index (black)
+
+   Set up the mapping weights from side A to the XGrid:
+
+    ! Note that the weights are dest area weighted, they are ratio
+    ! of areas with destination area as the denominator.
+    ! Set up mapping weights from A1 -> X
+    sparseMatA2X(1)%factorList(:)=1.
+
+    ! Set up mapping weights from A2 -> X
+    sparseMatA2X(2)%factorList(:)=1.
+
+   Set up the mapping indices and weights from the XGrid to B side:
+
+    ! Set up mapping from X -> B
+    sparseMatX2B(1)%factorIndexList(1,1)=1    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,2)=2    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,3)=3    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,4)=4    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,5)=5    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,6)=6    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,7)=7    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,8)=8    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,9)=9    ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,10)=10  ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,11)=11  ! src seq index (black)
+    sparseMatX2B(1)%factorIndexList(1,12)=12  ! src seq index (black)
+
+    sparseMatX2B(1)%factorIndexList(2,1)=1    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,2)=1    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,3)=2    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,4)=1    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,5)=1    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,6)=2    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,7)=3    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,8)=3    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,9)=4    ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,10)=3   ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,11)=3   ! dst seq index (blue)
+    sparseMatX2B(1)%factorIndexList(2,12)=4   ! dst seq index (blue)
+
+    ! Set up mapping weights from X -> B
+    sparseMatX2B(1)%factorList(1)=4./9.
+    sparseMatX2B(1)%factorList(2)=2./9.
+    sparseMatX2B(1)%factorList(3)=2./3.
+    sparseMatX2B(1)%factorList(4)=2./9.
+    sparseMatX2B(1)%factorList(5)=1./9.
+    sparseMatX2B(1)%factorList(6)=1./3.
+    sparseMatX2B(1)%factorList(7)=2./9.
+    sparseMatX2B(1)%factorList(8)=1./9.
+    sparseMatX2B(1)%factorList(9)=1./3.
+    sparseMatX2B(1)%factorList(10)=4./9.
+    sparseMatX2B(1)%factorList(11)=2./9.
+    sparseMatX2B(1)%factorList(12)=2./3.
+
+   Optionally the area can be setup to compute surface area weighted flux
+   integrals:
+
+    ! Set up destination areas to adjust weighted flux
+    xgrid_area(1) = 1.
+    xgrid_area(2) = 0.5
+    xgrid_area(3) = 0.5
+    xgrid_area(4) = 0.5
+    xgrid_area(5) = 0.25
+    xgrid_area(6) = 0.25
+    xgrid_area(7) = 0.5
+    xgrid_area(8) = 0.25
+    xgrid_area(9) = 0.25
+    xgrid_area(10) = 1.
+    xgrid_area(11) = 0.5
+    xgrid_area(12) = 0.5
+
+   Create an XGrid based on the user supplied regridding parameters:
+
+    xgrid = ESMF_XGridCreateFromSparseMat(sideAGrid=sideA, &
+        sideBGrid=sideB, area=xgrid_area, &
+        centroid=centroid, sparseMatA2X=sparseMatA2X, &
+        sparseMatX2B=sparseMatX2B, rc=localrc)
+
+   Create an ESMF_Field on the XGrid:
+
+    field = ESMF_FieldCreate(xgrid, typekind=ESMF_TYPEKIND_R8, &
+                rc=localrc)
+
+   Query the Field for its Fortran data pointer and its exclusive bounds:
+
+    call ESMF_FieldGet(field, farrayPtr=xfarrayPtr, &
+        exclusiveLBound=xlb, exclusiveUBound=xub, rc=localrc)
+
+   Setup and initialize src and dst Fields on side A and side B Grids,
+   source Fields have different source flux:
+
+    do i = 1, 2
+        srcField(i) = ESMF_FieldCreate(sideA(i), &
+                typekind=ESMF_TYPEKIND_R8, rc=localrc)
+
+        call ESMF_FieldGet(srcField(i), farrayPtr=farrayPtr, rc=localrc)
+
+        farrayPtr = i
+    enddo
+    do i = 1, 1
+        dstField(i) = ESMF_FieldCreate(sideB(i), &
+                typekind=ESMF_TYPEKIND_R8, rc=localrc)
+
+        call ESMF_FieldGet(dstField(i), farrayPtr=farrayPtr, rc=localrc)
+
+        farrayPtr = 0.0
+    enddo
+
+   The current implementation requires that Grids used to generate the
+   XGrid must not match, i.e. they are different either topologically or
+   geometrically or both. In this example, the first source Grid is
+   topologically identical to the destination Grid but their geometric
+   coordinates are different. This requirement will be relaxed in a future
+   release.
+
+   First we compute the regrid routehandles, these routehandles can be
+   used repeatedly afterwards. Then we initialize the values in the
+   Fields. Finally we execute the Regrid.
+
+    ! Compute regrid routehandles. The routehandles can be used
+    ! repeatedly afterwards.
+    ! From A -> X
+    do i = 1, 2
+        call ESMF_FieldRegridStore(xgrid, srcField(i), field, &
+                routehandle=rh_src2xgrid(i), rc = localrc)
+
+    enddo
+    ! from X -> B
+    do i = 1, 1
+        call ESMF_FieldRegridStore(xgrid, field, dstField(i), &
+                routehandle=rh_xgrid2dst(i), rc = localrc)
+
+    enddo
+
+    ! Initialize values in the source Fields on side A
+    do i = 1, 2
+        call ESMF_FieldGet(srcField(i), farrayPtr=farrayPtr, rc=localrc)
+
+        farrayPtr = i
+    enddo
+    ! Initialize values in the destination Field on XGrid
+    xfarrayPtr = 0.0
+    ! Initialize values in the destination Field on Side B
+    do i = 1, 1
+        call ESMF_FieldGet(dstField(i), farrayPtr=farrayPtr, rc=localrc)
+
+        farrayPtr = 0.0
+    enddo
+
+   First we regrid from the Fields on side A to the Field on the XGrid:
+
+    ! Execute regrid from A -> X
+    do i = 1, 2
+        call ESMF_FieldRegrid(srcField(i), field, &
+            routehandle=rh_src2xgrid(i), &
+            zeroregion=ESMF_REGION_SELECT, rc = localrc)
+
+    enddo
+
+   Next we regrid from the Field on XGrid to the destination Field on side
+   B:
+
+    ! Execute the regrid store
+    do i = 1, 1
+        call ESMF_FieldRegrid(field, dstField(i), &
+            routehandle=rh_xgrid2dst(i), rc = localrc)
+
+    enddo
+
+   In the above example, we first set up all the required parameters to
+   create an XGrid from user supplied input. Then we create Fields on the
+   XGrid and the Grids on either side. Finally we use the
+   ESMF_FieldRegrid() interface to perform a flux exchange from the source
+   side to the destination side.
+
+  34.3.4 Query the XGrid for its internal information
+
+   One can query the XGrid for its internal information:
+
+    call ESMF_XGridGet(xgrid, &
+        sideAGridCount=ngridA, &    ! number of Grids on side A
+        sideBGridCount=ngridB, &    ! number of Grids on side B
+        sideAGrid=l_sideA, &    ! list of Grids on side A
+        sideBGrid=l_sideB, &    ! list of Grids on side B
+        area=l_area, &      ! list of area of XGrid
+        centroid=l_centroid, &  ! list of centroid of XGrid
+        distgridA=l_sideAdg, &  ! list of Distgrids on side A
+        distgridM = distgrid, & ! balanced distgrid
+        sparseMatA2X=l_sparseMatA2X, & !sparse matrix matmul parameters A to X
+        sparseMatX2B=l_sparseMatX2B, & !sparse matrix matmul parameters X to B
+        rc=localrc)
+
+    call ESMF_XGridGet(xgrid, localDe=0, &
+        elementCount=eleCount, &    ! elementCount on the localDE
+        exclusiveCount=ec, &        ! exclusive count
+        exclusiveLBound=elb, &      ! exclusive lower bound
+        exclusiveUBound=eub, &      ! exclusive upper bound
+        rc=localrc)
+
+    call ESMF_XGridGet(xgrid, &
+        xgridSide=ESMF_XGRIDSIDE_A, & ! side of the XGrid to query
+        gridIndex=1, &              ! index of the distgrid
+        distgrid=distgrid, &        ! the distgrid returned
+        rc=localrc)
+
+  34.3.5 Destroying the XGrid and other resources
+
+   Clean up the resources by destroying the XGrid and other objects:
+
+    ! After the regridding is successful.
+    ! Clean up all the allocated resources:
+    call ESMF_FieldDestroy(field, rc=localrc)
+
+    call ESMF_XGridDestroy(xgrid, rc=localrc)
+
+    do i = 1, 2
+        call ESMF_FieldDestroy(srcField(i), rc = localrc)
+
+        call ESMF_GridDestroy(sideA(i), rc = localrc)
+
+    enddo
+
+    do i = 1, 1
+        call ESMF_FieldDestroy(dstField(i), rc = localrc)
+
+        call ESMF_GridDestroy(sideB(i), rc = localrc)
+
+    enddo
+
+    deallocate(sparseMatA2X(1)%factorIndexList, sparseMatA2X(1)%factorList)
+    deallocate(sparseMatA2X(2)%factorIndexList, sparseMatA2X(2)%factorList)
+    deallocate(sparseMatX2B(1)%factorIndexList, sparseMatX2B(1)%factorList)
+
+34.4 Restrictions and Future Work
+
+  34.4.1 Restrictions and Future Work
+
+    1. CAUTION: Any Grid or Mesh pair picked from the A side and B side of
+       the XGrid cannot point to the same Grid or Mesh in memory on a
+       local PET. This prevents Regrid from selecting the right source and
+       destination grid automatically to calculate the regridding
+       routehandle. It's okay for the Grid and Mesh to have identical
+       topological and geographical properties as long as they are stored
+       in different memory.
+
+34.5 Design and Implementation Notes
+
+    1. The XGrid class is implemented in Fortran, and as such is defined
+       inside the framework by a XGrid derived type and a set of
+       subprograms (functions and subroutines) which operate on that
+       derived type. The XGrid class contains information needed to create
+       Grid, Field, and communication routehandle.
+    2. XGrid follows the framework-wide convention of the unison creation
+       and operation rule: All PETs which are part of the currently
+       executing VM must create the same XGrids at the same point in their
+       execution. In addition to the unison rule, XGrid creation also
+       performs inter-PET communication within the current executing VM.
+
+34.6 Class API
+
+  34.6.1 ESMF_XGridAssignment(=) - XGrid assignment
+
+   INTERFACE:
+     interface assignment(=)
+     xgrid1 = xgrid2
+
+   ARGUMENTS:
+     type(ESMF_XGrid) :: xgrid1
+     type(ESMF_XGrid) :: xgrid2
+
+   DESCRIPTION:
+
+   Assign xgrid1 as an alias to the same ESMF XGrid object in memory as
+   xgrid2. If xgrid2 is invalid, then xgrid1 will be equally invalid after
+   the assignment.
+
+   The arguments are:
+
+   xgrid1
+          The ESMF_XGrid object on the left hand side of the assignment.
+
+   xgrid2
+          The ESMF_XGrid object on the right hand side of the assignment.
+
+  34.6.2 ESMF_XGridOperator(==) - XGrid equality operator
+
+   INTERFACE:
+     interface operator(==)
+     if (xgrid1 == xgrid2) then ... endif
+               OR
+     result = (xgrid1 == xgrid2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_XGrid), intent(in) :: xgrid1
+     type(ESMF_XGrid), intent(in) :: xgrid2
+
+   DESCRIPTION:
+
+   Test whether xgrid1 and xgrid2 are valid aliases to the same ESMF XGrid
+   object in memory. For a more general comparison of two ESMF XGrids,
+   going beyond the simple alias test, the ESMF_XGridMatch() function (not
+   yet implemented) must be used.
+
+   The arguments are:
+
+   xgrid1
+          The ESMF_XGrid object on the left hand side of the equality
+          operation.
+
+   xgrid2
+          The ESMF_XGrid object on the right hand side of the equality
+          operation.
+
+  34.6.3 ESMF_XGridOperator(/=) - XGrid not equal operator
+
+   INTERFACE:
+     interface operator(/=)
+     if (xgrid1 /= xgrid2) then ... endif
+               OR
+     result = (xgrid1 /= xgrid2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_XGrid), intent(in) :: xgrid1
+     type(ESMF_XGrid), intent(in) :: xgrid2
+
+   DESCRIPTION:
+
+   Test whether xgrid1 and xgrid2 are not valid aliases to the same ESMF
+   XGrid object in memory. For a more general comparison of two ESMF
+   XGrids, going beyond the simple alias test, the ESMF_XGridMatch()
+   function (not yet implemented) must be used.
+
+   The arguments are:
+
+   xgrid1
+          The ESMF_XGrid object on the left hand side of the non-equality
+          operation.
+
+   xgrid2
+          The ESMF_XGrid object on the right hand side of the non-equality
+          operation.
+

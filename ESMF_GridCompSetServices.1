@@ -1,0 +1,238 @@
+  17.4.19 ESMF_GridCompSetServices - Call user routine to register GridComp
+  methods
+
+   INTERFACE:
+   recursive subroutine ESMF_GridCompSetServices(gridcomp, &
+     userRoutine, userRc, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(inout)         :: gridcomp
+     interface
+       subroutine userRoutine(gridcomp, rc)
+         use ESMF_CompMod
+         implicit none
+         type(ESMF_GridComp)        :: gridcomp ! must not be optional
+         integer, intent(out)       :: rc       ! must not be optional
+       end subroutine
+     end interface
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: userRc
+     integer,             intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Call into user provided userRoutine which is responsible for setting
+   Component's Initialize(), Run(), and Finalize() services.
+
+   The arguments are:
+
+   gridcomp
+          Gridded Component.
+
+   userRoutine
+          The Component writer must supply a subroutine with the exact
+          interface shown above for the userRoutine argument. Arguments in
+          userRoutine must not be declared as optional, and the types,
+          intent and order must match. Prior to Fortran-2008, the
+          subroutine must be either a module scope procedure, or an
+          external procedure that has a matching interface block specified
+          for it. An internal procedure which is contained within another
+          procedure must not be used. From Fortran-2008 onwards, an
+          internal procedure contained within either a main program or a
+          module procedure may be used. If the internal procedure is
+          contained within a module procedure, it is subject to
+          initialization requirements. See: [274]16.4.9
+
+          The userRoutine, when called by the framework, must make
+          successive calls to ESMF_GridCompSetEntryPoint() to preset
+          callback routines for standard Component Initialize(), Run(),
+          and Finalize() methods.
+
+   [userRc]
+          Return code set by userRoutine before returning.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  17.4.20 ESMF_GridCompSetServices - Call user routine through name lookup, to
+  register GridComp methods
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridCompSetServices()
+   recursive subroutine ESMF_GridCompSetServicesShObj(gridcomp, userRoutine, &
+     sharedObj, userRoutineFound, userRc, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(inout)         :: gridcomp
+     character(len=*),    intent(in)            :: userRoutine
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len=*),    intent(in),  optional :: sharedObj
+     logical,             intent(out), optional :: userRoutineFound
+     integer,             intent(out), optional :: userRc
+     integer,             intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.3.0r
+                Added argument userRoutineFound. The new argument provides
+                a way to test availability without causing error
+                conditions.
+
+   DESCRIPTION:
+
+   Call into a user provided routine which is responsible for setting
+   Component's Initialize(), Run(), and Finalize() services. The named
+   userRoutine must exist in the executable, or in the shared object
+   specified by sharedObj. In the latter case all of the platform specific
+   details about dynamic linking and loading apply.
+
+   The arguments are:
+
+   gridcomp
+          Gridded Component.
+
+   userRoutine
+          Name of routine to be called, specified as a character string.
+          The Component writer must supply a subroutine with the exact
+          interface shown for userRoutine below. Arguments must not be
+          declared as optional, and the types, intent and order must
+          match. Prior to Fortran-2008, the subroutine must be either a
+          module scope procedure, or an external procedure that has a
+          matching interface block specified for it. An internal procedure
+          which is contained within another procedure must not be used.
+          From Fortran-2008 onwards, an internal procedure contained
+          within either a main program or a module procedure may be used.
+          If the internal procedure is contained within a module
+          procedure, it is subject to initialization requirements. See:
+          [275]16.4.9
+
+          INTERFACE:
+
+       interface
+         subroutine userRoutine(gridcomp, rc)
+           type(ESMF_GridComp)  :: gridcomp   ! must not be optional
+           integer, intent(out) :: rc         ! must not be optional
+         end subroutine
+       end interface
+
+          DESCRIPTION:
+          The userRoutine, when called by the framework, must make
+          successive calls to ESMF_GridCompSetEntryPoint() to preset
+          callback routines for standard Component Initialize(), Run(),
+          and Finalize() methods.
+
+   [sharedObj]
+          Name of shared object that contains userRoutine. If the
+          sharedObj argument is not provided the executable itself will be
+          searched for userRoutine.
+
+   [userRoutineFound]
+          Report back whether the specified userRoutine was found and
+          executed, or was not available. If this argument is present, not
+          finding the userRoutine will not result in returning an error in
+          rc. The default is to return an error if the userRoutine cannot
+          be found.
+
+   [userRc]
+          Return code set by userRoutine before returning.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  17.4.21 ESMF_GridCompSetServices - Set to serve as Dual Component for an
+  Actual Component
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridCompSetServices()
+   recursive subroutine ESMF_GridCompSetServicesComp(gridcomp, &
+     actualGridcomp, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(inout)         :: gridcomp
+     type(ESMF_GridComp), intent(in)            :: actualGridcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set the services of a Gridded Component to serve a "dual" Component for
+   an "actual" Component. The component tunnel is VM based.
+
+   The arguments are:
+
+   gridcomp
+          Dual Gridded Component.
+
+   actualGridcomp
+          Actual Gridded Component.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  17.4.22 ESMF_GridCompSetServices - Set to serve as Dual Component for an
+  Actual Component through sockets
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridCompSetServices()
+   recursive subroutine ESMF_GridCompSetServicesSock(gridcomp, port, &
+     server, timeout, timeoutFlag, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(inout)         :: gridcomp
+     integer,             intent(in)            :: port
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len=*),    intent(in),  optional :: server
+     integer,             intent(in),  optional :: timeout
+     logical,             intent(out), optional :: timeoutFlag
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set the services of a Gridded Component to serve a "dual" Component for
+   an "actual" Component. The component tunnel is socket based.
+
+   The arguments are:
+
+   gridcomp
+          Dual Gridded Component.
+
+   port
+          Port number under which the actual component is being served.
+          The valid port range is [1024, 65535].
+
+   [server]
+          Server name where the actual component is being served. The
+          default, i.e. if the server argument was not provided, is
+          localhost.
+
+   [timeout]
+          The maximum period in seconds that this call will wait in
+          communications with the actual component, before returning with
+          a timeout condition. The default is 3600, i.e. 1 hour.
+
+   [timeoutFlag]
+          Returns .true. if the timeout was reached, .false. otherwise. If
+          timeoutFlag was not provided, a timeout condition will lead to a
+          return code of rc \= ESMF_SUCCESS. Otherwise the return value of
+          timeoutFlag is the sole indicator of a timeout condition.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

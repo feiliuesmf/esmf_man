@@ -1,0 +1,37 @@
+  47.3.8 ESMF_ConfigFindNextLabel - Find a label in Config object starting from
+  current position
+
+   INTERFACE:
+     subroutine ESMF_ConfigFindNextLabel(config, label, isPresent, rc)
+
+   ARGUMENTS:
+       type(ESMF_Config), intent(inout)           :: config
+       character(len=*),  intent(in)              :: label
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       logical,           intent(out),  optional  :: isPresent
+       integer,           intent(out),  optional  :: rc
+
+   DESCRIPTION:
+
+   Finds the label (key) string in the config object, starting from the
+   current position pointer.
+
+   This method is equivalent to ESMF_ConfigFindLabel, but the search is
+   performed starting from the current position pointer.
+
+   The arguments are:
+
+   config
+          Already created ESMF_Config object.
+
+   label
+          Identifying label.
+
+   [isPresent]
+          Set to .true. if the item is found.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors. If the
+          label is not found, and the isPresent argument is not present,
+          an error is returned.
+

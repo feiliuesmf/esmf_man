@@ -1,0 +1,361 @@
+          + [185]46 Alarm Class
+               o [186]46.1 Description
+               o [187]46.2 Constants
+                    # [188]46.2.1 ESMF_ALARMLIST
+               o [189]46.3 Use and Examples
+                    # [190]46.3.1 Clock initialization
+                    # [191]46.3.2 Alarm initialization
+                    # [192]46.3.3 Clock advance and Alarm processing
+                    # [193]46.3.4 Alarm and Clock destruction
+               o [194]46.4 Restrictions and Future Work
+               o [195]46.5 Design and Implementation Notes
+               o [196]46.6 Class API
+                    # [197]46.6.1 ESMF_AlarmAssignment(=)
+                    # [198]46.6.2 ESMF_AlarmOperator(==)
+                    # [199]46.6.3 ESMF_AlarmOperator(/=)
+                    # [200]46.6.4 ESMF_AlarmCreate
+                    # [201]46.6.5 ESMF_AlarmCreate
+                    # [202]46.6.6 ESMF_AlarmDestroy
+                    # [203]46.6.7 ESMF_AlarmDisable
+                    # [204]46.6.8 ESMF_AlarmEnable
+                    # [205]46.6.9 ESMF_AlarmGet
+                    # [206]46.6.10 ESMF_AlarmIsCreated
+                    # [207]46.6.11 ESMF_AlarmIsEnabled
+                    # [208]46.6.12 ESMF_AlarmIsRinging
+                    # [209]46.6.13 ESMF_AlarmIsSticky
+                    # [210]46.6.14 ESMF_AlarmNotSticky
+                    # [211]46.6.15 ESMF_AlarmPrint
+                    # [212]46.6.16 ESMF_AlarmRingerOff
+                    # [213]46.6.17 ESMF_AlarmRingerOn
+                    # [214]46.6.18 ESMF_AlarmSet
+                    # [215]46.6.19 ESMF_AlarmSticky
+                    # [216]46.6.20 ESMF_AlarmValidate
+                    # [217]46.6.21 ESMF_AlarmWasPrevRinging
+                    # [218]46.6.22 ESMF_AlarmWillRingNext
+                                 46 Alarm Class
+
+46.1 Description
+
+   The Alarm class identifies events that occur at specific Times or
+   specific TimeIntervals by returning a true value at those times or
+   subsequent times, and a false value otherwise.
+
+46.2 Constants
+
+  46.2.1 ESMF_ALARMLIST
+
+   DESCRIPTION:
+   Specifies the characteristics of Alarms that populate a retrieved Alarm
+   list.
+
+   The type of this flag is:
+
+   type(ESMF_AlarmList_Flag)
+
+   The valid values are:
+
+   ESMF_ALARMLIST_ALL
+          All alarms.
+
+   ESMF_ALARMLIST_NEXTRINGING
+          Alarms that will ring before or at the next timestep.
+
+   ESMF_ALARMLIST_PREVRINGING
+          Alarms that rang at or since the last timestep.
+
+   ESMF_ALARMLIST_RINGING
+          Only ringing alarms.
+
+46.3 Use and Examples
+
+   Alarms are used in conjunction with Clocks (see Section [588]45.1).
+   Multiple Alarms can be associated with a Clock. During the
+   ESMF_ClockAdvance() method, a Clock iterates over its internal Alarms
+   to determine if any are ringing. Alarms ring when a specified Alarm
+   time is reached or exceeded, taking into account whether the time step
+   is positive or negative. In ESMF_DIRECTION_REVERSE (see
+   Section [589]45.1), alarms ring in reverse, i.e., they begin ringing
+   when they originally ended, and end ringing when they originally began.
+   On completion of the time advance call, the Clock optionally returns a
+   list of ringing alarms.
+
+   Each ringing Alarm can then be processed using Alarm methods for
+   identifying, turning off, disabling or resetting the Alarm.
+
+   Alarm methods are defined for obtaining the ringing state, turning the
+   ringer on/off, enabling/disabling the Alarm, and getting/setting
+   associated times.
+
+   The following example shows how to set and process Alarms.
+
+! !PROGRAM: ESMF_AlarmEx - Alarm examples
+!
+! !DESCRIPTION:
+!
+! This program shows an example of how to create, initialize, and process
+! alarms associated with a clock.
+!-----------------------------------------------------------------------------
+#include "ESMF.h"
+
+      ! ESMF Framework module
+      use ESMF
+      use ESMF_TestMod
+      implicit none
+
+      ! instantiate time_step, start, stop, and alarm times
+      type(ESMF_TimeInterval) :: timeStep, alarmInterval
+      type(ESMF_Time) :: alarmTime, startTime, stopTime
+
+      ! instantiate a clock
+      type(ESMF_Clock) :: clock
+
+      ! instantiate Alarm lists
+      integer, parameter :: NUMALARMS = 2
+      type(ESMF_Alarm) :: alarm(NUMALARMS)
+
+      ! local variables for Get methods
+      integer :: ringingAlarmCount  ! at any time step (0 to NUMALARMS)
+
+      ! name, loop counter, result code
+      character (len=ESMF_MAXSTR) :: name
+      integer :: i, rc, result
+
+      ! initialize ESMF framework
+      call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, &
+        defaultlogfilename="AlarmEx.Log", &
+        logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+  46.3.1 Clock initialization
+
+   This example shows how to create and initialize an ESMF_Clock.
+
+      ! initialize time interval to 1 day
+      call ESMF_TimeIntervalSet(timeStep, d=1, rc=rc)
+
+      ! initialize start time to 9/1/2003
+      call ESMF_TimeSet(startTime, yy=2003, mm=9, dd=1, rc=rc)
+
+      ! initialize stop time to 9/30/2003
+      call ESMF_TimeSet(stopTime, yy=2003, mm=9, dd=30, rc=rc)
+
+      ! create & initialize the clock with the above values
+      clock = ESMF_ClockCreate(timeStep, startTime, stopTime=stopTime, &
+                               name="The Clock", rc=rc)
+
+  46.3.2 Alarm initialization
+
+   This example shows how to create and initialize two ESMF_Alarms and
+   associate them with the clock.
+
+      ! Initialize first alarm to be a one-shot on 9/15/2003 and associate
+      ! it with the clock
+      call ESMF_TimeSet(alarmTime, yy=2003, mm=9, dd=15, rc=rc)
+
+      alarm(1) = ESMF_AlarmCreate(clock, &
+         ringTime=alarmTime, name="Example alarm 1", rc=rc)
+
+      ! Initialize second alarm to ring on a 1 week interval starting 9/1/2003
+      ! and associate it with the clock
+      call ESMF_TimeSet(alarmTime, yy=2003, mm=9, dd=1, rc=rc)
+
+      call ESMF_TimeIntervalSet(alarmInterval, d=7, rc=rc)
+
+      ! Alarm gets default name "Alarm002"
+      alarm(2) = ESMF_AlarmCreate(clock=clock, ringTime=alarmTime, &
+                                  ringInterval=alarmInterval, rc=rc)
+
+  46.3.3 Clock advance and Alarm processing
+
+   This example shows how to advance an ESMF_Clock and process any
+   resulting ringing alarms.
+
+      ! time step clock from start time to stop time
+      do while (.not.ESMF_ClockIsStopTime(clock, rc=rc))
+
+        ! perform time step and get the number of any ringing alarms
+        call ESMF_ClockAdvance(clock, ringingAlarmCount=ringingAlarmCount, &
+                               rc=rc)
+
+        call ESMF_ClockPrint(clock, options="currTime string", rc=rc)
+
+        ! check if alarms are ringing
+        if (ringingAlarmCount > 0) then
+          print *, "number of ringing alarms = ", ringingAlarmCount
+
+          do i = 1, NUMALARMS
+            if (ESMF_AlarmIsRinging(alarm(i), rc=rc)) then
+
+              call ESMF_AlarmGet(alarm(i), name=name, rc=rc)
+              print *, trim(name), " is ringing!"
+
+              ! after processing alarm, turn it off
+              call ESMF_AlarmRingerOff(alarm(i), rc=rc)
+
+            end if ! this alarm is ringing
+          end do ! each ringing alarm
+        endif ! ringing alarms
+      end do ! timestep clock
+
+  46.3.4 Alarm and Clock destruction
+
+   This example shows how to destroy ESMF_Alarms and ESMF_Clocks.
+
+      call ESMF_AlarmDestroy(alarm(1), rc=rc)
+
+      call ESMF_AlarmDestroy(alarm(2), rc=rc)
+
+      call ESMF_ClockDestroy(clock, rc=rc)
+
+      ! finalize ESMF framework
+      call ESMF_Finalize(rc=rc)
+
+      end program ESMF_AlarmEx
+
+46.4 Restrictions and Future Work
+
+    1. Alarm list allocation factor The alarm list within a clock is
+       dynamically allocated automatically, 200 alarm references at a
+       time. This constant is defined in both Fortran and C++ with a
+       #define for ease of modification.
+    2. Sticky alarm end times in reverse For sticky alarms, there is an
+       implicit limitation that in order to properly reverse timestep
+       through a ring end time, that time must have already been traversed
+       in the forward direction. This is due to the fact that the Time
+       Manager cannot predict when user code will call
+       ESMF_AlarmRingerOff(). An error message will be logged when this
+       limitation is not satisfied.
+    3. Sticky alarm ring interval in reverse For repeating sticky alarms,
+       it is currently assumed that the ringInterval is constant, so that
+       only the time of the last call to ESMF_AlarmRingerOff() is saved.
+       In ESMF_DIRECTION_REVERSE, this information is used to turn sticky
+       alarms back on. In a future release, ringIntervals will be allowed
+       to be variable, by saving alarm state at every timestep.
+
+46.5 Design and Implementation Notes
+
+   The Alarm class is designed as a deep, dynamically allocatable class,
+   based on a pointer type. This allows for both indirect and direct
+   manipulation of alarms. Indirect alarm manipulation is where ESMF_Alarm
+   API methods, such as ESMF_AlarmRingerOff(), are invoked on alarm
+   references (pointers) returned from ESMF_Clock queries such as "return
+   ringing alarms." Since the method is performed on an alarm reference,
+   the actual alarm held by the clock is affected, not just a user's local
+   copy. Direct alarm manipulation is the more common case where alarm API
+   methods are invoked on the original alarm objects created by the user.
+
+   For consistency, the ESMF_Clock class is also designed as a deep,
+   dynamically allocatable class.
+
+   An additional benefit from this approach is that Clocks and Alarms can
+   be created and used from anywhere in a user's code without regard to
+   the scope in which they were created. In contrast, statically created
+   Alarms and Clocks would disappear if created within a user's routine
+   that returns, whereas dynamically allocated Alarms and Clocks will
+   persist until explicitly destroyed by the user.
+
+46.6 Class API
+
+  46.6.1 ESMF_AlarmAssignment(=) - Assign an Alarm to another Alarm
+
+   INTERFACE:
+       interface assignment(=)
+       alarm1 = alarm2
+
+   ARGUMENTS:
+       type(ESMF_Alarm) :: alarm1
+       type(ESMF_Alarm) :: alarm2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign alarm1 as an alias to the same ESMF_Alarm object in memory as
+   alarm2. If alarm2 is invalid, then alarm1 will be equally invalid after
+   the assignment.
+
+   The arguments are:
+
+   alarm1
+          The ESMF_Alarm object on the left hand side of the assignment.
+
+   alarm2
+          The ESMF_Alarm object on the right hand side of the assignment.
+
+  46.6.2 ESMF_AlarmOperator(==) - Test if Alarm 1 is equal to Alarm 2
+
+   INTERFACE:
+       interface operator(==)
+       if (alarm1 == alarm2) then ... endif
+                    OR
+       result = (alarm1 == alarm2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Alarm), intent(in) :: alarm1
+       type(ESMF_Alarm), intent(in) :: alarm2
+
+   DESCRIPTION:
+
+   Overloads the (==) operator for the ESMF_Alarm class. Compare two
+   alarms for equality; return .true. if equal, .false. otherwise.
+   Comparison is based on IDs, which are distinct for newly created alarms
+   and identical for alarms created as copies.
+
+   If either side of the equality test is not in the ESMF_INIT_CREATED
+   status an error will be logged. However, this does not affect the
+   return value, which is .true. when both sides are in the same status,
+   and .false. otherwise.
+
+   The arguments are:
+
+   alarm1
+          The ESMF_Alarm object on the left hand side of the equality
+          operation.
+
+   alarm2
+          The ESMF_Alarm object on the right hand side of the equality
+          operation.
+
+  46.6.3 ESMF_AlarmOperator(/=) - Test if Alarm 1 is not equal to Alarm 2
+
+   INTERFACE:
+       interface operator(/=)
+       if (alarm1 /= alarm2) then ... endif
+                    OR
+       result = (alarm1 /= alarm2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Alarm), intent(in) :: alarm1
+       type(ESMF_Alarm), intent(in) :: alarm2
+
+   DESCRIPTION:
+
+   Overloads the (/=) operator for the ESMF_Alarm class. Compare two
+   alarms for inequality; return .true. if not equal, .false. otherwise.
+   Comparison is based on IDs, which are distinct for newly created alarms
+   and identical for alarms created as copies.
+
+   If either side of the equality test is not in the ESMF_INIT_CREATED
+   status an error will be logged. However, this does not affect the
+   return value, which is .true. when both sides are not in the same
+   status, and .false. otherwise.
+
+   The arguments are:
+
+   alarm1
+          The ESMF_Alarm object on the left hand side of the non-equality
+          operation.
+
+   alarm2
+          The ESMF_Alarm object on the right hand side of the non-equality
+          operation.
+

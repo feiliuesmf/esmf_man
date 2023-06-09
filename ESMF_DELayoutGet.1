@@ -1,0 +1,108 @@
+  50.6.7 ESMF_DELayoutGet - Get object-wide DELayout information
+
+   INTERFACE:
+   recursive subroutine ESMF_DELayoutGet(delayout, vm, deCount,&
+     petMap, vasMap, oneToOneFlag, pinflag, localDeCount, localDeToDeMap, &
+     localDeList, &      ! DEPRECATED ARGUMENT
+     vasLocalDeCount, vasLocalDeToDeMap, &
+     vasLocalDeList, &   ! DEPRECATED ARGUMENT
+     rc)
+
+   ARGUMENTS:
+     type(ESMF_DELayout),      intent(in)            :: delayout
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_VM),            intent(out), optional :: vm
+     integer,                  intent(out), optional :: deCount
+     integer, target,          intent(out), optional :: petMap(:)
+     integer, target,          intent(out), optional :: vasMap(:)
+     logical,                  intent(out), optional :: oneToOneFlag
+     type(ESMF_Pin_Flag),      intent(out), optional :: pinflag
+     integer,                  intent(out), optional :: localDeCount
+     integer, target,          intent(out), optional :: localDeToDeMap(:)
+     integer, target, intent(out), optional :: localDeList(:)  !DEPRECATED ARG
+     integer,                  intent(out), optional :: vasLocalDeCount
+     integer, target,          intent(out), optional :: vasLocalDeToDeMap(:)
+     integer, target, intent(out), optional :: vasLocalDeList(:) !DEPRECATED ARG
+     integer,                  intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        5.2.0rp1
+                Added arguments localDeToDeMap and vasLocalDeToDeMap.
+                Started to deprecate arguments localDeList and
+                vasLocalDeList. The new argument names correctly use the
+                Map suffix and better describe the returned information.
+                This was pointed out by user request.
+
+   DESCRIPTION:
+
+   Access to DELayout information.
+
+   The arguments are:
+
+   delayout
+          Queried ESMF_DELayout object.
+
+   [vm]
+          The ESMF_VM object on which delayout is defined.
+
+   [deCount]
+          The total number of DEs in the DELayout.
+
+   [petMap]
+          List of PETs against which the DEs are mapped. The petMap
+          argument must at least be of size deCount.
+
+   [vasMap]
+          List of VASs against which the DEs are mapped. The vasMap
+          argument must at least be of size deCount.
+
+   [oneToOneFlag]
+          A value of .TRUE. indicates that delayout maps each DE to a
+          single PET, and each PET maps to a single DE. All other layouts
+          return a value of .FALSE..
+
+   [pinflag]
+          The type of DE pinning. See section [601]50.2.1 for a list of
+          valid pinning options.
+
+   [localDeCount]
+          The number of DEs in the DELayout associated with the local PET.
+
+   [localDeToDeMap]
+          Mapping between localDe indices and the (global) DEs associated
+          with the local PET. The localDe index variables are discussed in
+          sections [602]50.3.7 and [603]28.2.5. The provided actual
+          argument must be of size localDeCount.
+
+   [localDeList]
+          DEPRECATED ARGUMENT! Please use the argument localDeToDeMap
+          instead.
+
+   [vasLocalDeCount]
+          The number of DEs in the DELayout associated with the local VAS.
+
+   [vasLocalDeToDeMap]
+          Mapping between localDe indices and the (global) DEs associated
+          with the local VAS. The localDe index variables are discussed in
+          sections [604]50.3.7 and [605]28.2.5. The provided actual
+          argument must be of size localDeCount.
+
+   [vasLocalDeList]
+          DEPRECATED ARGUMENT! Please use the argument vasLocalDeToDeMap
+          instead.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,499 @@
+  31.6.15 ESMF_GridCreate1PeriDim - Create a Grid with one periodic dim and an
+  irregular distribution
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridCreate1PeriDim()
+       function ESMF_GridCreate1PeriDimI(minIndex,         &
+         countsPerDEDim1,countsPerDeDim2,                  &
+         countsPerDEDim3,                                  &
+         polekindflag, periodicDim, poleDim,                   &
+         coordSys, coordTypeKind,                          &
+         coordDep1, coordDep2, coordDep3,                  &
+         gridEdgeLWidth, gridEdgeUWidth, gridAlign,        &
+         gridMemLBound, indexflag, petMap, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_Grid) :: ESMF_GridCreate1PeriDimI
+
+   ARGUMENTS:
+        integer,                   intent(in),  optional :: minIndex(:)
+        integer,                   intent(in)            :: countsPerDEDim1(:)
+        integer,                   intent(in)            :: countsPerDEDim2(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        integer,                   intent(in),  optional :: countsPerDEDim3(:)
+        type(ESMF_PoleKind_Flag),  intent(in),  optional :: polekindflag(2)
+        integer,                   intent(in),  optional :: periodicDim
+        integer,                   intent(in),  optional :: poleDim
+        type(ESMF_CoordSys_Flag),  intent(in),  optional :: coordSys
+        type(ESMF_TypeKind_Flag),  intent(in),  optional :: coordTypeKind
+        integer,                   intent(in),  optional :: coordDep1(:)
+        integer,                   intent(in),  optional :: coordDep2(:)
+        integer,                   intent(in),  optional :: coordDep3(:)
+        integer,                   intent(in),  optional :: gridEdgeLWidth(:)
+        integer,                   intent(in),  optional :: gridEdgeUWidth(:)
+        integer,                   intent(in),  optional :: gridAlign(:)
+        integer,                   intent(in),  optional :: gridMemLBound(:)
+        type(ESMF_Index_Flag),     intent(in),  optional :: indexflag
+        integer,                   intent(in),  optional :: petMap(:,:,:)
+        character (len=*),         intent(in),  optional :: name
+        integer,                   intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method creates a single tile, irregularly distributed grid (see
+   Figure [1266]13) with one periodic dimension. To specify the irregular
+   distribution, the user passes in an array for each grid dimension,
+   where the length of the array is the number of DEs in the dimension.
+   Currently this call only supports creating 2D or 3D Grids. A 2D Grid
+   can be specified using the countsPerDEDim1 and countsPerDEDim2
+   arguments. A 3D Grid can be specified by also using the optional
+   countsPerDEDim3 argument. The index of each array element in these
+   arguments corresponds to a DE number. The array value at the index is
+   the number of grid cells on the DE in that dimension.
+
+   Section [1267]31.3.4 shows an example of using this method to create a
+   2D Grid with uniformly spaced coordinates. This creation method can
+   also be used as the basis for grids with rectilinear coordinates or
+   curvilinear coordinates.
+
+   The arguments are:
+
+   [minIndex]
+          Tuple to start the index ranges at. If not present, defaults to
+          /1,1,1,.../.
+
+   countsPerDEDim1
+          This arrays specifies the number of cells per DE for index
+          dimension 1 for the exclusive region (the center stagger
+          location).
+
+   countsPerDEDim2
+          This array specifies the number of cells per DE for index
+          dimension 2 for the exclusive region (center stagger location).
+
+   [countsPerDEDim3]
+          This array specifies the number of cells per DE for index
+          dimension 3 for the exclusive region (center stagger location).
+          If not specified then grid is 2D.
+
+   [polekindflag]
+          Two item array which specifies the type of connection which
+          occurs at the pole. The value in polekindflag(1) specifies the
+          connection that occurs at the minimum end of the pole dimension.
+          The value in polekindflag(2) specifies the connection that
+          occurs at the maximum end of the pole dimension. Please see
+          Section [1268]31.2.5 for a full list of options. If not
+          specified, the default is ESMF_POLEKIND_MONOPOLE for both.
+
+   [periodicDim]
+          The periodic dimension. If not specified, defaults to 1.
+
+   [poleDim]
+          The dimension at who's ends the poles are located. If not
+          specified defaults to 2.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1269]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. All numerical types
+          listed under section [1270]54.59 are supported. If not specified
+          then defaults to ESMF_TYPEKIND_R8.
+
+   [coordDep1]
+          This array specifies the dependence of the first coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the first coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [coordDep2]
+          This array specifies the dependence of the second coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the second coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [coordDep3]
+          This array specifies the dependence of the third coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the third coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [gridEdgeLWidth]
+          The padding around the lower edges of the grid. This padding is
+          between the index space corresponding to the cells and the
+          boundary of the the exclusive region. This extra space is to
+          contain the extra padding for non-center stagger locations, and
+          should be big enough to hold any stagger in the grid. If this
+          and gridAlign are not present then defaults to 0, 0, ..., 0 (all
+          zeros).
+
+   [gridEdgeUWidth]
+          The padding around the upper edges of the grid. This padding is
+          between the index space corresponding to the cells and the
+          boundary of the the exclusive region. This extra space is to
+          contain the extra padding for non-center stagger locations, and
+          should be big enough to hold any stagger in the grid. If this
+          and gridAlign are not present then defaults to 1, 1, ..., 1 (all
+          ones).
+
+   [gridAlign]
+          Specification of how the stagger locations should align with the
+          cell index space (can be overridden by the individual
+          staggerAligns). If the gridEdgeWidths are not specified than
+          this argument implies the gridEdgeWidths. If the gridEdgeWidths
+          are specified and this argument isn't then this argument is
+          implied by the gridEdgeWidths. If this and the gridEdgeWidths
+          are not specified, then defaults to -1, -1, ..., -1 (all
+          negative ones).
+
+   [gridMemLBound]
+          Specifies the lower index range of the memory of every DE in
+          this Grid. Only used when indexflag is ESMF_INDEX_USER. May be
+          overridden by staggerMemLBound.
+
+   [indexflag]
+          Indicates the indexing scheme to be used in the new Grid. Please
+          see Section [1271]54.27 for the list of options. If not present,
+          defaults to ESMF_INDEX_DELOCAL.
+
+   [petMap]
+          Sets the mapping of pets to the created DEs. This 3D should be
+          of size size(countsPerDEDim1) x size(countsPerDEDim2) x
+          size(countsPerDEDim3). If countsPerDEDim3 isn't present, then
+          the last dimension is of size 1.
+
+   [name]
+          ESMF_Grid name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.16 ESMF_GridCreate1PeriDim - Create a Grid with one periodic dim and a
+  regular distribution
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridCreate1PeriDim()
+       function ESMF_GridCreate1PeriDimR(regDecomp, decompFlag, &
+         minIndex, maxIndex,                                    &
+         polekindflag, periodicDim, poleDim,                        &
+         coordSys, coordTypeKind,                               &
+         coordDep1, coordDep2, coordDep3,                       &
+         gridEdgeLWidth, gridEdgeUWidth, gridAlign,             &
+         gridMemLBound, indexflag, petMap, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_Grid) :: ESMF_GridCreate1PeriDimR
+
+   ARGUMENTS:
+        integer,                   intent(in),  optional :: regDecomp(:)
+        type(ESMF_Decomp_Flag),    intent(in),  optional :: decompflag(:)
+        integer,                   intent(in),  optional :: minIndex(:)
+        integer,                   intent(in)            :: maxIndex(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        type(ESMF_PoleKind_Flag),  intent(in),  optional :: polekindflag(2)
+        integer,                   intent(in),  optional :: periodicDim
+        integer,                   intent(in),  optional :: poleDim
+        type(ESMF_CoordSys_Flag),  intent(in),  optional :: coordSys
+        type(ESMF_TypeKind_Flag),  intent(in),  optional :: coordTypeKind
+        integer,                   intent(in),  optional :: coordDep1(:)
+        integer,                   intent(in),  optional :: coordDep2(:)
+        integer,                   intent(in),  optional :: coordDep3(:)
+        integer,                   intent(in),  optional :: gridEdgeLWidth(:)
+        integer,                   intent(in),  optional :: gridEdgeUWidth(:)
+        integer,                   intent(in),  optional :: gridAlign(:)
+        integer,                   intent(in),  optional :: gridMemLBound(:)
+        type(ESMF_Index_Flag),     intent(in),  optional :: indexflag
+        integer,                   intent(in),  optional :: petMap(:,:,:)
+        character (len=*),         intent(in),  optional :: name
+        integer,                   intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method creates a single tile, regularly distributed grid (see
+   Figure [1272]13) with one periodic dimension. To specify the
+   distribution, the user passes in an array (regDecomp) specifying the
+   number of DEs to divide each dimension into. The array decompFlag
+   indicates how the division into DEs is to occur. The default is to
+   divide the range as evenly as possible. Currently this call only
+   supports creating a 2D or 3D Grid, and thus, for example, maxIndex must
+   be of size 2 or 3.
+
+   The arguments are:
+
+   [regDecomp]
+          List that has the same number of elements as maxIndex. Each
+          entry is the number of decounts for that dimension. If not
+          specified, the default decomposition will be petCountx1x1..x1.
+
+   [decompflag]
+          List of decomposition flags indicating how each dimension of the
+          tile is to be divided between the DEs. The default setting is
+          ESMF_DECOMP_BALANCED in all dimensions. Please see
+          Section [1273]54.13 for a full description of the ! possible
+          options. Note that currently the option ESMF_DECOMP_CYCLIC isn't
+          supported in Grid creation.
+
+   [minIndex]
+          The bottom extent of the grid array. If not given then the value
+          defaults to /1,1,1,.../.
+
+   maxIndex
+          The upper extent of the grid array.
+
+   [polekindflag]
+          Two item array which specifies the type of connection which
+          occurs at the pole. The value in polekindflag(1) specifies the
+          connection that occurs at the minimum end of the pole dimension.
+          The value in polekindflag(2) specifies the connection that
+          occurs at the maximum end of the pole dimension. Please see
+          Section [1274]31.2.5 for a full list of options. If not
+          specified, the default is ESMF_POLEKIND_MONOPOLE for both.
+
+   [periodicDim]
+          The periodic dimension. If not specified, defaults to 1.
+
+   [poleDim]
+          The dimension at who's ends the poles are located. If not
+          specified defaults to 2.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1275]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. All numerical types
+          listed under section [1276]54.59 are supported. If not specified
+          then defaults to ESMF_TYPEKIND_R8.
+
+   [coordDep1]
+          This array specifies the dependence of the first coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the first coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [coordDep2]
+          This array specifies the dependence of the second coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the second coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [coordDep3]
+          This array specifies the dependence of the third coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the third coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [gridEdgeLWidth]
+          The padding around the lower edges of the grid. This padding is
+          between the index space corresponding to the cells and the
+          boundary of the the exclusive region. This extra space is to
+          contain the extra padding for non-center stagger locations, and
+          should be big enough to hold any stagger in the grid. If this
+          and gridAlign are not present then defaults to 0, 0, ..., 0 (all
+          zeros).
+
+   [gridEdgeUWidth]
+          The padding around the upper edges of the grid. This padding is
+          between the index space corresponding to the cells and the
+          boundary of the the exclusive region. This extra space is to
+          contain the extra padding for non-center stagger locations, and
+          should be big enough to hold any stagger in the grid. If this
+          and gridAlign are not present then defaults to 1, 1, ..., 1 (all
+          ones).
+
+   [gridAlign]
+          Specification of how the stagger locations should align with the
+          cell index space (can be overridden by the individual
+          staggerAligns). If the gridEdgeWidths are not specified than
+          this argument implies the gridEdgeWidths. If the gridEdgeWidths
+          are specified and this argument isn't then this argument is
+          implied by the gridEdgeWidths. If this and the gridEdgeWidths
+          are not specified, then defaults to -1, -1, ..., -1 (all
+          negative ones).
+
+   [gridMemLBound]
+          Specifies the lower index range of the memory of every DE in
+          this Grid. Only used when indexflag is ESMF_INDEX_USER. May be
+          overridden by staggerMemLBound.
+
+   [indexflag]
+          Indicates the indexing scheme to be used in the new Grid. Please
+          see Section [1277]54.27 for the list of options. If not present,
+          defaults to ESMF_INDEX_DELOCAL.
+
+   [petMap]
+          Sets the mapping of pets to the created DEs. This 3D should be
+          of size regDecomp(1) x regDecomp(2) x regDecomp(3) If the Grid
+          is 2D, then the last dimension is of size 1.
+
+   [name]
+          ESMF_Grid name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.17 ESMF_GridCreate1PeriDim - Create a Grid with one periodic dim and an
+  arbitrary distribution
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridCreate1PeriDim()
+       function ESMF_GridCreate1PeriDimA(minIndex, maxIndex,  &
+         arbIndexCount, arbIndexList,                         &
+         polekindflag, periodicDim, poleDim,                      &
+         coordSys, coordTypeKind,                             &
+         coordDep1, coordDep2, coordDep3,                     &
+         distDim, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_Grid) :: ESMF_GridCreate1PeriDimA
+
+   ARGUMENTS:
+        integer,                   intent(in),  optional :: minIndex(:)
+         integer,                   intent(in)            :: maxIndex(:)
+        integer,                   intent(in)                    :: arbIndexCoun
+t
+        integer,                   intent(in)            :: arbIndexList(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        type(ESMF_PoleKind_Flag),  intent(in),  optional :: polekindflag(2)
+        integer,                   intent(in),  optional :: periodicDim
+        integer,                   intent(in),  optional :: poleDim
+        type(ESMF_CoordSys_Flag),  intent(in),  optional :: coordSys
+        type(ESMF_TypeKind_Flag),  intent(in),  optional :: coordTypeKind
+        integer,                   intent(in),  optional :: coordDep1(:)
+        integer,                   intent(in),  optional :: coordDep2(:)
+        integer,                   intent(in),  optional :: coordDep3(:)
+        integer,                   intent(in),  optional :: distDim(:)
+        character (len=*),         intent(in),  optional :: name
+        integer,                   intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method creates a single tile, arbitrarily distributed grid (see
+   Figure [1278]13) with one periodic dimension. To specify the arbitrary
+   distribution, the user passes in an 2D array of local indices, where
+   the first dimension is the number of local grid cells specified by
+   localArbIndexCount and the second dimension is the number of
+   distributed dimensions.
+
+   distDim specifies which grid dimensions are arbitrarily distributed.
+   The size of distDim has to agree with the size of the second dimension
+   of localArbIndex.
+
+   Currently this call only supports creating a 2D or 3D Grid, and thus,
+   for example, maxIndex must be of size 2 or 3.
+
+   The arguments are:
+
+   [minIndex]
+          Tuple to start the index ranges at. If not present, defaults to
+          /1,1,1,.../.
+
+   maxIndex
+          The upper extend of the grid index ranges.
+
+   arbIndexCount
+          The number of grid cells in the local DE. It is okay to have 0
+          grid cell in a local DE.
+
+   arbIndexList
+          This 2D array specifies the indices of the PET LOCAL grid cells.
+          The dimensions should be arbIndexCount * number of Distributed
+          grid dimensions where arbIndexCount is the input argument
+          specified below
+
+   [polekindflag]
+          Two item array which specifies the type of connection which
+          occurs at the pole. The value in polekindflag(1) specifies the
+          connection that occurs at the minimum end of the pole dimension.
+          The value in polekindflag(2) specifies the connection that
+          occurs at the maximum end of the pole dimension. Please see
+          Section [1279]31.2.5 for a full list of options. If not
+          specified, the default is ESMF_POLEKIND_MONOPOLE for both.
+
+   [periodicDim]
+          The periodic dimension. If not specified, defaults to 1.
+
+   [poleDim]
+          The dimension at who's ends the poles are located. If not
+          specified defaults to 2.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1280]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. All numerical types
+          listed under section [1281]54.59 are supported. If not specified
+          then defaults to ESMF_TYPEKIND_R8.
+
+   [coordDep1]
+          The size of the array specifies the number of dimensions of the
+          first coordinate component array. The values specify which of
+          the index dimensions the corresponding coordinate arrays map to.
+          The format should be /ESMF_DIM_ARB/ where /ESMF_DIM_ARB/ is
+          mapped to the collapsed 1D dimension from all the arbitrarily
+          distributed dimensions. n is the dimension that is not
+          distributed (if exists). If not present the default is
+          /ESMF_DIM_ARB/ if the first dimension is arbitararily
+          distributed, or /n/ if not distributed (i.e. n=1) Please see
+          Section [1282]54.2 for a definition of ESMF_DIM_ARB.
+
+   [coordDep2]
+          The size of the array specifies the number of dimensions of the
+          second coordinate component array. The values specify which of
+          the index dimensions the corresponding coordinate arrays map to.
+          The format should be /ESMF_DIM_ARB/ where /ESMF_DIM_ARB/ is
+          mapped to the collapsed 1D dimension from all the arbitrarily
+          distributed dimensions. n is the dimension that is not
+          distributed (if exists). If not present the default is
+          /ESMF_DIM_ARB/ if this dimension is arbitararily distributed, or
+          /n/ if not distributed (i.e. n=2) Please see Section [1283]54.2
+          for a definition of ESMF_DIM_ARB.
+
+   [coordDep3]
+          The size of the array specifies the number of dimensions of the
+          third coordinate component array. The values specify which of
+          the index dimensions the corresponding coordinate ! arrays map
+          to. The format should be /ESMF_DIM_ARB/ where /ESMF_DIM_ARB/ is
+          mapped to the collapsed 1D dimension from all the arbitrarily
+          distributed dimensions. n is the dimension that is not
+          distributed (if exists). If not present the default is
+          /ESMF_DIM_ARB/ if this dimension is arbitararily distributed, or
+          /n/ if not distributed (i.e. n=3) Please see Section [1284]54.2
+          for a definition of ESMF_DIM_ARB.
+
+   [distDim]
+          This array specifies which dimensions are arbitrarily
+          distributed. The size of the array specifies the total
+          distributed dimensions. if not specified, defaults is all
+          dimensions will be arbitrarily distributed. The size has to
+          agree with the size of the second dimension of localArbIndex.
+
+   [name]
+          ESMF_Grid name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

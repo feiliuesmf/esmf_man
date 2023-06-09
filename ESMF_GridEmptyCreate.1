@@ -1,0 +1,48 @@
+  31.6.35 ESMF_GridEmptyCreate - Create a Grid that has no contents
+
+   INTERFACE:
+      function ESMF_GridEmptyCreate(vm, rc)
+
+   RETURN VALUE:
+      type(ESMF_Grid) :: ESMF_GridEmptyCreate
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        type(ESMF_VM),           intent(in),  optional :: vm
+        integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added argument vm to support object creation on a
+                different VM than that of the current context.
+
+   DESCRIPTION:
+
+   Partially create an ESMF_Grid object. This function allocates an
+   ESMF_Grid object, but doesn't allocate any coordinate storage or other
+   internal structures. The ESMF_GridEmptyComplete() calls can be used to
+   set the values in the grid object and to construct the internal
+   structure.
+
+   The arguments are:
+
+   [vm]
+          If present, the Grid object is created on the specified ESMF_VM
+          object. The default is to create on the VM of the current
+          context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

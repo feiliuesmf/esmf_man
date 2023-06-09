@@ -1,0 +1,25 @@
+  48.5.36 ESMF_HConfigIterEndMapKey - Iterator at the end
+
+   INTERFACE:
+   function ESMF_HConfigIterEndMapKey(hconfig, rc)
+
+   RETURN VALUE:
+     type(ESMF_HConfigIter) :: ESMF_HConfigIterEndMapKey
+
+   ARGUMENTS:
+     type(ESMF_HConfigIter), intent(in)        :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return an iterator that points to one past the last item in hconfig.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfigIter object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

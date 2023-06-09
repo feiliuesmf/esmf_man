@@ -1,0 +1,28 @@
+  27.5.14 ESMF_ArrayBundleIsCreated - Check whether an ArrayBundle object has
+  been created
+
+   INTERFACE:
+   function ESMF_ArrayBundleIsCreated(arraybundle, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_ArrayBundleIsCreated
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle), intent(in)            :: arraybundle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the arraybundle has been created. Otherwise return
+   .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the
+   return value of the function will also be .false..
+
+   The arguments are:
+
+   arraybundle
+          ESMF_ArrayBundle queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,413 @@
+          + [77]18 CplComp Class
+               o [78]18.1 Description
+               o [79]18.2 Use and Examples
+                    # [80]18.2.1 Implement a user-code SetServices routine
+                    # [81]18.2.2 Implement a user-code Initialize routine
+                    # [82]18.2.3 Implement a user-code Run routine
+                    # [83]18.2.4 Implement a user-code Finalize routine
+                    # [84]18.2.5 Implement a user-code SetVM routine
+               o [85]18.3 Restrictions and Future Work
+               o [86]18.4 Class API
+                    # [87]18.4.1 ESMF_CplCompAssignment(=)
+                    # [88]18.4.2 ESMF_CplCompOperator(==)
+                    # [89]18.4.3 ESMF_CplCompOperator(/=)
+                    # [90]18.4.4 ESMF_CplCompCreate
+                    # [91]18.4.5 ESMF_CplCompDestroy
+                    # [92]18.4.6 ESMF_CplCompFinalize
+                    # [93]18.4.7 ESMF_CplCompGet
+                    # [94]18.4.8 ESMF_CplCompGetInternalState
+                    # [95]18.4.9 ESMF_CplCompInitialize
+                    # [96]18.4.10 ESMF_CplCompIsCreated
+                    # [97]18.4.11 ESMF_CplCompIsPetLocal
+                    # [98]18.4.12 ESMF_CplCompPrint
+                    # [99]18.4.13 ESMF_CplCompReadRestart
+                    # [100]18.4.14 ESMF_CplCompRun
+                    # [101]18.4.15 ESMF_CplCompServiceLoop
+                    # [102]18.4.16 ESMF_CplCompSet
+                    # [103]18.4.17 ESMF_CplCompSetEntryPoint
+                    # [104]18.4.18 ESMF_CplCompSetInternalState
+                    # [105]18.4.19 ESMF_CplCompSetServices
+                    # [106]18.4.20 ESMF_CplCompSetServices
+                    # [107]18.4.21 ESMF_CplCompSetServices
+                    # [108]18.4.22 ESMF_CplCompSetServices
+                    # [109]18.4.23 ESMF_CplCompSetVM
+                    # [110]18.4.24 ESMF_CplCompSetVM
+                    # [111]18.4.25 ESMF_CplCompSetVMMaxPEs
+                    # [112]18.4.26 ESMF_CplCompSetVMMaxThreads
+                    # [113]18.4.27 ESMF_CplCompSetVMMinThreads
+                    # [114]18.4.28 ESMF_CplCompValidate
+                    # [115]18.4.29 ESMF_CplCompWait
+                    # [116]18.4.30 ESMF_CplCompWriteRestart
+                                18 CplComp Class
+
+18.1 Description
+
+   In a large, multi-component application such as a weather forecasting
+   or climate prediction system running within ESMF, physical domains and
+   major system functions are represented as Gridded Components (see
+   Section [280]17.1). A Coupler Component, or ESMF_CplComp, arranges and
+   executes the data transformations between the Gridded Components.
+   Ideally, Coupler Components should contain all the information about
+   inter-component communication for an application. This enables the
+   Gridded Components in the application to be used in multiple contexts;
+   that is, used in different coupled configurations without changes to
+   their source code. For example, the same atmosphere might in one case
+   be coupled to an ocean in a hurricane prediction model, and to a data
+   assimilation system for numerical weather prediction in another. A
+   single Coupler Component can couple two or more Gridded Components.
+
+   Like Gridded Components, Coupler Components have two parts, one that is
+   provided by the user and another that is part of the framework. The
+   user-written portion of the software is the coupling code necessary for
+   a particular exchange between Gridded Components. This portion of the
+   Coupler Component code must be divided into separately callable
+   initialize, run, and finalize methods. The interfaces for these methods
+   are prescribed by ESMF.
+
+   The term “user-written” is somewhat misleading here, since within a
+   Coupler Component the user can leverage ESMF infrastructure software
+   for regridding, redistribution, lower-level communications, calendar
+   management, and other functions. However, ESMF is unlikely to offer all
+   the software necessary to customize a data transfer between Gridded
+   Components. For instance, ESMF does not currently offer tools for unit
+   tranformations or time averaging operations, so users must manage those
+   operations themselves.
+
+   The second part of a Coupler Component is the ESMF_CplComp derived type
+   within ESMF. The user must create one of these types to represent a
+   specific coupling function, such as the regular transfer of data
+   between a data assimilation system and an atmospheric model. [281]^2
+
+   The user-written part of a Coupler Component is associated with an
+   ESMF_CplComp derived type through a routine called ESMF_SetServices().
+   This is a routine that the user must write and declare public. Inside
+   the ESMF_SetServices() routine the user must call ESMF_SetEntryPoint()
+   methods that associate a standard ESMF operation with the name of the
+   corresponding Fortran subroutine in their user code. For example, a
+   user routine called “couplerInit” might be associated with the standard
+   initialize routine in a Coupler Component.
+
+18.2 Use and Examples
+
+   A Coupler Component manages the transformation of data between
+   Components. It contains a list of State objects and the operations
+   needed to make them compatible, including such things as regridding and
+   unit conversion. Coupler Components are user-written, following
+   prescribed ESMF interfaces and, wherever desired, using ESMF
+   infrastructure tools.
+
+  18.2.1 Implement a user-code SetServices routine
+
+   Every ESMF_CplComp is required to provide and document a public set
+   services routine. It can have any name, but must follow the declaration
+   below: a subroutine which takes an ESMF_CplComp as the first argument,
+   and an integer return code as the second. Both arguments are required
+   and must not be declared as optional. If an intent is specified in the
+   interface it must be intent(inout) for the first and intent(out) for
+   the second argument.
+
+   The set services routine must call the ESMF method
+   ESMF_CplCompSetEntryPoint() to register with the framework what
+   user-code subroutines should be called to initialize, run, and finalize
+   the component. There are additional routines which can be registered as
+   well, for checkpoint and restart functions.
+
+   Note that the actual subroutines being registered do not have to be
+   public to this module; only the set services routine itself must be
+   available to be used by other code.
+
+    ! Example Coupler Component
+    module ESMF_CouplerEx
+
+    ! ESMF Framework module
+    use ESMF
+    implicit none
+    public CPL_SetServices
+
+    contains
+
+    subroutine CPL_SetServices(comp, rc)
+      type(ESMF_CplComp)    :: comp   ! must not be optional
+      integer, intent(out)  :: rc     ! must not be optional
+
+      ! Set the entry points for standard ESMF Component methods
+      call ESMF_CplCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, &
+                          userRoutine=CPL_Init, rc=rc)
+      call ESMF_CplCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
+                          userRoutine=CPL_Run, rc=rc)
+      call ESMF_CplCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, &
+                          userRoutine=CPL_Final, rc=rc)
+
+      rc = ESMF_SUCCESS
+    end subroutine
+
+  18.2.2 Implement a user-code Initialize routine
+
+   When a higher level component is ready to begin using an ESMF_CplComp,
+   it will call its initialize routine.
+
+   The component writer must supply a subroutine with the exact interface
+   shown below. Arguments must not be declared as optional, and the types
+   and order must match.
+
+   At initialization time the component can allocate data space, open data
+   files, set up initial conditions; anything it needs to do to prepare to
+   run.
+
+   The rc return code should be set if an error occurs, otherwise the
+   value ESMF_SUCCESS should be returned.
+
+    subroutine CPL_Init(comp, importState, exportState, clock, rc)
+      type(ESMF_CplComp)    :: comp               ! must not be optional
+      type(ESMF_State)      :: importState        ! must not be optional
+      type(ESMF_State)      :: exportState        ! must not be optional
+      type(ESMF_Clock)      :: clock              ! must not be optional
+      integer, intent(out)  :: rc                 ! must not be optional
+
+      print *, "Coupler Init starting"
+
+      ! Add whatever code here needed
+      ! Precompute any needed values, fill in any inital values
+      !  needed in Import States
+
+      rc = ESMF_SUCCESS
+
+      print *, "Coupler Init returning"
+
+    end subroutine CPL_Init
+
+  18.2.3 Implement a user-code Run routine
+
+   During the execution loop, the run routine may be called many times.
+   Each time it should read data from the importState, use the clock to
+   determine what the current time is in the calling component, compute
+   new values or process the data, and produce any output and place it in
+   the exportState.
+
+   When a higher level component is ready to use the ESMF_CplComp it will
+   call its run routine.
+
+   The component writer must supply a subroutine with the exact interface
+   shown below. Arguments must not be declared as optional, and the types
+   and order must match.
+
+   It is expected that this is where the bulk of the model computation or
+   data analysis will occur.
+
+   The rc return code should be set if an error occurs, otherwise the
+   value ESMF_SUCCESS should be returned.
+
+    subroutine CPL_Run(comp, importState, exportState, clock, rc)
+      type(ESMF_CplComp)    :: comp              ! must not be optional
+      type(ESMF_State)      :: importState       ! must not be optional
+      type(ESMF_State)      :: exportState       ! must not be optional
+      type(ESMF_Clock)      :: clock             ! must not be optional
+      integer, intent(out)  :: rc                ! must not be optional
+
+      print *, "Coupler Run starting"
+
+      ! Add whatever code needed here to transform Export state data
+      !  into Import states for the next timestep.
+
+      rc = ESMF_SUCCESS
+
+      print *, "Coupler Run returning"
+
+    end subroutine CPL_Run
+
+  18.2.4 Implement a user-code Finalize routine
+
+   At the end of application execution, each ESMF_CplComp should
+   deallocate data space, close open files, and flush final results. These
+   functions should be placed in a finalize routine.
+
+   The component writer must supply a subroutine with the exact interface
+   shown below. Arguments must not be declared as optional, and the types
+   and order must match.
+
+   The rc return code should be set if an error occurs, otherwise the
+   value ESMF_SUCCESS should be returned.
+
+    subroutine CPL_Final(comp, importState, exportState, clock, rc)
+      type(ESMF_CplComp)    :: comp                ! must not be optional
+      type(ESMF_State)      :: importState         ! must not be optional
+      type(ESMF_State)      :: exportState         ! must not be optional
+      type(ESMF_Clock)      :: clock               ! must not be optional
+      integer, intent(out)  :: rc                  ! must not be optional
+
+      print *, "Coupler Final starting"
+
+      ! Add whatever code needed here to compute final values and
+      !  finish the computation.
+
+      rc = ESMF_SUCCESS
+
+      print *, "Coupler Final returning"
+
+    end subroutine CPL_Final
+
+  18.2.5 Implement a user-code SetVM routine
+
+   Every ESMF_CplComp can optionally provide and document a public set vm
+   routine. It can have any name, but must follow the declaration below: a
+   subroutine which takes an ESMF_CplComp as the first argument, and an
+   integer return code as the second. Both arguments are required and must
+   not be declared as optional. If an intent is specified in the interface
+   it must be intent(inout) for the first and intent(out) for the second
+   argument.
+
+   The set vm routine is the only place where the child component can use
+   the ESMF_CplCompSetVMMaxPEs(), or ESMF_CplCompSetVMMaxThreads(), or
+   ESMF_CplCompSetVMMinThreads() call to modify aspects of its own VM.
+
+   A component's VM is started up right before its set services routine is
+   entered. ESMF_CplCompSetVM() is executing in the parent VM, and must be
+   called before ESMF_CplCompSetServices().
+
+    subroutine GComp_SetVM(comp, rc)
+      type(ESMF_CplComp)   :: comp   ! must not be optional
+      integer, intent(out)  :: rc     ! must not be optional
+
+      type(ESMF_VM) :: vm
+      logical :: pthreadsEnabled
+
+      ! Test for Pthread support, all SetVM calls require it
+      call ESMF_VMGetGlobal(vm, rc=rc)
+      call ESMF_VMGet(vm, pthreadsEnabledFlag=pthreadsEnabled, rc=rc)
+
+      if (pthreadsEnabled) then
+        ! run PETs single-threaded
+        call ESMF_CplCompSetVMMinThreads(comp, rc=rc)
+      endif
+
+      rc = ESMF_SUCCESS
+
+    end subroutine
+
+    end module ESMF_CouplerEx
+
+18.3 Restrictions and Future Work
+
+    1. No optional arguments. User-written routines called by SetServices,
+       and registered for Initialize, Run and Finalize, must not declare
+       any of the arguments as optional.
+    2. No Transforms. Components must exchange data through ESMF_State
+       objects. The input data are available at the time the component
+       code is called, and data to be returned to another component are
+       available when that code returns.
+    3. No automatic unit conversions. The ESMF framework does not
+       currently contain tools for performing unit conversions, operations
+       that are fairly standard within Coupler Components.
+    4. No accumulator. The ESMF does not have an accumulator tool, to
+       perform time averaging of fields for coupling. This is likely to be
+       developed in the near term.
+
+18.4 Class API
+
+  18.4.1 ESMF_CplCompAssignment(=) - CplComp assignment
+
+   INTERFACE:
+     interface assignment(=)
+     cplcomp1 = cplcomp2
+
+   ARGUMENTS:
+     type(ESMF_CplComp) :: cplcomp1
+     type(ESMF_CplComp) :: cplcomp2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign cplcomp1 as an alias to the same ESMF CplComp object in memory
+   as cplcomp2. If cplcomp2 is invalid, then cplcomp1 will be equally
+   invalid after the assignment.
+
+   The arguments are:
+
+   cplcomp1
+          The ESMF_CplComp object on the left hand side of the assignment.
+
+   cplcomp2
+          The ESMF_CplComp object on the right hand side of the
+          assignment.
+
+  18.4.2 ESMF_CplCompOperator(==) - CplComp equality operator
+
+   INTERFACE:
+   interface operator(==)
+     if (cplcomp1 == cplcomp2) then ... endif
+               OR
+     result = (cplcomp1 == cplcomp2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_CplComp), intent(in) :: cplcomp1
+     type(ESMF_CplComp), intent(in) :: cplcomp2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether cplcomp1 and cplcomp2 are valid aliases to the same ESMF
+   CplComp object in memory. For a more general comparison of two ESMF
+   CplComps, going beyond the simple alias test, the ESMF_CplCompMatch()
+   function (not yet implemented) must be used.
+
+   The arguments are:
+
+   cplcomp1
+          The ESMF_CplComp object on the left hand side of the equality
+          operation.
+
+   cplcomp2
+          The ESMF_CplComp object on the right hand side of the equality
+          operation.
+
+  18.4.3 ESMF_CplCompOperator(/=) - CplComp not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (cplcomp1 /= cplcomp2) then ... endif
+               OR
+     result = (cplcomp1 /= cplcomp2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_CplComp), intent(in) :: cplcomp1
+     type(ESMF_CplComp), intent(in) :: cplcomp2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether cplcomp1 and cplcomp2 are not valid aliases to the same
+   ESMF CplComp object in memory. For a more general comparison of two
+   ESMF CplComps, going beyond the simple alias test, the
+   ESMF_CplCompMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   cplcomp1
+          The ESMF_CplComp object on the left hand side of the
+          non-equality operation.
+
+   cplcomp2
+          The ESMF_CplComp object on the right hand side of the
+          non-equality operation.
+

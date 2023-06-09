@@ -1,0 +1,348 @@
+  25.5.35 ESMF_FieldBundleSMMStore - Precompute a FieldBundle sparse matrix
+  multiplication with local factors
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldBundleSMMStore()
+   subroutine ESMF_FieldBundleSMMStore<type><kind>(srcFieldBundle, &
+   dstFieldBundle, routehandle, factorList, factorIndexList, &
+   ignoreUnmatchedIndicesFlag, srcTermProcessing, rc)
+
+   ARGUMENTS:
+   type(ESMF_FieldBundle), intent(in) :: srcFieldBundle
+   type(ESMF_FieldBundle), intent(inout) :: dstFieldBundle
+   type(ESMF_RouteHandle), intent(inout) :: routehandle
+   <type>(ESMF_KIND_<kind>), intent(in) :: factorList(:)
+   integer, intent(in), :: factorIndexList(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   logical, intent(in), optional :: ignoreUnmatchedIndicesFlag(:)
+   integer, intent(inout), optional :: srcTermProcessing(:)
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added argument srcTermProcessing. The new argument gives
+                the user access to the tuning parameter affecting the
+                sparse matrix execution and bit-wise reproducibility.
+
+        8.1.0
+                Added argument ignoreUnmatchedIndicesFlag to support cases
+                where the sparse matrix includes terms with source or
+                destination sequence indices not present in the source or
+                destination field.
+
+   DESCRIPTION:
+
+   Store a FieldBundle sparse matrix multiplication operation from
+   srcFieldBundle to dstFieldBundle. PETs that specify non-zero matrix
+   coefficients must use the <type><kind> overloaded interface and provide
+   the factorList and factorIndexList arguments. Providing factorList and
+   factorIndexList arguments with size(factorList) = (/0/) and
+   size(factorIndexList) = (/2,0/) or (/4,0/) indicates that a PET does
+   not provide matrix elements. Alternatively, PETs that do not provide
+   matrix elements may also call into the overloaded interface without
+   factorList and factorIndexList arguments.
+
+   Both srcFieldBundle and dstFieldBundle are interpreted as
+   sequentialized vectors. The sequence is defined by the order of
+   DistGrid dimensions and the order of tiles within the DistGrid or by
+   user-supplied arbitrary sequence indices. See section [773]28.2.18 for
+   details on the definition of sequence indices. SMM corresponds to an
+   identity mapping of the source FieldBundle vector to the destination
+   FieldBundle vector.
+
+   Source and destination Fields may be of different <type><kind>. Further
+   source and destination Fields may differ in shape, however, the number
+   of elements must match.
+
+   It is erroneous to specify the identical FieldBundle object for
+   srcFieldBundle and dstFieldBundle arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_FieldBundleSMM() on any pair of FieldBundles that matches
+   srcFieldBundle and dstFieldBundle in type, kind, and memory layout of
+   the gridded dimensions. However, the size, number, and index order of
+   ungridded dimensions may be different. See section [774]37.2.5 for a
+   more detailed discussion of RouteHandle reusability.
+
+   This method is overloaded for:
+   ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   This call is collective across the current VM.
+
+   For examples and associated documentation regarding this method see
+   Section [775]25.2.11.
+
+   The arguments are:
+
+   srcFieldBundle
+          ESMF_FieldBundle with source data.
+
+   dstFieldBundle
+          ESMF_FieldBundle with destination data. The data in this
+          FieldBundle may be destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   factorList
+          List of non-zero coefficients.
+
+   factorIndexList
+          Pairs of sequence indices for the factors stored in factorList.
+
+          The second dimension of factorIndexList steps through the list
+          of pairs, i.e. size(factorIndexList,2) == size(factorList). The
+          first dimension of factorIndexList is either of size 2 or size
+          4.
+
+          In the size 2 format factorIndexList(1,:) specifies the sequence
+          index of the source element in the srcFieldBundle while
+          factorIndexList(2,:) specifies the sequence index of the
+          destination element in dstFieldBundle. For this format to be a
+          valid option source and destination FieldBundles must have
+          matching number of tensor elements (the product of the sizes of
+          all Field tensor dimensions). Under this condition an identity
+          matrix can be applied within the space of tensor elements for
+          each sparse matrix factor.
+
+          The size 4 format is more general and does not require a
+          matching tensor element count. Here the
+
+          factorIndexList(1,:) specifies the sequence index while
+          factorIndexList(2,:) specifies the tensor sequence index of the
+          source element in the srcFieldBundle. Further
+          factorIndexList(3,:) specifies the sequence index and
+          factorIndexList(4,:) specifies the tensor sequence index of the
+          destination element in the dstFieldBundle.
+
+          See section [776]28.2.18 for details on the definition of
+          sequence indices and tensor sequence indices.
+
+   [ignoreUnmatchedIndicesFlag]
+          If set to .false., the default, source and destination side must
+          cover all of the squence indices defined in the sparse matrix.
+          An error will be returned if a sequence index in the sparse
+          matrix does not match on either the source or destination side.
+          If set to .true., mismatching sequence indices are silently
+          ignored. The size of this array argument must either be 1 or
+          equal the number of Fieldss in the srcFieldBundle and
+          dstFieldBundle arguments. In the latter case, the handling of
+          unmatched indices is specified for each Field pair separately.
+          If only one element is specified, it is used for all Field
+          pairs.
+
+   [srcTermProcessing]
+          Source term summing options for route handle creation. See
+          ESMF_FieldRegridStore documentation for a full parameter
+          description. Two forms may be provided. If a single element list
+          is provided, this integer value is applied across all bundle
+          members. Otherwise, the list must contain as many elements as
+          there are bundle members. For the special case of accessing the
+          auto-tuned parameter (providing a negative integer value), the
+          list length must equal the bundle member count.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  25.5.36 ESMF_FieldBundleSMMStore - Precompute a FieldBundle sparse matrix
+  multiplication
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldBundleSMMStore()
+     subroutine ESMF_FieldBundleSMMStoreNF(srcFieldBundle, dstFieldBundle, &
+         routehandle, ignoreUnmatchedIndicesFlag, &
+         srcTermProcessing, rc)
+
+   ARGUMENTS:
+         type(ESMF_FieldBundle), intent(in) :: srcFieldBundle
+         type(ESMF_FieldBundle), intent(inout) :: dstFieldBundle
+         type(ESMF_RouteHandle), intent(inout) :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+         logical, intent(in), optional :: ignoreUnmatchedIndicesFlag(:)
+         integer, intent(inout), optional :: srcTermProcessing(:)
+         integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added argument srcTermProcessing. The new argument gives
+                the user access to the tuning parameter affecting the
+                sparse matrix execution and bit-wise reproducibility.
+
+        8.1.0
+                Added argument ignoreUnmatchedIndicesFlag to support cases
+                where the sparse matrix includes terms with source or
+                destination sequence indices not present in the source or
+                destination field.
+
+   DESCRIPTION:
+
+   Store a FieldBundle sparse matrix multiplication operation from
+   srcFieldBundle to dstFieldBundle. PETs that specify non-zero matrix
+   coefficients must use the <type><kind> overloaded interface and provide
+   the factorList and factorIndexList arguments. Providing factorList and
+   factorIndexList arguments with size(factorList) = (/0/) and
+   size(factorIndexList) = (/2,0/) or (/4,0/) indicates that a PET does
+   not provide matrix elements. Alternatively, PETs that do not provide
+   matrix elements may also call into the overloaded interface without
+   factorList and factorIndexList arguments.
+
+   Both srcFieldBundle and dstFieldBundle are interpreted as
+   sequentialized vectors. The sequence is defined by the order of
+   DistGrid dimensions and the order of tiles within the DistGrid or by
+   user-supplied arbitrary sequence indices. See section [777]28.2.18 for
+   details on the definition of sequence indices. SMM corresponds to an
+   identity mapping of the source FieldBundle vector to the destination
+   FieldBundle vector.
+
+   Source and destination Fields may be of different <type><kind>. Further
+   source and destination Fields may differ in shape, however, the number
+   of elements must match.
+
+   It is erroneous to specify the identical FieldBundle object for
+   srcFieldBundle and dstFieldBundle arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_FieldBundleSMM() on any pair of FieldBundles that matches
+   srcFieldBundle and dstFieldBundle in type, kind, and memory layout of
+   the gridded dimensions. However, the size, number, and index order of
+   ungridded dimensions may be different. See section [778]37.2.5 for a
+   more detailed discussion of RouteHandle reusability.
+
+   This method is overloaded for ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   This call is collective across the current VM.
+
+   For examples and associated documentation regarding this method see
+   Section [779]25.2.11.
+
+   The arguments are:
+
+   srcFieldBundle
+          ESMF_FieldBundle with source data.
+
+   dstFieldBundle
+          ESMF_FieldBundle with destination data. The data in this
+          FieldBundle may be destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [ignoreUnmatchedIndicesFlag]
+          If set to .false., the default, source and destination side must
+          cover all of the squence indices defined in the sparse matrix.
+          An error will be returned if a sequence index in the sparse
+          matrix does not match on either the source or destination side.
+          If set to .true., mismatching sequence indices are silently
+          ignored. The size of this array argument must either be 1 or
+          equal the number of Fieldss in the srcFieldBundle and
+          dstFieldBundle arguments. In the latter case, the handling of
+          unmatched indices is specified for each Field pair separately.
+          If only one element is specified, it is used for all Field
+          pairs.
+
+   [srcTermProcessing]
+          Source term summing options for route handle creation. See
+          ESMF_FieldRegridStore documentation for a full parameter
+          description. Two forms may be provided. If a single element list
+          is provided, this integer value is applied across all bundle
+          members. Otherwise, the list must contain as many elements as
+          there are bundle members. For the special case of accessing the
+          auto-tuned parameter (providing a negative integer value), the
+          list length must equal the bundle member count.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  25.5.37 ESMF_FieldBundleSMMStore - Precompute field bundle sparse matrix
+  multiplication using factors read from file
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldBundleSMMStore()
+     subroutine ESMF_FieldBundleSMMStoreFromFile(srcFieldBundle, dstFieldBundle,
+ &
+       filename, routehandle, ignoreUnmatchedIndicesFlag, &
+       srcTermProcessing, rc)
+   ! ARGUMENTS:
+       type(ESMF_FieldBundle), intent(in) :: srcFieldBundle
+       type(ESMF_FieldBundle), intent(inout) :: dstFieldBundle
+       character(len=*), intent(in) :: filename
+       type(ESMF_RouteHandle), intent(inout) :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       logical, intent(in), optional :: ignoreUnmatchedIndicesFlag(:)
+       integer, intent(inout), optional :: srcTermProcessing(:)
+       integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Compute an ESMF_RouteHandle using factors read from file.
+
+   The arguments are:
+
+   srcFieldBundle
+          ESMF_FieldBundle with source data.
+
+   dstFieldBundle
+          ESMF_FieldBundle with destination data. The data in this field
+          bundle may be destroyed by this call.
+
+   filename
+          Path to the file containing weights for creating an
+          ESMF_RouteHandle. See ([780]12.9) for a description of the SCRIP
+          weight file format. Only "row", "col", and "S" variables are
+          required. They must be one-dimensionsal with dimension "n_s".
+
+   routehandle
+          Handle to the ESMF_RouteHandle.
+
+   [ignoreUnmatchedIndicesFlag]
+          If set to .false., the default, source and destination side must
+          cover all of the squence indices defined in the sparse matrix.
+          An error will be returned if a sequence index in the sparse
+          matrix does not match on either the source or destination side.
+          If set to .true., mismatching sequence indices are silently
+          ignored. The size of this array argument must either be 1 or
+          equal the number of Fieldss in the srcFieldBundle and
+          dstFieldBundle arguments. In the latter case, the handling of
+          unmatched indices is specified for each Field pair separately.
+          If only one element is specified, it is used for all Field
+          pairs.
+
+   [srcTermProcessing]
+          Source term summing options for route handle creation. See
+          ESMF_FieldRegridStore documentation for a full parameter
+          description. Two forms may be provided. If a single element list
+          is provided, this integer value is applied across all bundle
+          members. Otherwise, the list must contain as many elements as
+          there are bundle members. For the special case of accessing the
+          auto-tuned parameter (providing a negative integer value), the
+          list length must equal the bundle member count.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

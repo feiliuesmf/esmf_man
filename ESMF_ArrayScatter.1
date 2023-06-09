@@ -1,0 +1,61 @@
+  28.5.34 ESMF_ArrayScatter - Scatter a Fortran array across the ESMF_Array
+
+   INTERFACE:
+   subroutine ESMF_ArrayScatter(array, farray, rootPet, tile, vm, rc)
+
+   ARGUMENTS:
+   type(ESMF_Array), intent(inout) :: array
+   <type> (ESMF_KIND_<kind>), intent(in), target :: farray(<rank>)
+   integer, intent(in) :: rootPet
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(in), optional :: tile
+   type(ESMF_VM), intent(in), optional :: vm
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Scatter the data of farray located on rootPET across an ESMF_Array
+   object. A single farray must be scattered across a single DistGrid tile
+   in Array. The optional tile argument allows selection of the tile. For
+   Arrays defined on a single tile DistGrid the default selection (tile 1)
+   will be correct. The shape of farray must match the shape of the tile
+   in Array.
+
+   If the Array contains replicating DistGrid dimensions data will be
+   scattered across all of the replicated pieces.
+
+   This version of the interface implements the PET-based blocking
+   paradigm: Each PET of the VM must issue this call exactly once for all
+   of its DEs. The call will block until all PET-local data objects are
+   accessible.
+
+   The arguments are:
+
+   array
+          The ESMF_Array object across which data will be scattered.
+
+   {farray}
+          The Fortran array that is to be scattered. Only root must
+          provide a valid farray, the other PETs may treat farray as an
+          optional argument.
+
+   rootPet
+          PET that holds the valid data in farray.
+
+   [tile]
+          The DistGrid tile in array into which to scatter farray. By
+          default farray will be scattered into tile 1.
+
+   [vm]
+          Optional ESMF_VM object of the current context. Providing the VM
+          of the current context will lower the method's overhead.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

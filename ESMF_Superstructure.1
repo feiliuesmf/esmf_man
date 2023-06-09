@@ -1,0 +1,619 @@
+               o [14]15.1 Superstructure Classes
+               o [15]15.2 Hierarchical Creation of Components
+               o [16]15.3 Sequential and Concurrent Execution of
+                 Components
+               o [17]15.4 Intra-Component Communication
+               o [18]15.5 Data Distribution and Scoping in Components
+               o [19]15.6 Performance
+               o [20]15.7 Object Model
+          + [21]16 Application Driver and Required ESMF Methods
+               o [22]16.1 Description
+               o [23]16.2 Constants
+                    # [24]16.2.1 ESMF_END
+               o [25]16.3 Use and Examples
+               o [26]16.4 Required ESMF Methods
+                    # [27]16.4.1 ESMF_Initialize
+                    # [28]16.4.2 ESMF_InitializePreMPI
+                    # [29]16.4.3 ESMF_IsInitialized
+                    # [30]16.4.4 ESMF_IsFinalized
+                    # [31]16.4.5 ESMF_Finalize
+                    # [32]16.4.6 User-code SetServices method
+                    # [33]16.4.7 User-code Initialize, Run, and Finalize
+                      methods
+                    # [34]16.4.8 User-code SetVM method
+                    # [35]16.4.9 Use of internal procedures as
+                      user-provided procedures
+15.1 Superstructure Classes
+
+   There are a small number of classes in the ESMF superstructure:
+
+     * Component An ESMF component has two parts, one that is supplied by
+       ESMF and one that is supplied by the user. The part that is
+       supplied by the framework is an ESMF derived type that is either a
+       Gridded Component (GridComp) or a Coupler Component (CplComp). A
+       Gridded Component typically represents a physical domain in which
+       data is associated with one or more grids - for example, a sea ice
+       model. A Coupler Component arranges and executes data
+       transformations and transfers between one or more Gridded
+       Components. Gridded Components and Coupler Components have standard
+       methods, which include initialize, run, and finalize. These methods
+       can be multi-phase.
+       The second part of an ESMF Component is user code, such as a model
+       or data assimilation system. Users set entry points within their
+       code so that it is callable by the framework. In practice, setting
+       entry points means that within user code there are calls to ESMF
+       methods that associate the name of a Fortran subroutine with a
+       corresponding standard ESMF operation. For example, a user-written
+       initialization routine called myOceanInit might be associated with
+       the standard initialize routine of an ESMF Gridded Component named
+       “myOcean” that represents an ocean model.
+     * State ESMF Components exchange information with other Components
+       only through States. A State is an ESMF derived type that can
+       contain Fields, FieldBundles, Arrays, ArrayBundles, and other
+       States. A Component is associated with two States, an Import State
+       and an Export State. Its Import State holds the data that it
+       receives from other Components. Its Export State contains data that
+       it makes available to other Components.
+
+   An ESMF coupled application typically involves a parent Gridded
+   Component, two or more child Gridded Components and one or more Coupler
+   Components.
+
+   The parent Gridded Component is responsible for creating the child
+   Gridded Components that are exchanging data, for creating the Coupler,
+   for creating the necessary Import and Export States, and for setting up
+   the desired sequencing. The application's “main” routine calls the
+   parent Gridded Component's initialize, run, and finalize methods in
+   order to execute the application. For each of these standard methods,
+   the parent Gridded Component in turn calls the corresponding methods in
+   the child Gridded Components and the Coupler Component. For example,
+   consider a simple coupled ocean/atmosphere simulation. When the
+   initialize method of the parent Gridded Component is called by the
+   application, it in turn calls the initialize methods of its child
+   atmosphere and ocean Gridded Components, and the initialize method of
+   an ocean-to-atmosphere Coupler Component. Figure [231]3 shows this
+   schematically.
+
+   CAPTION: Figure 2: ESMF enables applications such as the atmospheric
+   general circulation model GEOS-5 to be structured hierarchically, and
+   reconfigured and extended easily. Each box in this diagram is an ESMF
+   Gridded Component.
+
+                \scalebox{0.9}{\includegraphics{ESMF_GEOS5}}
+
+15.2 Hierarchical Creation of Components
+
+   Components are allocated computational resources in the form of
+   Persistent Execution Threads, or PETs. A list of a Component's PETs is
+   contained in a structure called a Virtual Machine, or VM. The VM also
+   contains information about the topology and characteristics of the
+   underlying computer. Components are created hierarchically, with parent
+   Components creating child Components and allocating some or all of
+   their PETs to each one. By default ESMF creates a new VM for each child
+   Component, which allows Components to tailor their VM resources to
+   match their needs. In some cases, a child may want to share its
+   parent's VM - ESMF supports this, too.
+
+   A Gridded Component may exist across all the PETs in an application. A
+   Gridded Component may also reside on a subset of PETs in an
+   application. These PETs may wholly coincide with, be wholly contained
+   within, or wholly contain another Component.
+
+   CAPTION: Figure 3: A call to a standard ESMF initialize (run, finalize)
+   method by a parent component triggers calls to initialize (run,
+   finalize) all of its child components.
+
+               \scalebox{1.0}{\includegraphics{ESMF_appunit}}
+
+15.3 Sequential and Concurrent Execution of Components
+
+   When a set of Gridded Components and a Coupler runs in sequence on the
+   same set of PETs the application is executing in a sequential mode.
+   When Gridded Components are created and run on mutually exclusive sets
+   of PETs, and are coupled by a Coupler Component that extends over the
+   union of these sets, the mode of execution is concurrent.
+
+   Figure [232]4 illustrates a typical configuration for a simple coupled
+   sequential application, and Figure [233]5 shows a possible
+   configuration for the same application running in a concurrent mode.
+
+   Parent Components can select if and when to wait for concurrently
+   executing child Components, synchronizing only when required.
+
+   It is possible for ESMF applications to contain some Component sets
+   that are executing sequentially and others that are executing
+   concurrently. We might have, for example, atmosphere and land
+   Components created on the same subset of PETs, ocean and sea ice
+   Components created on the remainder of PETs, and a Coupler created
+   across all the PETs in the application.
+
+   CAPTION: Figure 4: Schematic of the run method of a coupled
+   application, with an “Atmosphere” and an “Ocean” Gridded Component
+   running sequentially with an “Atm-Ocean Coupler.” The top-level
+   “Hurricane Model” Gridded Component contains the sequencing information
+   and time advancement loop. The application driver, Coupler, and all
+   Gridded Components are distributed over nine PETs.
+
+                \scalebox{1.0}{\includegraphics{ESMF_serial}}
+
+   CAPTION: Figure 5: Schematic of the run method of a coupled
+   application, with an “Atmosphere” and an “Ocean” Gridded Component
+   running concurrently with an “Atm-Ocean Coupler.” The top-level
+   “Hurricane Model” Gridded Component contains the sequencing information
+   and time advancement loop. The application driver, Coupler, and
+   top-level “Hurricane Model” Gridded Component are distributed over nine
+   PETs. The “Atmosphere” Gridded Component is distributed over three PETs
+   and the “Ocean” Gridded Component is distributed over six PETs.
+
+              \scalebox{1.0}{\includegraphics{ESMF_concurrent}}
+
+15.4 Intra-Component Communication
+
+   All data transfers within an ESMF application occur within a component.
+   For example, a Gridded Component may contain halo updates. Another
+   example is that a Coupler Component may redistribute data between two
+   Gridded Components. As a result, the architecture of ESMF does not
+   depend on any particular data communication mechanism, and new
+   communication schemes can be introduced without affecting the overall
+   structure of the application.
+
+   Since all data communication happens within a component, a Coupler
+   Component must be created on the union of the PETs of all the Gridded
+   Components that it couples.
+
+15.5 Data Distribution and Scoping in Components
+
+   The scope of distributed objects is the VM of the currently executing
+   Component. For this reason, all PETs in the current VM must make the
+   same distributed object creation calls. When a Coupler Component
+   running on a superset of a Gridded Component's PETs needs to make
+   communication calls involving objects created by the Gridded Component,
+   an ESMF-supplied function called ESMF_StateReconcile() creates proxy
+   objects for those PETs that had no previous information about the
+   distributed objects. Proxy objects contain no local data but can be
+   used in communication calls (such as regrid or redistribute) to
+   describe the remote source for data being moved to the current PET, or
+   to describe the remote destination for data being moved from the local
+   PET. Figure [234]6 is a simple schematic that shows the sequence of
+   events in a reconcile call.
+
+   CAPTION: Figure 6: An ESMF_StateReconcile() call creates proxy objects
+   for use in subsequent communication calls. The reconcile call would
+   normally be made during Coupler initialization.
+
+              \scalebox{1.0}{\includegraphics{ESMF_reconcile}}
+
+15.6 Performance
+
+   The ESMF design enables the user to configure ESMF applications so that
+   data is transferred directly from one component to another, without
+   requiring that it be copied or sent to a different data buffer as an
+   interim step. This is likely to be the most efficient way of performing
+   inter-component coupling. However, if desired, an application can also
+   be configured so that data from a source component is sent to a
+   distinct set of Coupler Component PETs for processing before being sent
+   to its destination.
+
+   The ability to overlap computation with communication is essential for
+   performance. When running with ESMF the user can initiate data sends
+   during Gridded Component execution, as soon as the data is ready.
+   Computations can then proceed simultaneously with the data transfer.
+
+15.7 Object Model
+
+   The following is a simplified Unified Modeling Language (UML) diagram
+   showing the relationships among ESMF superstructure classes. See
+   Appendix A, A Brief Introduction to UML, for a translation table that
+   lists the symbols in the diagram and their meaning.
+
+                         \includegraphics{Comp_obj}
+
+                16 Application Driver and Required ESMF Methods
+
+16.1 Description
+
+   Every ESMF application needs a driver code. Typically the driver layer
+   is implemented as the "main" of the application, although this is not
+   strictly an ESMF requirement. For most ESMF applications the task of
+   the application driver will be very generic: Initialize ESMF, create a
+   top-level Component and call its Initialize, Run and Finalize methods,
+   before destroying the top-level Component again and calling ESMF
+   Finalize.
+
+   ESMF provides a number of different application driver templates in the
+   $ESMF_DIR/src/Superstructure/AppDriver directory. An appropriate one
+   can be chosen depending on how the application is to be structured:
+
+   Sequential vs. Concurrent Execution
+          In a sequential execution model, every Component executes on all
+          PETs, with each Component completing execution before the next
+          Component begins. This has the appeal of simplicity of data
+          consumption and production: when a Gridded Component starts, all
+          required data is available for use, and when a Gridded Component
+          finishes, all data produced is ready for consumption by the next
+          Gridded Component. This approach also has the possibility of
+          less data movement if the grid and data decomposition is done
+          such that each processor's memory contains the data needed by
+          the next Component.
+
+          In a concurrent execution model, subgroups of PETs run Gridded
+          Components and multiple Gridded Components are active at the
+          same time. Data exchange must be coordinated between Gridded
+          Components so that data deadlock does not occur. This strategy
+          has the advantage of allowing coupling to other Gridded
+          Components at any time during the computational process,
+          including not having to return to the calling level of code
+          before making data available.
+
+   Pairwise vs. Hub and Spoke
+          Coupler Components are responsible for taking data from one
+          Gridded Component and putting it into the form expected by
+          another Gridded Component. This might include regridding, change
+          of units, averaging, or binning.
+
+          Coupler Components can be written for pairwise data exchange:
+          the Coupler Component takes data from a single Component and
+          transforms it for use by another single Gridded Component. This
+          simplifies the structure of the Coupler Component code.
+
+          Couplers can also be written using a hub and spoke model where a
+          single Coupler accepts data from all other Components, can do
+          data merging or splitting, and formats data for all other
+          Components.
+
+          Multiple Couplers, using either of the above two models or some
+          mixture of these approaches, are also possible.
+
+   Implementation Language
+          The ESMF framework currently has Fortran interfaces for all
+          public functions. Some functions also have C interfaces, and the
+          number of these is expected to increase over time.
+
+   Number of Executables
+          The simplest way to run an application is to run the same
+          executable program on all PETs. Different Components can still
+          be run on mutually exclusive PETs by using branching (e.g., if
+          this is PET 1, 2, or 3, run Component A, if it is PET 4, 5, or 6
+          run Component B). This is a SPMD model, Single Program Multiple
+          Data.
+
+          The alternative is to start a different executable program on
+          different PETs. This is a MPMD model, Multiple Program Multiple
+          Data. There are complications with many job control systems on
+          multiprocessor machines in getting the different executables
+          started, and getting inter-process communications established.
+          ESMF currently has some support for MPMD: different Components
+          can run as separate executables, but the Coupler that transfers
+          data between the Components must still run on the union of their
+          PETs. This means that the Coupler Component must be linked into
+          all of the executables.
+
+16.2 Constants
+
+  16.2.1 ESMF_END
+
+   DESCRIPTION:
+   The ESMF_End_Flag determines how an ESMF application is shut down.
+
+   The type of this flag is:
+
+   type(ESMF_End_Flag)
+
+   The valid values are:
+
+   ESMF_END_ABORT
+          Global abort of the ESMF application. There is no guarantee that
+          all PETs will shut down cleanly during an abort. However, all
+          attempts are made to prevent the application from hanging and
+          the LogErr of at least one PET will be completely flushed during
+          the abort. This option should only be used if a condition is
+          detected that prevents normal continuation or termination of the
+          application. Typical conditions that warrant the use of
+          ESMF_END_ABORT are those that occur on a per PET basis where
+          other PETs may be blocked in communication calls, unable to
+          reach the normal termination point. An aborted application
+          returns to the parent process with a system dependent indication
+          that a failure occurred during execution.
+
+   ESMF_END_NORMAL
+          Normal termination of the ESMF application. Wait for all PETs of
+          the global VM to reach ESMF_Finalize() before termination. This
+          is the clean way of terminating an application. MPI_Finalize()
+          will be called in case of MPI applications.
+
+   ESMF_END_KEEPMPI
+          Same as ESMF_END_NORMAL but MPI_Finalize() will not be called.
+          It is the user code's responsibility to shut down MPI cleanly if
+          necessary.
+
+16.3 Use and Examples
+
+   ESMF encourages application organization in which there is a single
+   top-level Gridded Component. This provides a simple, clear sequence of
+   operations at the highest level, and also enables the entire
+   application to be treated as a sub-Component of another, larger
+   application if desired. When a simple application is organized in this
+   fashion the standard AppDriver can probably be used without much
+   modification.
+
+   Examples of program organization using the AppDriver can be found in
+   the src/Superstructure/AppDriver directory. A set of subdirectories
+   within the AppDriver directory follows the naming convention:
+<seq|concur>_<pairwise|hub>_<f|c>driver_<spmd|mpmd>
+
+   The example that is currently implemented is seq_pairwise_fdriver_spmd,
+   which has sequential component execution, a pairwise coupler, a main
+   program in Fortran, and all processors launching the same executable.
+   It is also copied automatically into a top-level quick_start directory
+   at compilation time.
+
+   The user can copy the AppDriver files into their own local directory.
+   Some of the files can be used unchanged. Others are template files
+   which have the rough outline of the code but need additional
+   application-specific code added in order to perform a meaningful
+   function. The README file in the AppDriver subdirectory or quick_start
+   directory contains instructions about which files to change.
+
+   Examples of concurrent component execution can be found in the system
+   tests that are bundled with the ESMF distribution.
+
+
+  ---------------------------------------------------------------------------
+  ---------------------------------------------------------------------------
+   EXAMPLE:  This is an AppDriver.F90 file for a sequential ESMF application.
+  ---------------------------------------------------------------------------
+  ---------------------------------------------------------------------------
+
+    The ChangeMe.F90 file that's included below contains a number of
+    definitions that are used by the AppDriver, such as the name of the
+    application's main configuration file and the name of the application's
+    SetServices routine.  This file is in the same directory as the
+    AppDriver.F90 file.
+  ---------------------------------------------------------------------------
+
+ #include "ChangeMe.F90"
+
+     program ESMF_AppDriver
+ #define ESMF_METHOD "program ESMF_AppDriver"
+
+ #include "ESMF.h"
+
+     ! ESMF module, defines all ESMF data types and procedures
+     use ESMF
+
+     ! Gridded Component registration routines.  Defined in "ChangeMe.F90"
+     use USER_APP_Mod, only : SetServices => USER_APP_SetServices
+
+     implicit none
+
+  ---------------------------------------------------------------------------
+    Define local variables
+  ---------------------------------------------------------------------------
+
+     ! Components and States
+     type(ESMF_GridComp) :: compGridded
+     type(ESMF_State) :: defaultstate
+
+     ! Configuration information
+     type(ESMF_Config) :: config
+
+     ! A common Grid
+     type(ESMF_Grid) :: grid
+
+     ! A Clock, a Calendar, and timesteps
+     type(ESMF_Clock) :: clock
+     type(ESMF_TimeInterval) :: timeStep
+     type(ESMF_Time) :: startTime
+     type(ESMF_Time) :: stopTime
+
+     ! Variables related to the Grid
+     integer :: i_max, j_max
+
+     ! Return codes for error checks
+     integer :: rc, localrc
+
+  ---------------------------------------------------------------------------
+    Initialize ESMF.  Note that an output Log is created by default.
+  ---------------------------------------------------------------------------
+
+     call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, rc=localrc)
+     if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+     call ESMF_LogWrite("ESMF AppDriver start", ESMF_LOGMSG_INFO)
+
+  ---------------------------------------------------------------------------
+    Create and load a configuration file.
+    The USER_CONFIG_FILE is set to sample.rc in the ChangeMe.F90 file.
+    The sample.rc file is also included in the directory with the
+    AppDriver.F90 file.
+  ---------------------------------------------------------------------------
+
+     config = ESMF_ConfigCreate(rc=localrc)
+     if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+     call ESMF_ConfigLoadFile(config, USER_CONFIG_FILE, rc = localrc)
+     if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+  ---------------------------------------------------------------------------
+    Get configuration information.
+
+    A configuration file like sample.rc might include:
+    - size and coordinate information needed to create the default Grid.
+    - the default start time, stop time, and running intervals
+      for the main time loop.
+  ---------------------------------------------------------------------------
+
+     call ESMF_ConfigGetAttribute(config, i_max, label='I Counts:', &
+       default=10, rc=localrc)
+     if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+     call ESMF_ConfigGetAttribute(config, j_max, label='J Counts:', &
+       default=40, rc=localrc)
+     if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+  ---------------------------------------------------------------------------
+    Create the top Gridded Component.
+  ---------------------------------------------------------------------------
+
+     compGridded = ESMF_GridCompCreate(name="ESMF Gridded Component", &
+         rc=localrc)
+     if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+     call ESMF_LogWrite("Component Create finished", ESMF_LOGMSG_INFO)
+
+  ----------------------------------------------------------------------------
+    Register the set services method for the top Gridded Component.
+  ----------------------------------------------------------------------------
+
+     call ESMF_GridCompSetServices(compGridded, userRoutine=SetServices, rc=rc)
+     if (ESMF_LogFoundError(rc, msg="Registration failed", rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+  ----------------------------------------------------------------------------
+    Create and initialize a Clock.
+  ----------------------------------------------------------------------------
+
+       call ESMF_TimeIntervalSet(timeStep, s=2, rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+             ESMF_CONTEXT, rcToReturn=rc)) &
+             call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+       call ESMF_TimeSet(startTime, yy=2004, mm=9, dd=25, rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+             ESMF_CONTEXT, rcToReturn=rc)) &
+             call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+       call ESMF_TimeSet(stopTime, yy=2004, mm=9, dd=26, rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+             ESMF_CONTEXT, rcToReturn=rc)) &
+             call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+       clock = ESMF_ClockCreate(timeStep, startTime, stopTime=stopTime, &
+                 name="Application Clock", rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+             ESMF_CONTEXT, rcToReturn=rc)) &
+             call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+  ----------------------------------------------------------------------------
+    Create and initialize a Grid.
+
+    The default lower indices for the Grid are (/1,1/).
+    The upper indices for the Grid are read in from the sample.rc file,
+    where they are set to (/10,40/).  This means a Grid will be
+    created with 10 grid cells in the x direction and 40 grid cells in the
+    y direction.  The Grid section in the Reference Manual shows how to set
+    coordinates.
+  ----------------------------------------------------------------------------
+
+       grid = ESMF_GridCreateNoPeriDim(maxIndex=(/i_max, j_max/), &
+                              name="source grid", rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+             ESMF_CONTEXT, rcToReturn=rc)) &
+             call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+       ! Attach the grid to the Component
+       call ESMF_GridCompSet(compGridded, grid=grid, rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+             ESMF_CONTEXT, rcToReturn=rc)) &
+             call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+  ----------------------------------------------------------------------------
+    Create and initialize a State to use for both import and export.
+    In a real code, separate import and export States would normally be
+    created.
+  ----------------------------------------------------------------------------
+
+       defaultstate = ESMF_StateCreate(name="Default State", rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+             ESMF_CONTEXT, rcToReturn=rc)) &
+             call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+  ----------------------------------------------------------------------------
+    Call the initialize, run, and finalize methods of the top component.
+    When the initialize method of the top component is called, it will in
+    turn call the initialize methods of all its child components, they
+    will initialize their children, and so on.  The same is true of the
+    run and finalize methods.
+  ----------------------------------------------------------------------------
+
+       call ESMF_GridCompInitialize(compGridded, importState=defaultstate, &
+         exportState=defaultstate, clock=clock, rc=localrc)
+       if (ESMF_LogFoundError(rc, msg="Initialize failed", rcToReturn=rc)) &
+           call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+       call ESMF_GridCompRun(compGridded, importState=defaultstate, &
+         exportState=defaultstate, clock=clock, rc=localrc)
+       if (ESMF_LogFoundError(rc, msg="Run failed", rcToReturn=rc)) &
+           call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+       call ESMF_GridCompFinalize(compGridded, importState=defaultstate, &
+         exportState=defaultstate, clock=clock, rc=localrc)
+       if (ESMF_LogFoundError(rc, msg="Finalize failed", rcToReturn=rc)) &
+           call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+
+  ----------------------------------------------------------------------------
+    Destroy objects.
+  ----------------------------------------------------------------------------
+
+       call ESMF_ClockDestroy(clock, rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+       call ESMF_StateDestroy(defaultstate, rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+       call ESMF_GridCompDestroy(compGridded, rc=localrc)
+       if (ESMF_LogFoundError(localrc, ESMF_ERR_PASSTHRU, &
+         ESMF_CONTEXT, rcToReturn=rc)) &
+         call ESMF_Finalize(rc=localrc, endflag=ESMF_END_ABORT)
+
+  ----------------------------------------------------------------------------
+    Finalize and clean up.
+  ----------------------------------------------------------------------------
+
+     call ESMF_Finalize()
+
+     end program ESMF_AppDriver
+
+16.4 Required ESMF Methods
+
+   There are a few methods that every ESMF application must contain.
+   First, ESMF_Initialize() and ESMF_Finalize() are in complete analogy to
+   MPI_Init() and MPI_Finalize() known from MPI. All ESMF programs, serial
+   or parallel, must initialize the ESMF system at the beginning, and
+   finalize it at the end of execution. The behavior of calling any ESMF
+   method before ESMF_Initialize(), or after ESMF_Finalize() is undefined.
+
+   Second, every ESMF Component that is accessed by an ESMF application
+   requires that its set services routine is called through
+   ESMF_<Grid/Cpl>CompSetServices(). The Component must implement one
+   public entry point, its set services routine, that can be called
+   through the ESMF_<Grid/Cpl>CompSetServices() library routine. The
+   Component set services routine is responsible for setting entry points
+   for the standard ESMF Component methods Initialize, Run, and Finalize.
+
+   Finally, the Component can optionally call ESMF_<Grid/Cpl>CompSetVM()
+   before calling ESMF_<Grid/Cpl>CompSetServices(). Similar to
+   ESMF_<Grid/Cpl>CompSetServices(), the ESMF_<Grid/Cpl>CompSetVM() call
+   requires a public entry point into the Component. It allows the
+   Component to adjust certain aspects of its execution environment, i.e.
+   its own VM, before it is started up.
+
+   The following sections discuss the above mentioned aspects in more
+   detail.
+

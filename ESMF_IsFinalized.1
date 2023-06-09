@@ -1,0 +1,24 @@
+  16.4.4 ESMF_IsFinalized - Query Finalized status of ESMF
+
+   INTERFACE:
+     function ESMF_IsFinalized(rc)
+
+   RETURN VALUE:
+       logical :: ESMF_IsFinalized
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Returns .true. if the framework has been finalized. This means that
+   ESMF_Finalize() has been called. Otherwise returns .false.. If an error
+   occurs, i.e. rc /= ESMF_SUCCESS is returned, the return value of the
+   function will also be .false..
+
+   The arguments are:
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

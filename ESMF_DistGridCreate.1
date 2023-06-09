@@ -1,0 +1,949 @@
+  36.6.4 ESMF_DistGridCreate - Create DistGrid object from DistGrid
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateDG(distgrid, &
+     firstExtra, lastExtra, indexflag, connectionList, balanceflag, &
+     delayout, vm, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateDG
+
+   ARGUMENTS:
+     type(ESMF_DistGrid),           intent(in)            :: distgrid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, target,               intent(in),  optional :: firstExtra(:)
+     integer, target,               intent(in),  optional :: lastExtra(:)
+     type(ESMF_Index_Flag),         intent(in),  optional :: indexflag
+     type(ESMF_DistGridConnection), intent(in),  optional :: connectionList(:)
+     logical,                       intent(in),  optional :: balanceflag
+     type(ESMF_DELayout),           intent(in),  optional :: delayout
+     type(ESMF_VM),                 intent(in),  optional :: vm
+     integer,                       intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.3.0r
+                Added argument vm to support object creation on a
+                different VM than that of the current context.
+
+        8.0.0
+                Added argument delayout to support changing the layout of
+                DEs across PETs.
+                Added argument balanceflag to support rebalancing of the
+                incoming DistGrids decomposition.
+
+   DESCRIPTION:
+
+   Create a new DistGrid from an existing DistGrid, keeping the
+   decomposition unchanged, unless balanceflag=.true. (see below). The
+   firstExtraPTile and lastExtraPTile arguments allow extra elements to be
+   added at the first/last edge DE in each dimension. The method also
+   allows the indexflag to be set. Further, if the connectionList argument
+   provided in it will be used to set connections in the newly created
+   DistGrid, otherwise the connections of the incoming DistGrid will be
+   used.
+
+   The balanceflag argument allows a change in the decomposition, and thus
+   of the number of DEs. An attempt is made to decompose the index space
+   into as many DEs as there are PETs in the VM for which the DistGrid is
+   created. See the argument description for details.
+
+   Setting the balanceflag argument to .true. is currently incompatible
+   with providing any of the other optional arguments.
+
+   The arguments are:
+
+   distgrid
+          Incoming DistGrid object.
+
+   [firstExtra]
+          Extra elements added to the first DE along each dimension. This
+          increases the size of the index space compared to that of the
+          incoming distgrid. The decomposition of the enlarged index space
+          is constructed to align with the original index space provided
+          by distgrid. The default is a zero vector.
+
+   [lastExtra]
+          Extra elements added to the last DE along each dimension. This
+          increases the size of the index space compared to that of the
+          incoming distgrid. The decomposition of the enlarged index space
+          is constructed to align with the original index space provided
+          by distgrid. The default is a zero vector.
+
+   [indexflag]
+          If present, override the indexflag setting of the incoming
+          distgrid. See section [1533]54.27 for a complete list of
+          options. By default use the indexflag setting of distgrid.
+
+   [connectionList]
+          If present, override the connections of the incoming distgrid.
+          See section [1534]36.7.2 for the associated Set() method. By
+          default use the connections defined in distgrid.
+
+   [balanceflag]
+          If set to .true, rebalance the incoming distgrid decompositon to
+          exactly one DE per PET. The DEs along each dimension are chosen
+          to provide the most balanced decomposition across all
+          dimensions. The default is .false., leaving the decomposition,
+          and therefore the number of DEs unchanged. For this case, PETs
+          might end up with no DE, one DE, or multiple DEs.
+
+   [delayout]
+          If present, override the DELayout of the incoming distgrid. By
+          default use the DELayout defined in distgrid.
+
+   [vm]
+          If present, the DistGrid object and the DELayout object are
+          created on the specified ESMF_VM object. The default is to use
+          the VM of the current context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.5 ESMF_DistGridCreate - Create DistGrid object from DistGrid (multi-tile
+  version)
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateDGT(distgrid, firstExtraPTile, &
+     lastExtraPTile, indexflag, connectionList, balanceflag, &
+     delayout, vm, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateDGT
+
+   ARGUMENTS:
+     type(ESMF_DistGrid),           intent(in)            :: distgrid
+     integer, target,               intent(in)            :: firstExtraPTile(:,:
+)
+     integer, target,               intent(in)            :: lastExtraPTile(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_Index_Flag),         intent(in),  optional :: indexflag
+     type(ESMF_DistGridConnection), intent(in),  optional :: connectionList(:)
+     logical,                       intent(in),  optional :: balanceflag
+     type(ESMF_DELayout),           intent(in),  optional :: delayout
+     type(ESMF_VM),                 intent(in),  optional :: vm
+     integer,                       intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.3.0r
+                Added argument vm to support object creation on a
+                different VM than that of the current context.
+
+        8.0.0
+                Added argument delayout to support changing the layout of
+                DEs across PETs.
+                Added argument balanceflag to support rebalancing of the
+                incoming DistGrids decomposition.
+
+   DESCRIPTION:
+
+   Create a new DistGrid from an existing DistGrid, keeping the
+   decomposition unchanged, unless balanceflag=.true. (see below). The
+   firstExtraPTile and lastExtraPTile arguments allow extra elements to be
+   added at the first/last edge DE in each dimension. The method also
+   allows the indexflag to be set. Further, if the connectionList argument
+   provided in it will be used to set connections in the newly created
+   DistGrid, otherwise the connections of the incoming DistGrid will be
+   used.
+
+   The balanceflag argument allows a change in the decomposition, and thus
+   of the number of DEs. An attempt is made to decompose the index space
+   into as many DEs as there are PETs in the VM for which the DistGrid is
+   created. See the argument description for details.
+
+   Setting the balanceflag argument to .true. is currently incompatible
+   with providing any of the other optional arguments.
+
+   The arguments are:
+
+   distgrid
+          Incoming DistGrid object.
+
+   firstExtraPTile
+          Extra elements added to the first DE along each dimension for
+          each tile. This increases the size of the index space compared
+          to that of the incoming distgrid. The decomposition of the
+          enlarged index space is constructed to align with the original
+          index space provided by distgrid. The default is a zero vector.
+
+   lastExtraPTile
+          Extra elements added to the last DE along each dimension for
+          each tile. This increases the size of the index space compared
+          to that of the incoming distgrid. The decomposition of the
+          enlarged index space is constructed to align with the original
+          index space provided by distgrid. The default is a zero vector.
+
+   [indexflag]
+          If present, override the indexflag setting of the incoming
+          distgrid. See section [1535]54.27 for a complete list of
+          options. By default use the indexflag setting of distgrid.
+
+   [connectionList]
+          If present, override the connections of the incoming distgrid.
+          See section [1536]36.7.2 for the associated Set() method. By
+          default use the connections defined in distgrid.
+
+   [balanceflag]
+          If set to .true, rebalance the incoming distgrid decompositon.
+          An attempt is made to come out at exactly one DE per PET.
+          However, if there are more tiles than PETs, the lower PETs will
+          hold more than one DE. For cases where there are more PETs than
+          tiles, each tile is decomposed into DEs as to provide the most
+          balanced decomposition across all dimensions. The default is
+          .false., leaving the decomposition, and therefore the number of
+          DEs unchanged. For this case, PETs might end up with no DE, one
+          DE, or multiple DEs.
+
+   [delayout]
+          If present, override the DELayout of the incoming distgrid. By
+          default use the DELayout defined in distgrid.
+
+   [vm]
+          If present, the DistGrid object and the DELayout object are
+          created on the specified ESMF_VM object. The default is to use
+          the VM of the current context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.6 ESMF_DistGridCreate - Create DistGrid object with regular decomposition
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateRD(minIndex, maxIndex, regDecomp, &
+     decompflag, regDecompFirstExtra, regDecompLastExtra, deLabelList, &
+     indexflag, connectionList, delayout, vm, indexTK, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateRD
+
+   ARGUMENTS:
+     integer,                        intent(in)            :: minIndex(:)
+     integer,                        intent(in)            :: maxIndex(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                target, intent(in),  optional :: regDecomp(:)
+     type(ESMF_Decomp_Flag), target, intent(in),  optional :: decompflag(:)
+     integer,                target, intent(in),  optional :: regDecompFirstExtr
+a(:)
+     integer,                target, intent(in),  optional :: regDecompLastExtra
+(:)
+     integer,                target, intent(in),  optional :: deLabelList(:)
+     type(ESMF_Index_Flag),          intent(in),  optional :: indexflag
+     type(ESMF_DistGridConnection),  intent(in),  optional :: connectionList(:)
+     type(ESMF_DELayout),            intent(in),  optional :: delayout
+     type(ESMF_VM),                  intent(in),  optional :: vm
+     type(ESMF_TypeKind_Flag),       intent(in),  optional :: indexTK
+     integer,                        intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        8.1.0
+                Added argument indexTK to support explicit selection
+                between 32-bit and 64-bit sequence indices.
+
+   DESCRIPTION:
+
+   Create an ESMF_DistGrid from a single logically rectangular tile. The
+   tile has a regular decomposition, where the tile is decomposed into a
+   fixed number of DEs along each dimension. A regular decomposition of a
+   single tile is expressed by a single regDecomp list of DE counts in
+   each dimension.
+
+   The arguments are:
+
+   minIndex
+          Index space tuple of the lower corner of the single tile.
+
+   maxIndex
+          Index space tuple of the upper corner of the single tile.
+
+   [regDecomp]
+          List of DE counts for each dimension. The total deCount is
+          determined as the product of regDecomp elements. By default
+          regDecomp = (/deCount,1,...,1/), where deCount is the number of
+          DEs in the delayout. If the default delayout is used, the
+          deCount is equal to petCount. This leads to a simple 1 DE per
+          PET distribution, where the decompsition is only along the first
+          dimension.
+
+   [decompflag]
+          List of decomposition flags indicating how each dimension of the
+          tile is to be divided between the DEs. The default setting is
+          ESMF_DECOMP_BALANCED in all dimensions. See section [1537]54.13
+          for a list of valid decomposition options.
+
+   [regDecompFirstExtra]
+          Specify how many extra elements on the first DEs along each
+          dimension to consider when applying the regular decomposition
+          algorithm. This does not add extra elements to the index space
+          defined by minIndex and maxIndex. Instead regDecompFirstExtra is
+          used to correctly interpret the specified index space: The
+          regDecomp is first applied to the index space without the extra
+          elements. The extra elements are then added back in to arrive at
+          the final decomposition. This is useful when aligning the
+          decomposition of index spaces that only differ in extra elements
+          along the edges, e.g. when dealing with different stagger
+          locations. The default is a zero vector, assuming no extra
+          elements.
+
+   [regDecompLastExtra]
+          Specify how many extra elements on the last DEs along each
+          dimension to consider when applying the regular decomposition
+          algorithm. This does not add extra elements to the index space
+          defined by minIndex and maxIndex. Instead regDecompLastExtra is
+          used to correctly interpret the specified index space: The
+          regDecomp is first applied to the index space without the extra
+          elements. The extra elements are then added back in to arrive at
+          the final decomposition. This is useful when aligning the
+          decomposition of index spaces that only differ in extra elements
+          along the edges, e.g. when dealing with different stagger
+          locations. The default is a zero vector, assuming no extra
+          elements.
+
+   [deLabelList]
+          List assigning DE labels to the default sequence of DEs. The
+          default sequence is given by the column major order of the
+          regDecomp argument.
+
+   [indexflag]
+          Indicates whether the indices provided by the minIndex and
+          maxIndex arguments are forming a global index space or not. This
+          does not affect the indices held by the DistGrid object, which
+          are always identical to what was specified by minIndex and
+          maxIndex, regardless of the indexflag setting. However, it does
+          affect whether an ESMF_Array object created on the DistGrid can
+          choose global indexing or not. The default is
+          ESMF_INDEX_DELOCAL. See section [1538]54.27 for a complete list
+          of options.
+
+   [connectionList]
+          List of ESMF_DistGridConnection objects, defining connections
+          between DistGrid tiles in index space. See section [1539]36.7.2
+          for the associated Set() method.
+
+   [delayout]
+          ESMF_DELayout object to be used. If a DELayout object is
+          specified its deCount must match the number indicated by
+          regDecomp. By default a new DELayout object will be created with
+          the correct number of DEs.
+
+   [vm]
+          If present, the DistGrid object (and the DELayout object if not
+          provided) are created on the specified ESMF_VM object. The
+          default is to use the VM of the current context.
+
+   [indexTK]
+          Typekind used for global sequence indexing. See section
+          [1540]54.59 for a list of typekind options. Only integer types
+          are supported. The default is to have ESMF automatically choose
+          between ESMF_TYPEKIND_I4 and ESMF_TYPEKIND_I8, depending on
+          whether the global number of elements held by the DistGrid is
+          below or above the 32-bit limit, respectively. Because of the
+          use of signed integers for sequence indices, element counts of
+          $> 2^{31}-1 = 2,147,483,647$ will switch to 64-bit indexing.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.7 ESMF_DistGridCreate - Create DistGrid object with regular decomposition
+  (multi-tile version)
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateRDT(minIndexPTile, maxIndexPTile, &
+     regDecompPTile, decompflagPTile, regDecompFirstExtraPTile,&
+     regDecompLastExtraPTile, deLabelList, indexflag, connectionList, &
+     delayout, vm, indexTK, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateRDT
+
+   ARGUMENTS:
+     integer,                        intent(in)            :: minIndexPTile(:,:)
+     integer,                        intent(in)            :: maxIndexPTile(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                        intent(in),  optional :: regDecompPTile(:,:
+)
+     type(ESMF_Decomp_Flag), target, intent(in),  optional :: decompflagPTile(:,
+:)
+     integer,                target, intent(in),  optional :: regDecompFirstExtr
+aPTile(:,:)
+     integer,                target, intent(in),  optional :: regDecompLastExtra
+PTile(:,:)
+     integer,                        intent(in),  optional :: deLabelList(:)
+     type(ESMF_Index_Flag),          intent(in),  optional :: indexflag
+     type(ESMF_DistGridConnection),  intent(in),  optional :: connectionList(:)
+     type(ESMF_DELayout),            intent(in),  optional :: delayout
+     type(ESMF_VM),                  intent(in),  optional :: vm
+     type(ESMF_TypeKind_Flag),       intent(in),  optional :: indexTK
+     integer,                        intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        8.1.0
+                Added argument indexTK to support explicit selection
+                between 32-bit and 64-bit sequence indices.
+
+   DESCRIPTION:
+
+   Create an ESMF_DistGrid from multiple logically rectangular tiles. Each
+   tile has a regular decomposition, where the tile is decomposed into a
+   fixed number of DEs along each dimension. A regular decomposition of a
+   multi-tile DistGrid is expressed by a list of DE count vectors, one
+   vector for each tile. If a DELayout is specified, it must contain at
+   least as many DEs as there are tiles.
+
+   The arguments are:
+
+   minIndexPTile
+          The first index provides the index space tuple of the lower
+          corner of a tile. The second index indicates the tile number.
+
+   maxIndexPTile
+          The first index provides the index space tuple of the upper
+          corner of a tile. The second index indicates the tile number.
+
+   [regDecompPTile]
+          List of DE counts for each dimension. The second index steps
+          through the tiles. The total deCount is determined as ths sum
+          over the products of regDecomp elements for each tile. By
+          default each tile is decomposed only along the first dimension.
+          The default number of DEs per tile is at least 1, but may be
+          greater for the leading tiles if the deCount is greater than the
+          tileCount. If no DELayout is specified, the deCount is by
+          default set equal to the number of PETs (petCount), or the
+          number of tiles (tileCount), which ever is greater. This means
+          that as long as petCount > tileCount, the resulting default
+          distribution will be 1 DE per PET. Notice that some tiles may be
+          decomposed into more DEs than other tiles.
+
+   [decompflagPTile]
+          List of decomposition flags indicating how each dimension of
+          each tile is to be divided between the DEs. The default setting
+          is ESMF_DECOMP_BALANCED in all dimensions for all tiles. See
+          section [1541]54.13 for a list of valid decomposition flag
+          options. The second index indicates the tile number.
+
+   [regDecompFirstExtraPTile]
+          Specify how many extra elements on the first DEs along each
+          dimension to consider when applying the regular decomposition
+          algorithm. This does not add extra elements to the index space
+          defined by minIndex and maxIndex. Instead
+          regDecompFirstExtraPTile is used to correctly interpret the
+          specified index space: The regDecomp is first applied to the
+          index space without the extra elements. The extra elements are
+          then added back in to arrive at the final decomposition. This is
+          useful when aligning the decomposition of index spaces that only
+          differ in extra elements along the edges, e.g. when dealing with
+          different stagger locations. The default is a zero vector,
+          assuming no extra elements.
+
+   [regDecompLastExtraPTile]
+          Specify how many extra elements on the last DEs along each
+          dimension to consider when applying the regular decomposition
+          algorithm. This does not add extra elements to the index space
+          defined by minIndex and maxIndex. Instead
+          regDecompLastExtraPTile is used to correctly interpret the
+          specified index space: The regDecomp is first applied to the
+          index space without the extra elements. The extra elements are
+          then added back in to arrive at the final decomposition. This is
+          useful when aligning the decomposition of index spaces that only
+          differ in extra elements along the edges, e.g. when dealing with
+          different stagger locations. The default is a zero vector,
+          assuming no extra elements.
+
+   [deLabelList]
+          List assigning DE labels to the default sequence of DEs. The
+          default sequence is given by the column major order of the
+          regDecompPTile elements in the sequence as they appear following
+          the tile index.
+
+   [indexflag]
+          Indicates whether the indices provided by the minIndexPTile and
+          maxIndexPTile arguments are forming a global index space or not.
+          This does not affect the indices held by the DistGrid object,
+          which are always identical to what was specified by
+          minIndexPTile and maxIndexPTile, regardless of the indexflag
+          setting. However, it does affect whether an ESMF_Array object
+          created on the DistGrid can choose global indexing or not. The
+          default is ESMF_INDEX_DELOCAL. See section [1542]54.27 for a
+          complete list of options.
+
+   [connectionList]
+          List of ESMF_DistGridConnection objects, defining connections
+          between DistGrid tiles in index space. See section [1543]36.7.2
+          for the associated Set() method.
+
+   [delayout]
+          Optional ESMF_DELayout object to be used. By default a new
+          DELayout object will be created with as many DEs as there are
+          PETs, or tiles, which ever is greater. If a DELayout object is
+          specified, the number of DEs must match regDecompPTile, if
+          present. In the case that regDecompPTile was not specified, the
+          deCount must be at least that of the default DELayout. The
+          regDecompPTile will be constructed accordingly.
+
+   [vm]
+          Optional ESMF_VM object of the current context. Providing the VM
+          of the current context will lower the method's overhead.
+
+   [indexTK]
+          Typekind used for global sequence indexing. See section
+          [1544]54.59 for a list of typekind options. Only integer types
+          are supported. The default is to have ESMF automatically choose
+          between ESMF_TYPEKIND_I4 and ESMF_TYPEKIND_I8, depending on
+          whether the global number of elements held by the DistGrid is
+          below or above the 32-bit limit, respectively. Because of the
+          use of signed integers for sequence indices, element counts of
+          $> 2^{31}-1 = 2,147,483,647$ will switch to 64-bit indexing.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.8 ESMF_DistGridCreate - Create DistGrid object with DE blocks
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateDB(minIndex, maxIndex, deBlockList, &
+     deLabelList, indexflag, connectionList, delayout, vm, &
+     indexTK, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateDB
+
+   ARGUMENTS:
+     integer,                       intent(in)            :: minIndex(:)
+     integer,                       intent(in)            :: maxIndex(:)
+     integer,                       intent(in)            :: deBlockList(:,:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                       intent(in),  optional :: deLabelList(:)
+     type(ESMF_Index_Flag),         intent(in),  optional :: indexflag
+     type(ESMF_DistGridConnection), intent(in),  optional :: connectionList(:)
+     type(ESMF_DELayout),           intent(in),  optional :: delayout
+     type(ESMF_VM),                 intent(in),  optional :: vm
+     type(ESMF_TypeKind_Flag),      intent(in),  optional :: indexTK
+     integer,                       intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added argument indexTK to support selecting between 32-bit
+                and 64-bit sequence indices.
+
+   DESCRIPTION:
+
+   Create an ESMF_DistGrid from a single logically rectangular tile with
+   decomposition specified by deBlockList.
+
+   The arguments are:
+
+   minIndex
+          Index space tuple of the lower corner of the single tile.
+
+   maxIndex
+          Index space tuple of the upper corner of the single tile.
+
+   deBlockList
+          List of DE-local blocks. The third index of deBlockList steps
+          through the deBlock elements (i.e. deCount), which are defined
+          by the first two indices. The first index must be of size
+          dimCount and the second index must be of size 2. Each element of
+          deBlockList defined by the first two indices hold the following
+          information.
+
+                     +---------------------------------------> 2nd index
+                     |    1               2
+                     | 1  minIndex(1)    maxIndex(1)
+                     | 2  minIndex(2)    maxIndex(2)
+                     | .  minIndex(.)    maxIndex(.)
+                     | .
+                     v
+                    1st index
+
+          It is required that there be no overlap between the DE blocks.
+
+   [deLabelList]
+          List assigning DE labels to the default sequence of DEs. The
+          default sequence is given by the order of DEs in the deBlockList
+          argument.
+
+   [indexflag]
+          Indicates whether the indices provided by the minIndex and
+          maxIndex arguments are forming a global index space or not. This
+          does not affect the indices held by the DistGrid object, which
+          are always identical to what was specified by minIndex and
+          maxIndex, regardless of the indexflag setting. However, it does
+          affect whether an ESMF_Array object created on the DistGrid can
+          choose global indexing or not. The default is
+          ESMF_INDEX_DELOCAL. See section [1545]54.27 for a complete list
+          of options.
+
+   [connectionList]
+          List of ESMF_DistGridConnection objects, defining connections
+          between DistGrid tiles in index space. See section [1546]36.7.2
+          for the associated Set() method.
+
+   [delayout]
+          Optional ESMF_DELayout object to be used. By default a new
+          DELayout object will be created with the correct number of DEs.
+          If a DELayout object is specified its number of DEs must match
+          the number indicated by regDecomp.
+
+   [vm]
+          Optional ESMF_VM object of the current context. Providing the VM
+          of the current context will lower the method's overhead.
+
+   [indexTK]
+          Typekind used for global sequence indexing. See section
+          [1547]54.59 for a list of typekind options. Only integer types
+          are supported. The default is to have ESMF automatically choose
+          between ESMF_TYPEKIND_I4 and ESMF_TYPEKIND_I8, depending on
+          whether the global number of elements held by the DistGrid is
+          below or above the 32-bit limit, respectively. Because of the
+          use of signed integers for sequence indices, element counts of
+          $> 2^{31}-1 = 2,147,483,647$ will switch to 64-bit indexing.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.9 ESMF_DistGridCreate - Create DistGrid object with DE blocks (multi-tile
+  version)
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateDBT(minIndexPTile, maxIndexPTile, deBlockList, &
+     deToTileMap, deLabelList, indexflag, connectionList, &
+     delayout, vm, indexTK, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateDBT
+
+   ARGUMENTS:
+     integer,                       intent(in)            :: minIndexPTile(:,:)
+     integer,                       intent(in)            :: maxIndexPTile(:,:)
+     integer,                       intent(in)            :: deBlockList(:,:,:)
+     integer,                       intent(in)            :: deToTileMap(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                       intent(in),  optional :: deLabelList(:)
+     type(ESMF_Index_Flag),         intent(in),  optional :: indexflag
+     type(ESMF_DistGridConnection), intent(in),  optional :: connectionList(:)
+     type(ESMF_DELayout),           intent(in),  optional :: delayout
+     type(ESMF_VM),                 intent(in),  optional :: vm
+     type(ESMF_TypeKind_Flag),      intent(in),  optional :: indexTK
+     integer,                       intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create an ESMF_DistGrid on multiple logically rectangular tiles with
+   decomposition specified by deBlockList.
+
+   The arguments are:
+
+   minIndexPTile
+          The first index provides the index space tuple of the lower
+          corner of a tile. The second index indicates the tile number.
+
+   maxIndexPTile
+          The first index provides the index space tuple of the upper
+          corner of a tile. The second index indicates the tile number.
+
+   deBlockList
+          List of DE-local blocks. The third index of deBlockList steps
+          through the deBlock elements (i.e. deCount), which are defined
+          by the first two indices. The first index must be of size
+          dimCount and the second index must be of size 2. Each element of
+          deBlockList defined by the first two indices hold the following
+          information.
+
+                     +---------------------------------------> 2nd index
+                     |    1               2
+                     | 1  minIndex(1)    maxIndex(1)
+                     | 2  minIndex(2)    maxIndex(2)
+                     | .  minIndex(.)    maxIndex(.)
+                     | .
+                     v
+                    1st index
+
+          It is required that there be no overlap between the DE blocks.
+
+   deToTileMap
+          List assigning each DE to a specific tile. The size of
+          deToTileMap must be equal to deCount. The order of DEs is the
+          same as in deBlockList.
+
+   [deLabelList]
+          List assigning DE labels to the default sequence of DEs. The
+          default sequence is given by the order of DEs in the deBlockList
+          argument.
+
+   [indexflag]
+          Indicates whether the indices provided by the minIndexPTile and
+          maxIndexPTile arguments are forming a global index space or not.
+          This does not affect the indices held by the DistGrid object,
+          which are always identical to what was specified by
+          minIndexPTile and maxIndexPTile, regardless of the indexflag
+          setting. However, it does affect whether an ESMF_Array object
+          created on the DistGrid can choose global indexing or not. The
+          default is ESMF_INDEX_DELOCAL. See section [1548]54.27 for a
+          complete list of options.
+
+   [connectionList]
+          List of ESMF_DistGridConnection objects, defining connections
+          between DistGrid tiles in index space. See section [1549]36.7.2
+          for the associated Set() method.
+
+   [delayout]
+          Optional ESMF_DELayout object to be used. By default a new
+          DELayout object will be created with the correct number of DEs.
+          If a DELayout object is specified its number of DEs must match
+          the number indicated by regDecomp.
+
+   [vm]
+          Optional ESMF_VM object of the current context. Providing the VM
+          of the current context will lower the method's overhead.
+
+   [indexTK]
+          Typekind used for global sequence indexing. See section
+          [1550]54.59 for a list of typekind options. Only integer types
+          are supported. The default is to have ESMF automatically choose
+          between ESMF_TYPEKIND_I4 and ESMF_TYPEKIND_I8, depending on
+          whether the global number of elements held by the DistGrid is
+          below or above the 32-bit limit, respectively. Because of the
+          use of signed integers for sequence indices, element counts of
+          $> 2^{31}-1 = 2,147,483,647$ will switch to 64-bit indexing.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.10 ESMF_DistGridCreate - Create 1D DistGrid object from user's arbitrary
+  sequence index list 1 DE per PET
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateDBAI1D1DE(arbSeqIndexList, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateDBAI1D1DE
+
+   ARGUMENTS:
+     integer, intent(in)            :: arbSeqIndexList(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Create an ESMF_DistGrid of dimCount 1 from a PET-local list of sequence
+   indices. The PET-local size of the arbSeqIndexList argument determines
+   the number of local elements in the created DistGrid. The sequence
+   indices must be unique across all PETs. A default DELayout with 1 DE
+   per PET across all PETs of the current VM is automatically created.
+
+   This is a collective method across the current VM.
+
+   The arguments are:
+
+   arbSeqIndexList
+          List of arbitrary sequence indices that reside on the local PET.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.11 ESMF_DistGridCreate - Create 1D DistGrid object from user's arbitrary
+  64-bit sequence index list 1 DE per PET
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateDBAI1D1DEI8(arbSeqIndexList, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateDBAI1D1DEI8
+
+   ARGUMENTS:
+     integer(ESMF_KIND_I8),  intent(in)            :: arbSeqIndexList(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create an ESMF_DistGrid of dimCount 1 from a PET-local list of sequence
+   indices. The PET-local size of the arbSeqIndexList argument determines
+   the number of local elements in the created DistGrid. The sequence
+   indices must be unique across all PETs. A default DELayout with 1 DE
+   per PET across all PETs of the current VM is automatically created.
+
+   This is a collective method across the current VM.
+
+   The arguments are:
+
+   arbSeqIndexList
+          List of arbitrary sequence indices that reside on the local PET.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.12 ESMF_DistGridCreate - Create 1D DistGrid object from user's arbitrary
+  sequence index list multiple DE/PET
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateDBAI1D(arbSeqIndexList, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateDBAI1D
+
+   ARGUMENTS:
+     type(ESMF_PtrInt1D), intent(in) :: arbSeqIndexList(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional  :: rc
+
+   DESCRIPTION:
+
+   Create an ESMF_DistGrid of dimCount 1 from a PET-local list of sequence
+   index lists. The PET-local size of the arbSeqIndexList argument
+   determines the number of local DEs in the created DistGrid. Each of the
+   local DEs is associated with as many index space elements as there are
+   arbitrary sequence indices in the associated list. The sequence indices
+   must be unique across all DEs. A default DELayout with the correct
+   number of DEs per PET is automatically created.
+
+   This is a collective method across the current VM.
+
+   The arguments are:
+
+   arbSeqIndexList
+          List of arbitrary sequence index lists that reside on the local
+          PET.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  36.6.13 ESMF_DistGridCreate - Create (1+n)D DistGrid object from user's
+  arbitrary sequence index list and minIndexPTile/maxIndexPTile
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridCreate()
+   function ESMF_DistGridCreateDBAI(arbSeqIndexList, arbDim, &
+     minIndexPTile, maxIndexPTile, rc)
+
+   RETURN VALUE:
+     type(ESMF_DistGrid) :: ESMF_DistGridCreateDBAI
+
+   ARGUMENTS:
+     integer, intent(in)            :: arbSeqIndexList(:)
+     integer, intent(in)            :: arbDim
+     integer, intent(in)            :: minIndexPTile(:)
+     integer, intent(in)            :: maxIndexPTile(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Create an ESMF_DistGrid of dimCount $1+n$ , where $n=$
+   size(minIndexPTile) = size(maxIndexPTile).
+
+   The resulting DistGrid will have a 1D distribution determined by the
+   PET-local arbSeqIndexList. The PET-local size of the arbSeqIndexList
+   argument determines the number of local elements along the arbitrarily
+   distributed dimension in the created DistGrid. The sequence indices
+   must be unique across all PETs. The associated, automatically created
+   DELayout will have 1 DE per PET across all PETs of the current VM.
+
+   In addition to the arbitrarily distributed dimension, regular DistGrid
+   dimensions can be specified in minIndexPTile and maxIndexPTile. The $n$
+   dimensional subspace spanned by the regular dimensions is "multiplied"
+   with the arbitrary dimension on each DE, to form a $1+n$ dimensional
+   total index space described by the DistGrid object. The arbDim argument
+   allows to specify which dimension in the resulting DistGrid corresponds
+   to the arbitrarily distributed one.
+
+   This is a collective method across the current VM.
+
+   The arguments are:
+
+   arbSeqIndexList
+          List of arbitrary sequence indices that reside on the local PET.
+
+   arbDim
+          Dimension of the arbitrary distribution.
+
+   minIndexPTile
+          Index space tuple of the lower corner of the tile. The arbitrary
+          dimension is not included in this tile
+
+   maxIndexPTile
+          Index space tuple of the upper corner of the tile. The arbitrary
+          dimension is not included in this tile
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

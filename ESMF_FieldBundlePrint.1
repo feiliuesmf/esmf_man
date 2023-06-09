@@ -1,0 +1,28 @@
+  25.5.18 ESMF_FieldBundlePrint - Print FieldBundle information
+
+   INTERFACE:
+   subroutine ESMF_FieldBundlePrint(fieldbundle, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(in) :: fieldbundle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Print internal information of the specified fieldbundle object.
+
+   The arguments are:
+
+   fieldbundle
+          ESMF_FieldBundle object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

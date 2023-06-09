@@ -1,0 +1,79 @@
+  37.5.1 ESMF_RouteHandleCreate - Create a new RouteHandle from RouteHandle
+
+   INTERFACE:
+   ! Private name; call using ESMF_RouteHandleCreate()
+   function ESMF_RouteHandleCreateRH(routehandle, &
+     originPetList, targetPetList, rc)
+
+   RETURN VALUE:
+     type(ESMF_RouteHandle) :: ESMF_RouteHandleCreateRH
+
+   ARGUMENTS:
+     type(ESMF_RouteHandle), intent(in)            :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(in),  optional :: originPetList(:)
+     integer,                intent(in),  optional :: targetPetList(:)
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a new ESMF_RouteHandle object from and existing RouteHandle. The
+   new RouteHandle can be created to function on a different petList than
+   the incoming RouteHandle.
+
+   The arguments are:
+
+   routehandle
+          The RouteHandle object to be duplicated.
+
+   [originPetList]
+          The petList on which the incoming routehandle is defined to
+          operate. If present, then targetPetList must also be present and
+          of the same size. The petLists are used to map origin PETs to
+          target PETs. By convention the petLists are constructed to first
+          list the PETs of the source component, followed by the PETs of
+          the destination component. Defaults, to the petList of the
+          current component context, meaning that the PETs in the
+          RouteHandle are not modified.
+
+   [targetPetList]
+          The petList on which the newly created RouteHandle is defined to
+          operate. If present, then originPetList must also be present and
+          of the same size. The petLists are used to map origin PETs to
+          target PETs. By convention the petLists are constructed to first
+          list the PETs of the source component, followed by the PETs of
+          the destination component. Defaults, to the petList of the
+          current component context, meaning that the PETs in the
+          RouteHandle are not modified.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  37.5.2 ESMF_RouteHandleCreate - Create a new RouteHandle from file
+
+   INTERFACE:
+   ! Private name; call using ESMF_RouteHandleCreate()
+   function ESMF_RouteHandleCreateFile(fileName, rc)
+
+   RETURN VALUE:
+     type(ESMF_RouteHandle) :: ESMF_RouteHandleCreateFile
+
+   ARGUMENTS:
+     character(*),           intent(in)            :: fileName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a new ESMF_RouteHandle object from a file. This method must be
+   called from a VM context that holds exactly as many PETs as were used
+   when generating the file.
+
+   The arguments are:
+
+   fileName
+          The name of the RouteHandle file to be read in.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

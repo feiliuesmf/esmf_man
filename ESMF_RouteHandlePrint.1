@@ -1,0 +1,22 @@
+  37.5.6 ESMF_RouteHandlePrint - Print the contents of a RouteHandle
+
+   INTERFACE:
+   subroutine ESMF_RouteHandlePrint(routehandle, rc)
+
+   ARGUMENTS:
+     type(ESMF_RouteHandle), intent(in)            :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Print information about an ESMF_RouteHandle.
+
+   The arguments are:
+
+   routehandle
+          ESMF_RouteHandle to print contents of.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

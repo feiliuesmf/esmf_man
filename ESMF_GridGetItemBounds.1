@@ -1,0 +1,127 @@
+  31.6.50 ESMF_GridGetItemBounds - Get DE-local item bounds from a Grid
+
+   INTERFACE:
+       subroutine ESMF_GridGetItemBounds(grid, itemflag,  &
+         staggerloc, localDE, &
+         exclusiveLBound, exclusiveUBound, exclusiveCount, &
+         computationalLBound, computationalUBound, computationalCount,  &
+         totalLBound, totalUBound, totalCount, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       type (ESMF_GridItem_Flag), intent(in)         :: itemflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type (ESMF_StaggerLoc), intent(in),  optional :: staggerloc
+       integer,                intent(in),  optional :: localDE
+       integer,        target, intent(out), optional :: exclusiveLBound(:)
+       integer,        target, intent(out), optional :: exclusiveUBound(:)
+       integer,        target, intent(out), optional :: exclusiveCount(:)
+       integer,        target, intent(out), optional :: computationalLBound(:)
+       integer,        target, intent(out), optional :: computationalUBound(:)
+       integer,        target, intent(out), optional :: computationalCount(:)
+       integer,        target, intent(out), optional :: totalLBound(:)
+       integer,        target, intent(out), optional :: totalUBound(:)
+       integer,        target, intent(out), optional :: totalCount(:)
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method gets information about the range of index space which a
+   particular piece of item data occupies. In other words, this method
+   returns the bounds of the item arrays. Note that unlike the output from
+   the Array, these values also include the undistributed dimensions and
+   are ordered to reflect the order of the indices in the item. So, for
+   example, totalLBound and totalUBound should match the bounds of the
+   Fortran array retrieved by ESMF_GridGetItem.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   itemflag
+          The item to get the information for. Please see
+          Section [1414]31.2.2 for a list of valid items.
+
+   [staggerloc]
+          The stagger location to get the information for. Please see
+          Section [1415]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   [localDE]
+          The local DE for which information is requested.
+          [0,..,localDECount-1]. For localDECount==1 the localDE argument
+          may be omitted, in which case it will default to localDE=0.
+
+   [exclusiveLBound]
+          Upon return this holds the lower bounds of the exclusive region.
+          exclusiveLBound must be allocated to be of size equal to the
+          item dimCount. Please see Section [1416]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [exclusiveUBound]
+          Upon return this holds the upper bounds of the exclusive region.
+          exclusiveUBound must be allocated to be of size equal to the
+          item dimCount. Please see Section [1417]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [exclusiveCount]
+          Upon return this holds the number of items,
+          exclusiveUBound-exclusiveLBound+1, in the exclusive region per
+          dimension. exclusiveCount must be allocated to be of size equal
+          to the item dimCount. Please see Section [1418]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalLBound]
+          Upon return this holds the lower bounds of the stagger region.
+          computationalLBound must be allocated to be of size equal to the
+          item dimCount. Please see Section [1419]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalUBound]
+          Upon return this holds the upper bounds of the stagger region.
+          computationalUBound must be allocated to be of size equal to the
+          item dimCount. Please see Section [1420]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalCount]
+          Upon return this holds the number of items in the computational
+          region per dimension (i.e.
+          computationalUBound-computationalLBound+1). computationalCount
+          must be allocated to be of size equal to the item dimCount.
+          Please see Section [1421]31.3.19 for a description of the
+          regions and their associated bounds and counts.
+
+   [totalLBound]
+          Upon return this holds the lower bounds of the total region.
+          totalLBound must be allocated to be of size equal to the item
+          dimCount. Please see Section [1422]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [totalUBound]
+          Upon return this holds the upper bounds of the total region.
+          totalUBound must be allocated to be of size equal to the item
+          dimCount. Please see Section [1423]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [totalCount]
+          Upon return this holds the number of items in the total region
+          per dimension (i.e. totalUBound-totalLBound+1). totalCount must
+          be allocated to be of size equal to the item dimCount. Please
+          see Section [1424]31.3.19 for a description of the regions and
+          their associated bounds and counts.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

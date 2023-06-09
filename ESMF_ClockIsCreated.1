@@ -1,0 +1,27 @@
+  45.5.12 ESMF_ClockIsCreated - Check whether a Clock object has been created
+
+   INTERFACE:
+   function ESMF_ClockIsCreated(clock, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_ClockIsCreated
+
+   ARGUMENTS:
+     type(ESMF_Clock), intent(in)            :: clock
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the clock has been created. Otherwise return .false..
+   If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return
+   value of the function will also be .false..
+
+   The arguments are:
+
+   clock
+          ESMF_Clock queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

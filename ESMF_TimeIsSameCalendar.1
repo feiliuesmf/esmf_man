@@ -1,0 +1,36 @@
+  43.4.13 ESMF_TimeIsSameCalendar - Compare Calendars of two Times
+
+   INTERFACE:
+       function ESMF_TimeIsSameCalendar(time1, time2, rc)
+
+   RETURN VALUE:
+       logical :: ESMF_TimeIsSameCalendar
+
+   ARGUMENTS:
+       type(ESMF_Time), intent(in)            :: time1
+       type(ESMF_Time), intent(in)            :: time2
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,         intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Returns .true. if the Calendars in these Times are the same, .false.
+   otherwise.
+
+   The arguments are:
+
+   time1
+          The first ESMF_Time in comparison.
+
+   time2
+          The second ESMF_Time in comparison.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

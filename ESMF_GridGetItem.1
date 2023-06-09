@@ -1,0 +1,247 @@
+  31.6.47 ESMF_GridGetItem - Get a DE-local Fortran array pointer to Grid item
+  data and item bounds
+
+   INTERFACE:
+        subroutine ESMF_GridGetItem<rank><type><kind>(grid, itemflag,  &
+          staggerloc, localDE, farrayPtr, datacopyflag,                  &
+          exclusiveLBound, exclusiveUBound, exclusiveCount,              &
+          computationalLBound, computationalUBound, computationalCount,  &
+          totalLBound, totalUBound, totalCount, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),      intent(in)               :: grid
+       type (ESMF_GridItem_Flag),intent(in)           :: itemflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type (ESMF_StaggerLoc), intent(in),  optional  :: staggerloc
+       integer,              intent(in),    optional  :: localDE
+       <type> (ESMF_KIND_<kind>), pointer             :: farrayPtr(<rank>)
+       type(ESMF_DataCopy_Flag),intent(in), optional  :: datacopyflag
+       integer,              intent(out),   optional  :: exclusiveLBound(:)
+       integer,              intent(out),   optional  :: exclusiveUBound(:)
+       integer,              intent(out),   optional  :: exclusiveCount(:)
+       integer,              intent(out),   optional  :: computationalLBound(:)
+       integer,              intent(out),   optional  :: computationalUBound(:)
+       integer,              intent(out),   optional  :: computationalCount(:)
+       integer,              intent(out),   optional  :: totalLBound(:)
+       integer,              intent(out),   optional  :: totalUBound(:)
+       integer,              intent(out),   optional  :: totalCount(:)
+       integer,              intent(out),   optional  :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method gets a Fortran pointer to the piece of memory which holds
+   the item data on the local DE for the given stagger locations. This is
+   useful, for example, for setting the item values in a Grid, or for
+   reading the item values. Currently this method supports up to three
+   grid dimensions, but is limited to the I4 datatype. See below for
+   specific supported values. If the item values that you are trying to
+   retrieve are of higher dimension, use the ESMF_GetItem() interface that
+   returns coordinate values in an ESMF_Array instead. That interface
+   supports the retrieval of coordinates up to 7D.
+
+   Supported values for the farrayPtr argument are:
+
+          integer(ESMF_KIND_I4), pointer :: farrayPtr(:)
+
+          integer(ESMF_KIND_I4), pointer :: farrayPtr(:,:)
+
+          integer(ESMF_KIND_I4), pointer :: farrayPtr(:,:,:)
+
+          real(ESMF_KIND_R4), pointer :: farrayPtr(:)
+
+          real(ESMF_KIND_R4), pointer :: farrayPtr(:,:)
+
+          real(ESMF_KIND_R4), pointer :: farrayPtr(:,:,:)
+
+          real(ESMF_KIND_R8), pointer :: farrayPtr(:)
+
+          real(ESMF_KIND_R8), pointer :: farrayPtr(:,:)
+
+          real(ESMF_KIND_R8), pointer :: farrayPtr(:,:,:)
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   itemflag
+          The item to get the information for. Please see
+          Section [1400]31.2.2 for a list of valid items.
+
+   [staggerloc]
+          The stagger location to get the information for. Please see
+          Section [1401]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   [localDE]
+          The local DE for which information is requested.
+          [0,..,localDECount-1]. For localDECount==1 the localDE argument
+          may be omitted, in which case it will default to localDE=0.
+
+   farrayPtr
+          The pointer to the item data.
+
+   [datacopyflag]
+          If not specified, default to ESMF_DATACOPY_REFERENCE, in this
+          case farrayPtr is a reference to the data in the Grid item
+          arrays. Please see Section [1402]54.12 for further description
+          and a list of valid values.
+
+   [exclusiveLBound]
+          Upon return this holds the lower bounds of the exclusive region.
+          exclusiveLBound must be allocated to be of size equal to the
+          grid dimCount.
+
+   [exclusiveUBound]
+          Upon return this holds the upper bounds of the exclusive region.
+          exclusiveUBound must be allocated to be of size equal to the
+          grid dimCount.
+
+   [exclusiveCount]
+          Upon return this holds the number of items in the exclusive
+          region per dimension (i.e. exclusiveUBound-exclusiveLBound+1).
+          exclusiveCount must be allocated to be of size equal to the grid
+          dimCount. Please see Section [1403]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [computationalLBound]
+          Upon return this holds the lower bounds of the stagger region.
+          computationalLBound must be allocated to be of size equal to the
+          grid dimCount. Please see Section [1404]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalUBound]
+          Upon return this holds the upper bounds of the stagger region.
+          exclusiveUBound must be allocated to be of size equal to the
+          grid dimCount. Please see Section [1405]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalCount]
+          Upon return this holds the number of items in the computational
+          region per dimension (i.e.
+          computationalUBound-computationalLBound+1). computationalCount
+          must be allocated to be of size equal to the grid dimCount.
+          Please see Section [1406]31.3.19 for a description of the
+          regions and their associated bounds and counts.
+
+   [totalLBound]
+          Upon return this holds the lower bounds of the total region.
+          totalLBound must be allocated to be of size equal to the grid
+          dimCount. Please see Section [1407]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [totalUBound]
+          Upon return this holds the upper bounds of the total region.
+          totalUBound must be allocated to be of size equal to the grid
+          dimCount. Please see Section [1408]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [totalCount]
+          Upon return this holds the number of items in the total region
+          per dimension (i.e. totalUBound-totalLBound+1). totalCount must
+          be allocated to be of size equal to the grid dimCount. Please
+          see Section [1409]31.3.19 for a description of the regions and
+          their associated bounds and counts.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.48 ESMF_GridGetItem - Get a Grid item and put into an Array
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGetItem()
+       subroutine ESMF_GridGetItemIntoArray(grid, itemflag,  staggerloc, &
+         array, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),           intent(in)            :: grid
+       type (ESMF_GridItem_Flag), intent(in)            :: itemflag
+       type (ESMF_StaggerLoc),    intent(in),  optional :: staggerloc
+       type(ESMF_Array),          intent(out)           :: array
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                   intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method allows the user to get access to the ESMF Array holding
+   item data at a particular stagger location. This is useful, for
+   example, to set the item values. To have an Array to access, the item
+   Array must have already been allocated, for example by ESMF_GridAddItem
+   or ESMF_GridSetItem.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   itemflag
+          The item from which to get the arrays. Please see
+          Section [1410]31.2.2 for a list of valid items.
+
+   [staggerloc]
+          The stagger location from which to get the arrays. Please see
+          Section [1411]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   array
+          An array into which to put the item information.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.49 ESMF_GridGetItem - Get information about an item at a particular
+  stagger location
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGetItem()
+       subroutine ESMF_GridGetItemInfo(grid, itemflag, &
+         staggerloc, isPresent, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),           intent(in)            :: grid
+       type (ESMF_GridItem_Flag), intent(in)            :: itemflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type (ESMF_StaggerLoc),    intent(in),  optional :: staggerloc
+       logical,                   intent(out), optional :: isPresent
+       integer,                   intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method allows the user to get information about a given item on a
+   given stagger.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   itemflag
+          The item for which to get information. Please see
+          Section [1412]31.2.2 for a list of valid items.
+
+   [staggerloc]
+          The stagger location for which to get information. Please see
+          Section [1413]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   [isPresent]
+          If .true. then an item of type itemflag has been added to this
+          staggerloc.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

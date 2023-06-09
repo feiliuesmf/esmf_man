@@ -1,0 +1,43 @@
+  40.4.19 ESMF_InfoIsPresent - Check for key presence
+
+   INTERFACE:
+ function ESMF_InfoIsPresent(info, key, attnestflag, isPointer, rc) result(is_pr
+esent)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(in) :: info
+   character(len=*), intent(in) :: key
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_AttNest_Flag), intent(in), optional :: attnestflag
+   logical, intent(in), optional :: isPointer
+   integer, intent(out), optional :: rc
+
+   RETURN VALUE:
+   logical :: is_present
+
+   DESCRIPTION:
+
+   Return true if key exists in ESMF_Info's storage.
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [500]40.2
+          for an overview of the key format.
+
+   [attnestflag]
+          Setting to ESMF_ATTNEST_ON triggers a recursive search for
+          keyParent. The first instance of the key will be found in the
+          hierarchy. Default is ESMF_ATTNEST_OFF.
+
+   [isPointer]
+          Default is true. If true, expect the key is using JSON Pointer
+          syntax (see section [501]40.2). Setting to false will trigger a
+          slightly faster search.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

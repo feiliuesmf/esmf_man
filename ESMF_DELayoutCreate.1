@@ -1,0 +1,130 @@
+  50.6.4 ESMF_DELayoutCreate - Create DELayout object
+
+   INTERFACE:
+   ! Private name; call using ESMF_DELayoutCreate()
+   recursive function ESMF_DELayoutCreateDefault(deCount, &
+     deGrouping, pinflag, petList, vm, rc)
+
+   RETURN VALUE:
+     type(ESMF_DELayout) :: ESMF_DELayoutCreateDefault
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                      intent(in),  optional :: deCount
+     integer, target,              intent(in),  optional :: deGrouping(:)
+     type(ESMF_Pin_Flag),          intent(in),  optional :: pinflag
+     integer, target,              intent(in),  optional :: petList(:)
+     type(ESMF_VM),                intent(in),  optional :: vm
+     integer,                      intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Create an ESMF_DELayout object on the basis of optionally provided
+   restrictions. By default a DELayout with deCount equal to petCount will
+   be created, each DE mapped to a single PET. However, the number of DEs
+   as well grouping of DEs and PETs can be specified via the optional
+   arguments.
+
+   The arguments are:
+
+   [deCount]
+          Number of DEs to be provided by the created DELayout. By default
+          the number of DEs equals the number of PETs in the associated VM
+          context. Specifying a deCount smaller than the number of PETs
+          will result in unassociated PETs. This may be used to share VM
+          resources between DELayouts within the same ESMF component.
+          Specifying a deCount greater than the number of PETs will result
+          in multiple DE to PET mapping.
+
+   [deGrouping]
+          This optional argument must be of size deCount. Its content
+          assigns a DE group index to each DE of the DELayout. A group
+          index of -1 indicates that the associated DE isn't member of any
+          particular group. The significance of DE groups is that all the
+          DEs belonging to a certain group will be mapped against the same
+          PET. This does not, however, mean that DEs belonging to
+          different DE groups must be mapped to different PETs.
+
+   [pinflag]
+          This flag specifies which type of resource DEs are pinned to.
+          The default is to pin DEs to PETs. Alternatively it is also
+          possible to pin DEs to VASs. See section [599]50.2.1 for a list
+          of valid pinning options.
+
+   [petList]
+          List specifying PETs to be used by this DELayout. This can be
+          used to control the PET overlap between DELayouts within the
+          same ESMF component. It is erroneous to specify PETs that are
+          not within the provided VM context. The default is to include
+          all the PETs of the VM.
+
+   [vm]
+          If present, the DELayout object is created on the specified
+          ESMF_VM object. The default is to create on the VM of the
+          current context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  50.6.5 ESMF_DELayoutCreate - Create DELayout from petMap
+
+   INTERFACE:
+   ! Private name; call using ESMF_DELayoutCreate()
+   recursive function ESMF_DELayoutCreateFromPetMap(petMap, &
+     pinflag, vm, rc)
+
+   RETURN VALUE:
+     type(ESMF_DELayout) :: ESMF_DELayoutCreateFromPetMap
+
+   ARGUMENTS:
+     integer,                      intent(in)            :: petMap(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_Pin_Flag),          intent(in),  optional :: pinflag
+     type(ESMF_VM),                intent(in),  optional :: vm
+     integer,                      intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Create an ESMF_DELayout with exactly specified DE to PET mapping.
+
+   This ESMF method must be called in unison by all PETs of the VM.
+   Calling this method from a PET not part of the VM or not calling it
+   from a PET that is part of the VM will result in undefined behavior.
+   ESMF does not guard against violation of the unison requirement. The
+   call is not collective, there is no communication between PETs.
+
+   The arguments are:
+
+   petMap
+          List specifying the DE-to-PET mapping. The list elements
+          correspond to DE 0, 1, 2, ... and map against the specified PET
+          of the VM context. The size of the petMap argument determines
+          the number of DEs in the created DELayout. It is erroneous to
+          specify a PET identifier that lies outside the VM context.
+
+   [pinflag]
+          This flag specifies which type of resource DEs are pinned to.
+          The default is to pin DEs to PETs. Alternatively it is also
+          possible to pin DEs to VASs. See section [600]50.2.1 for a list
+          of valid pinning options.
+
+   [vm]
+          If present, the DELayout object is created on the specified
+          ESMF_VM object. The default is to create on the VM of the
+          current context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,718 @@
+  33.4.6 ESMF_MeshCreate - Create a Mesh as a 3 step process
+
+   INTERFACE:
+   ! Private name; call using ESMF_MeshCreate()
+     function ESMF_MeshCreate3Part(parametricDim, spatialDim, coordSys, name, rc
+)
+
+   RETURN VALUE:
+     type(ESMF_Mesh)                                 :: ESMF_MeshCreate3Part
+
+   ARGUMENTS:
+     integer,                  intent(in)            :: parametricDim
+     integer,                  intent(in)            :: spatialDim
+     type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+     character(len=*),         intent(in),  optional :: name
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call is the first part of the three part mesh create sequence.
+   This call sets the dimension of the elements in the mesh
+   (parametricDim) and the number of coordinate dimensions in the mesh
+   (spatialDim). The next step is to call ESMF_MeshAddNodes()
+   ([1470]33.4.5) to add the nodes and then ESMF_MeshAddElements()
+   ([1471]33.4.4) to add the elements and finalize the mesh.
+
+   This call is collective across the current VM.
+
+   parametricDim
+          Dimension of the topology of the Mesh. (E.g. a mesh constructed
+          of squares would have a parametric dimension of 2, whereas a
+          Mesh constructed of cubes would have one of 3.)
+
+   spatialDim
+          The number of coordinate dimensions needed to describe the
+          locations of the nodes making up the Mesh. For a manifold, the
+          spatial dimension can be larger than the parametric dim (e.g.
+          the 2D surface of a sphere in 3D space), but it can't be
+          smaller.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1472]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [name]
+          The name of the Mesh.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  33.4.7 ESMF_MeshCreate - Create a Mesh all at once
+
+   INTERFACE:
+   ! Private name; call using ESMF_MeshCreate()
+     function ESMF_MeshCreate1Part(parametricDim, spatialDim, &
+                    nodeIds, nodeCoords, nodeOwners, nodeMask, nodalDistgrid, &
+                    elementIds, elementTypes, elementConn, &
+                    elementMask, elementArea, elementCoords, &
+                    elementDistgrid, coordSys, name, rc)
+
+   RETURN VALUE:
+     type(ESMF_Mesh)                                 :: ESMF_MeshCreate1Part
+
+   ARGUMENTS:
+     integer,                  intent(in)            :: parametricDim
+     integer,                  intent(in)            :: spatialDim
+     integer,                  intent(in)            :: nodeIds(:)
+     real(ESMF_KIND_R8),       intent(in)            :: nodeCoords(:)
+     integer,                  intent(in),  optional :: nodeOwners(:)
+     integer,                  intent(in),  optional :: nodeMask(:)
+     type(ESMF_DistGrid),      intent(in),  optional :: nodalDistgrid
+     integer,                  intent(in)            :: elementIds(:)
+     integer,                  intent(in)            :: elementTypes(:)
+     integer,                  intent(in)            :: elementConn(:)
+     integer,                  intent(in),  optional :: elementMask(:)
+     real(ESMF_KIND_R8),       intent(in),  optional :: elementArea(:)
+     real(ESMF_KIND_R8),       intent(in),  optional :: elementCoords(:)
+     type(ESMF_DistGrid),      intent(in),  optional :: elementDistgrid
+     type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+     character(len=*),         intent(in),  optional :: name
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a Mesh object in one step. After this call the Mesh is usable,
+   for example, a Field may be built on the created Mesh object and this
+   Field may be used in a ESMF_FieldRegridStore() call.
+
+   This call sets the dimension of the elements in the mesh
+   (parametricDim) and the number of coordinate dimensions in the mesh
+   (spatialDim). It then creates the nodes, and then creates the elements
+   by connecting together the nodes.
+
+   The parameters to this call nodeIds, nodeCoords, and nodeOwners
+   describe the nodes to be created on this PET. The description for a
+   particular node lies at the same index location in nodeIds and
+   nodeOwners. Each entry in nodeCoords consists of spatial dimension
+   coordinates, so the coordinates for node $n$ in the nodeIds array will
+   start at $(n-1)*spatialDim+1$ .
+
+   The parameters to this call elementIds, elementTypes, and elementConn
+   describe the elements to be created. The description for a particular
+   element lies at the same index location in elementIds and elementTypes.
+   Each entry in elementConn consists of the list of nodes used to create
+   that element, so the connections for element $e$ in the elementIds
+   array will start at $number\_of\_nodes\_in\_element(1) +
+   number\_of\_nodes\_in\_element(2) + \cdots +
+   number\_of\_nodes\_in\_element(e-1) + 1$ in elementConn.
+
+   This call is collective across the current VM.
+
+   parametricDim
+          Dimension of the topology of the Mesh. (E.g. a mesh constructed
+          of squares would have a parametric dimension of 2, whereas a
+          Mesh constructed of cubes would have one of 3.)
+
+   spatialDim
+          The number of coordinate dimensions needed to describe the
+          locations of the nodes making up the Mesh. For a manifold, the
+          spatial dimension can be larger than the parametric dim (e.g.
+          the 2D surface of a sphere in 3D space), but it can't be
+          smaller.
+
+   nodeIds
+          An array containing the global ids of the nodes to be created on
+          this PET. This input consists of a 1D array the size of the
+          number of nodes on this PET. Each node id must be a number equal
+          to or greater than 1. An id should be unique in the sense that
+          different nodes must have different ids (the same node that
+          appears on different processors must have the same id). There
+          may be gaps in the sequence of ids, but if these gaps are the
+          same scale as the length of the sequence it can lead to
+          inefficiencies when the Mesh is used (e.g. in
+          ESMF_FieldRegridStore()).
+
+   nodeCoords
+          An array containing the physical coordinates of the nodes to be
+          created on this PET. This input consists of a 1D array the size
+          of the number of nodes on this PET times the Mesh's spatial
+          dimension (spatialDim). The coordinates in this array are
+          ordered so that the coordinates for a node lie in sequence in
+          memory. (e.g. for a Mesh with spatial dimension 2, the
+          coordinates for node 1 are in nodeCoords(1) and nodeCoords(2),
+          the coordinates for node 2 are in nodeCoords(3) and
+          nodeCoords(4), etc.).
+
+   [nodeOwners]
+          An array containing the PETs that own the nodes to be created on
+          this PET. If the node is shared with another PET, the value may
+          be a PET other than the current one. Only nodes owned by this
+          PET will have PET local entries in a Field created on the Mesh.
+          This input consists of a 1D array the size of the number of
+          nodes on this PET. If not provided by the user, then ESMF will
+          calculate node ownership.
+
+   [nodeMask]
+          An array containing values which can be used for node masking.
+          Which values indicate masking are chosen via the srcMaskValues
+          or dstMaskValues arguments to ESMF_FieldRegridStore() call. This
+          input consists of a 1D array the size of the number of nodes on
+          this PET.
+
+   [nodalDistgrid]
+          If present, use this as the node Distgrid for the Mesh. The
+          passed in Distgrid needs to contain a local set of sequence
+          indices matching the set of local node ids (i.e. the ids in
+          nodeIds with nodeOwners equal to the current PET). However,
+          specifying an externally created Distgrid gives the user more
+          control over aspects of the Distgrid containing those sequence
+          indices (e.g. how they are broken into DEs). If not present, a
+          1D Distgrid will be created internally consisting of one DE per
+          PET.
+
+   elementIds
+          An array containing the global ids of the elements to be created
+          on this PET. This input consists of a 1D array the size of the
+          number of elements on this PET. Each element id must be a number
+          equal to or greater than 1. An id should be unique in the sense
+          that different elements must have different ids (the same
+          element that appears on different processors must have the same
+          id). There may be gaps in the sequence of ids, but if these gaps
+          are the same scale as the length of the sequence it can lead to
+          inefficiencies when the Mesh is used (e.g. in
+          ESMF_FieldRegridStore()).
+
+   elementTypes
+          An array containing the types of the elements to be created on
+          this PET. The types used must be appropriate for the parametric
+          dimension of the Mesh. Please see Section [1473]33.2.1 for the
+          list of options. This input consists of a 1D array the size of
+          the number of elements on this PET.
+
+   elementConn
+          An array containing the indexes of the sets of nodes to be
+          connected together to form the elements to be created on this
+          PET. The entries in this list are NOT node global ids, but
+          rather each entry is a local index (1 based) into the list of
+          nodes to be created on this PET by this call. In other words, an
+          entry of 1 indicates that this element contains the node
+          described by nodeIds(1), nodeCoords(1), etc. on this PET. It is
+          also important to note that the order of the nodes in an element
+          connectivity list matters. Please see Section [1474]33.2.1 for
+          diagrams illustrating the correct order of nodes in a element.
+          This input consists of a 1D array with a total size equal to the
+          sum of the number of nodes contained in each element on this
+          PET. The number of nodes in each element is implied by its
+          element type in elementTypes. The nodes for each element are in
+          sequence in this array (e.g. the nodes for element 1 are
+          elementConn(1), elementConn(2), etc.).
+
+   [elementMask]
+          An array containing values which can be used for element
+          masking. Which values indicate masking are chosen via the
+          srcMaskValues or dstMaskValues arguments to
+          ESMF_FieldRegridStore() call. This input consists of a 1D array
+          the size of the number of elements on this PET.
+
+   [elementArea]
+          An array containing element areas. If not specified, the element
+          areas are internally calculated. This input consists of a 1D
+          array the size of the number of elements on this PET. NOTE: ESMF
+          doesn't currently do unit conversion on areas. If these areas
+          are going to be used in a process that also involves the areas
+          of another Grid or Mesh (e.g. conservative regridding), then it
+          is the user's responsibility to make sure that the area units
+          are consistent between the two sides. If ESMF calculates an area
+          on the surface of a sphere, then it is in units of square
+          radians. If it calculates the area for a Cartesian grid, then it
+          is in the same units as the coordinates, but squared.
+
+   [elementCoords]
+          An array containing the physical coordinates of the elements to
+          be created on this PET. This input consists of a 1D array the
+          size of the number of elements on this PET times the Mesh's
+          spatial dimension (spatialDim). The coordinates in this array
+          are ordered so that the coordinates for an element lie in
+          sequence in memory. (e.g. for a Mesh with spatial dimension 2,
+          the coordinates for element 1 are in elementCoords(1) and
+          elementCoords(2), the coordinates for element 2 are in
+          elementCoords(3) and elementCoords(4), etc.).
+
+   [elementDistgrid]
+          If present, use this as the element Distgrid for the Mesh. The
+          passed in Distgrid needs to contain a local set of sequence
+          indices matching the set of local element ids (i.e. those in
+          elementIds). However, specifying an externally created Distgrid
+          gives the user more control over aspects of the Distgrid
+          containing those sequence indices (e.g. how they are broken into
+          DEs). If not present, a 1D Distgrid will be created internally
+          consisting of one DE per PET.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1475]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [name]
+          The name of the Mesh.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  33.4.8 ESMF_MeshCreate - Create a Mesh from a Grid
+
+   INTERFACE:
+   ! Private name; call using ESMF_MeshCreate()
+     function ESMF_MeshCreateFromGrid(grid, name, rc)
+
+   RETURN VALUE:
+     type(ESMF_Mesh)         :: ESMF_MeshCreateFromGrid
+
+   ARGUMENTS:
+     type(ESMF_Grid),        intent(in)            :: grid
+     character(len=*),       intent(in),  optional :: name
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create an ESMF Mesh from an ESMF Grid. This method creates the elements
+   of the Mesh from the cells of the Grid, and the nodes of the Mesh from
+   the corners of the Grid. Corresponding locations in the Grid and new
+   Mesh will have the same coordinates, sequence indices, masking, and
+   area information.
+
+   This method currently only works for 2D Grids. In addition, this method
+   requires the input Grid to have coordinates in the corner stagger
+   location.
+
+   grid
+          The ESMF Grid from which to create the Mesh.
+
+   [name]
+          The name of the Mesh.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  33.4.9 ESMF_MeshCreate - Create a Mesh from a file
+
+   INTERFACE:
+   ! Private name; call using ESMF_MeshCreate()
+     function ESMF_MeshCreateFromFile(filename, fileformat, &
+                  convertToDual, addUserArea, maskFlag, varname, &
+                  nodalDistgrid, elementDistgrid, &
+                  coordSys, name, rc)
+
+   RETURN VALUE:
+     type(ESMF_Mesh)         :: ESMF_MeshCreateFromFile
+
+   ARGUMENTS:
+     character(len=*),           intent(in)            :: filename
+     type(ESMF_FileFormat_Flag), intent(in)            :: fileformat
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                    intent(in),  optional :: convertToDual
+     logical,                    intent(in),  optional :: addUserArea
+     type(ESMF_MeshLoc),         intent(in),  optional :: maskFlag
+     character(len=*),           intent(in),  optional :: varname
+     type(ESMF_DistGrid),        intent(in),  optional :: nodalDistgrid
+     type(ESMF_DistGrid),        intent(in),  optional :: elementDistgrid
+     type(ESMF_CoordSys_Flag),   intent(in),  optional :: coordSys
+     character(len=*),           intent(in),  optional :: name
+     integer,                    intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a Mesh from a file. Provides options to convert to 3D and in the
+   case of SCRIP format files, allows the dual of the mesh to be created.
+
+   This call is collective across the current VM.
+
+   filename
+          The name of the grid file
+
+   fileformat
+          The file format. The valid options are ESMF_FILEFORMAT_SCRIP,
+          ESMF_FILEFORMAT_ESMFMESH and ESMF_FILEFORMAT_UGRID. Please see
+          Section [1476]54.19 for a detailed description of the options.
+
+   [convertToDual]
+          if .true., the mesh will be converted to its dual. If not
+          specified, defaults to .false..
+
+   [addUserArea]
+          if .true., the cell area will be read in from the GRID file.
+          This feature is only supported when the grid file is in the
+          SCRIP or ESMF format. If not specified, defaults to .false..
+
+   [maskFlag]
+          If maskFlag is present, generate the mask using the
+          missing_value attribute defined in 'varname' This flag is only
+          supported when the grid file is in the UGRID format. The value
+          could be either ESMF_MESHLOC_NODE or ESMF_MESHLOC_ELEMENT. If
+          the value is ESMF_MESHLOC_NODE, the node mask will be generated
+          and the variable has to be defined on the "node" (specified by
+          its location attribute). If the value is ESMF_MESHLOC_ELEMENT,
+          the element mask will be generated and the variable has to be
+          defined on the "face" of the mesh. If the variable is not
+          defined on the right location, no mask will be generated. If not
+          specified, no mask will be generated.
+
+   [varname]
+          If maskFlag is present, provide a variable name stored in the
+          UGRID file and the mask will be generated using the missing
+          value of the data value of this variable. The first two
+          dimensions of the variable has to be the the longitude and the
+          latitude dimension and the mask is derived from the first 2D
+          values of this variable even if this data is 3D, or 4D array. If
+          not specified, defaults to empty string.
+
+   [nodalDistgrid]
+          A Distgrid describing the user-specified distribution of the
+          nodes across the PETs.
+
+   [elementDistgrid]
+          A Distgrid describing the user-specified distribution of the
+          elements across the PETs.
+
+   [coordSys]
+          The coordinate system in which to store the mesh coordinate
+          data. If this setting doesn't match the coordinate system in the
+          file, then the coordinates in the file will be converted to this
+          system during mesh creation. It is currently an error to convert
+          Cartesian file coordinates into a spherical coordinate system.
+          For a full list of options, please see Section [1477]54.11. If
+          not specified, then defaults to the coordinate system in the
+          file.
+
+   [name]
+          The name of the Mesh.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  33.4.10 ESMF_MeshCreate - Create a copy of a Mesh with a new distribution
+
+   INTERFACE:
+   ! Private name; call using ESMF_MeshCreate()
+     function ESMF_MeshCreateRedist(mesh, nodalDistgrid, &
+       elementDistgrid, vm, name, rc)
+
+   RETURN VALUE:
+     type(ESMF_Mesh)                            :: ESMF_MeshCreateRedist
+
+   ARGUMENTS:
+     type(ESMF_Mesh),          intent(in)            :: mesh
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_DistGrid),      intent(in),  optional :: nodalDistgrid
+     type(ESMF_DistGrid),      intent(in),  optional :: elementDistgrid
+     type(ESMF_VM),            intent(in),  optional :: vm
+     character(len=*),         intent(in),  optional :: name
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a copy of an existing Mesh with a new distribution. Information
+   in the Mesh such as connections, coordinates, areas, masks, etc. are
+   automatically redistributed to the new Mesh. To redistribute data in
+   Fields built on the original Mesh create a Field on the new Mesh and
+   then use the Field redistribution functionality
+   (ESMF_FieldRedistStore(), etc.). The equivalent methods can also be
+   used for data in FieldBundles.
+
+   mesh
+          The source Mesh to be redistributed.
+
+   [nodalDistgrid]
+          A Distgrid describing the new distribution of the nodes across
+          the PETs.
+
+   [elementDistgrid]
+          A Distgrid describing the new distribution of the elements
+          across the PETs.
+
+   [vm]
+          If present, the Mesh object is created on the specified ESMF_VM
+          object. The default is to create on the VM of the current
+          context.
+
+   [name]
+          The name of the Mesh.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  33.4.11 ESMF_MeshCreate - Create a Mesh of just one element type using corner
+  coordinates
+
+   INTERFACE:
+   ! Private name; call using ESMF_MeshCreate()
+     function  ESMF_MeshCreateEasyElems1Type(parametricDim, coordSys, &
+                    elementIds, elementType, elementCornerCoords, &
+                    elementMask, elementArea, elementCoords, &
+                    elementDistgrid, rc)
+
+   RETURN VALUE:
+     type(ESMF_Mesh) :: ESMF_MeshCreateEasyElems1Type
+
+   ARGUMENTS:
+     integer,                  intent(in)            :: parametricDim
+     type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+     integer,                  intent(in),  optional :: elementIds(:)
+     integer,                  intent(in)            :: elementType
+     real(ESMF_KIND_R8),       intent(in)            :: elementCornerCoords(:,:,
+:)
+     integer,                  intent(in),  optional :: elementMask(:)
+     real(ESMF_KIND_R8),       intent(in),  optional :: elementArea(:)
+     real(ESMF_KIND_R8),       intent(in),  optional :: elementCoords(:,:)
+     type(ESMF_DistGrid),      intent(in),  optional :: elementDistgrid
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a Mesh object in one step by just specifying the corner
+   coordinates of each element. Internally these corners are turned into
+   nodes forming the outside edges of the elements. This call assumes that
+   each element is the same type to make the specification of the elements
+   a bit easier. After this call the Mesh is usable, for example, a Field
+   may be built on the created Mesh object and this Field may be used in
+   ESMF_FieldRegridStore(). However, the Mesh created by this call
+   consists of a set of disconnected elements, and so shouldn't be used in
+   a situation where connections between elements are necessary (e.g.
+   bilinear regridding on element centers, patch regridding, or
+   second-order conservative regridding).
+
+   This call sets the dimension of the elements in the Mesh via
+   parametricDim and the number of coordinate dimensions in the mesh is
+   determined from the first dimension of elementCornerCoords.
+
+   The parameters to this call elementIds, elementTypes, and
+   elementCornerCoords describe the elements to be created. The
+   description for a particular element lies at the same index location in
+   elementIds and elementTypes. The argument elementCornerCoords contains
+   the coordinates of the corners used to create each element. The first
+   dimension of this argument are across the coordinate dimensions. The
+   second dimension of this argument is across the corners of a particular
+   element. The last dimension of this argument is across the list of
+   elements on this PET, so the coordinates of corner c in element e on
+   this PET would be in elementCornerCoords(:,c,e).
+
+   This call is collective across the current VM.
+
+   parametricDim
+          Dimension of the topology of the Mesh. (E.g. a mesh constructed
+          of squares would have a parametric dimension of 2, whereas a
+          Mesh constructed of cubes would have one of 3.)
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1478]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [elementIds]
+          An array containing the global ids of the elements to be created
+          on this PET. This input consists of a 1D array the size of the
+          number of elements on this PET. Each element id must be a number
+          equal to or greater than 1. An id should be unique in the sense
+          that different elements must have different ids (the same
+          element that appears on different processors must have the same
+          id). There may be gaps in the sequence of ids, but if these gaps
+          are the same scale as the length of the sequence it can lead to
+          inefficiencies when the Mesh is used (e.g. in
+          ESMF_FieldRegridStore()). If not specified, then elements are
+          numbered in sequence starting with the first element on PET 0.
+
+   elementType
+          An variable containing the type of the elements to be created in
+          this Mesh. The type used must be appropriate for the parametric
+          dimension of the Mesh. Please see Section [1479]33.2.1 for the
+          list of options.
+
+   elementCornerCoords
+          A 3D array containing the coordinates of the corners of the
+          elements to be created on this PET. The first dimension of this
+          array is for the coordinates and should be of size 2 or 3. The
+          size of this dimension will be used to determine the spatialDim
+          of the Mesh. The second dimension is the number of corners for
+          an element. The 3rd dimension is a list of all the elements on
+          this PET.
+
+   [elementMask]
+          An array containing values which can be used for element
+          masking. Which values indicate masking are chosen via the
+          srcMaskValues or dstMaskValues arguments to
+          ESMF_FieldRegridStore() call. This input consists of a 1D array
+          the size of the number of elements on this PET.
+
+   [elementArea]
+          An array containing element areas. If not specified, the element
+          areas are internally calculated. This input consists of a 1D
+          array the size of the number of elements on this PET. NOTE: ESMF
+          doesn't currently do unit conversion on areas. If these areas
+          are going to be used in a process that also involves the areas
+          of another Grid or Mesh (e.g. conservative regridding), then it
+          is the user's responsibility to make sure that the area units
+          are consistent between the two sides. If ESMF calculates an area
+          on the surface of a sphere, then it is in units of square
+          radians. If it calculates the area for a Cartesian grid, then it
+          is in the same units as the coordinates, but squared.
+
+   [elementCoords]
+          An array containing the physical coordinates of the elements to
+          be created on this PET. This input consists of a 2D array with
+          the first dimension that same size as the first dimension of
+          elementCornerCoords. The second dimension should be the same
+          size as the elementTypes argument.
+
+   [elementDistgrid]
+          If present, use this as the element Distgrid for the Mesh. The
+          passed in Distgrid needs to contain a local set of sequence
+          indices matching the set of local element ids (i.e. those in
+          elementIds). However, specifying an externally created Distgrid
+          gives the user more control over aspects of the Distgrid
+          containing those sequence indices (e.g. how they are broken into
+          DEs). If not present, a 1D Distgrid will be created internally
+          consisting of one DE per PET.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  33.4.12 ESMF_MeshCreate - Create a Mesh using element corner coordinates
+
+   INTERFACE:
+   ! Private name; call using ESMF_MeshCreate()
+     function  ESMF_MeshCreateEasyElemsGen(parametricDim, coordSys, &
+                    elementIds, elementTypes, elementCornerCoords, &
+                    elementMask, elementArea, elementCoords, &
+                    elementDistgrid, rc)
+
+   RETURN VALUE:
+     type(ESMF_Mesh) :: ESMF_MeshCreateEasyElemsGen
+
+   ARGUMENTS:
+     integer,                  intent(in)            :: parametricDim
+     type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+     integer,                  intent(in),  optional :: elementIds(:)
+     integer,                  intent(in)            :: elementTypes(:)
+     real(ESMF_KIND_R8),       intent(in)            :: elementCornerCoords(:,:)
+     integer,                  intent(in),  optional :: elementMask(:)
+     real(ESMF_KIND_R8),       intent(in),  optional :: elementArea(:)
+     real(ESMF_KIND_R8),       intent(in),  optional :: elementCoords(:,:)
+     type(ESMF_DistGrid),      intent(in),  optional :: elementDistgrid
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a Mesh object in one step by just specifying the corner
+   coordinates of each element. Internally these corners are turned into
+   nodes forming the outside edges of the elements. After this call the
+   Mesh is usable, for example, a Field may be built on the created Mesh
+   object and this Field may be used in ESMF_FieldRegridStore(). However,
+   the Mesh created by this call consists of a set of disconnected
+   elements, and so shouldn't be used in a situation where connections
+   between elements are necessary (e.g. bilinear regridding on element
+   centers, patch regridding, or second-order conservative regridding).
+
+   This call sets the dimension of the elements in the Mesh via
+   parametricDim and the number of coordinate dimensions in the mesh is
+   determined from the first dimension of elementCornerCoords.
+
+   The parameters to this call elementIds, elementTypes, and
+   elementCornerCoords describe the elements to be created. The
+   description for a particular element lies at the same index location in
+   elementIds and elementTypes. The argument elementCornerCoords consists
+   of a list of all the corners used to create all the elements, so the
+   corners for element $e$ in the elementTypes array will start at
+   $number\_of\_corners\_in\_element(1) +
+   number\_of\_corners\_in\_element(2) + \cdots +
+   number\_of\_corners\_in\_element(e-1) + 1$ in elementCornerCoords.
+
+   This call is collective across the current VM.
+
+   parametricDim
+          Dimension of the topology of the Mesh. (E.g. a mesh constructed
+          of squares would have a parametric dimension of 2, whereas a
+          Mesh constructed of cubes would have one of 3.)
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1480]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [elementIds]
+          An array containing the global ids of the elements to be created
+          on this PET. This input consists of a 1D array the size of the
+          number of elements on this PET. Each element id must be a number
+          equal to or greater than 1. An id should be unique in the sense
+          that different elements must have different ids (the same
+          element that appears on different processors must have the same
+          id). There may be gaps in the sequence of ids, but if these gaps
+          are the same scale as the length of the sequence it can lead to
+          inefficiencies when the Mesh is used (e.g. in
+          ESMF_FieldRegridStore()). If not specified, then elements are
+          numbered in sequence starting with the first element on PET 0.
+
+   elementTypes
+          An array containing the types of the elements to be created on
+          this PET. The types used must be appropriate for the parametric
+          dimension of the Mesh. Please see Section [1481]33.2.1 for the
+          list of options. This input consists of a 1D array the size of
+          the number of elements on this PET.
+
+   elementCornerCoords
+          A 2D array containing the coordinates of the corners of the
+          elements to be created on this PET. The first dimension of this
+          array is for the coordinates and should be of size 2 or 3. The
+          size of this dimension will be used to determine the spatialDim
+          of the Mesh. The second dimension is a collapsed list of all the
+          corners in all the elements. The list of corners has been
+          collapsed to 1D to enable elements with different number of
+          corners to be supported in the same list without wasting space.
+          The number of corners in each element is implied by its element
+          type in elementTypes. The corners for each element are in
+          sequence in this array (e.g. If element 1 has 3 corners then
+          they are in elementCornerCoords(:,1), elementCornerCoords(:,2),
+          elementCornerCoords(:,3) and the corners for the next element
+          start in elementCornerCoords(:,4)).
+
+   [elementMask]
+          An array containing values which can be used for element
+          masking. Which values indicate masking are chosen via the
+          srcMaskValues or dstMaskValues arguments to
+          ESMF_FieldRegridStore() call. This input consists of a 1D array
+          the size of the number of elements on this PET.
+
+   [elementArea]
+          An array containing element areas. If not specified, the element
+          areas are internally calculated. This input consists of a 1D
+          array the size of the number of elements on this PET. NOTE: ESMF
+          doesn't currently do unit conversion on areas. If these areas
+          are going to be used in a process that also involves the areas
+          of another Grid or Mesh (e.g. conservative regridding), then it
+          is the user's responsibility to make sure that the area units
+          are consistent between the two sides. If ESMF calculates an area
+          on the surface of a sphere, then it is in units of square
+          radians. If it calculates the area for a Cartesian grid, then it
+          is in the same units as the coordinates, but squared.
+
+   [elementCoords]
+          An array containing the physical coordinates of the elements to
+          be created on this PET. This input consists of a 2D array with
+          the first dimension that same size as the first dimension of
+          elementCornerCoords. The second dimension should be the same
+          size as the elementTypes argument.
+
+   [elementDistgrid]
+          If present, use this as the element Distgrid for the Mesh. The
+          passed in Distgrid needs to contain a local set of sequence
+          indices matching the set of local element ids (i.e. those in
+          elementIds). However, specifying an externally created Distgrid
+          gives the user more control over aspects of the Distgrid
+          containing those sequence indices (e.g. how they are broken into
+          DEs). If not present, a 1D Distgrid will be created internally
+          consisting of one DE per PET.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

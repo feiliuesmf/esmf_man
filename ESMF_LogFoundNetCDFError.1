@@ -1,0 +1,67 @@
+  49.7.9 ESMF_LogFoundNetCDFError - Check NetCDF status code for success or log
+  the associated NetCDF error message.
+
+   INTERFACE:
+ function ESMF_LogFoundNetCDFError(ncerrToCheck, msg, line, &
+                                   file, method, rcToReturn, log)
+
+ #if defined ESMF_NETCDF
+   use netcdf
+ #elif defined ESMF_PNETCDF
+   use pnetcdf
+ #endif
+
+   RETURN VALUE:
+   logical :: ESMF_LogFoundNetCDFError
+
+   ARGUMENTS:
+   integer,          intent(in)              :: ncerrToCheck
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   character(len=*), intent(in),    optional :: msg
+   integer,          intent(in),    optional :: line
+   character(len=*), intent(in),    optional :: file
+   character(len=*), intent(in),    optional :: method
+   integer,          intent(inout), optional :: rcToReturn
+   type(ESMF_Log),   intent(inout), optional :: log
+
+   DESCRIPTION:
+
+   This function returns .true. when ncerrToCheck indicates an return code
+   other than 0 (the success code from NetCDF Fortran) or NF_NOERR (the
+   success code for PNetCDF). Otherwise it returns .false.. If an error is
+   indicated, a predefined ESMF error message will be written to the
+   ESMF_Log along with a user added msg, line, file and method. The NetCDF
+   string error representation will also be logged.
+
+   The arguments are:
+
+   [ncerrToCheck]
+          NetCDF error code to check.
+
+   [msg]
+          User-provided message string.
+
+   [line]
+          Integer source line number. Expected to be set by using the
+          preprocessor __LINE__ macro.
+
+   [file]
+          User-provided source file name.
+
+   [method]
+          User-provided method string.
+
+   [rcToReturn]
+          If specified, when ncerrToCheck indicates an error, set
+          rcToReturn to ESMF_RC_NETCDF_ERROR. The string representation
+          for the error code will be retrieved from the NetCDF Fortran
+          library and logged alongside any user-provided message string.
+          Otherwise, rcToReturn is not modified. This is not the return
+          code for this function; it allows the calling code to do an
+          assignment of the error code at the same time it is testing the
+          value.
+
+   [log]
+          An optional ESMF_Log object that can be used instead of the
+          default Log.
+

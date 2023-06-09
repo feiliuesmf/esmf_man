@@ -1,0 +1,22 @@
+  35.2.5 ESMF_GeomDestroy - Release resources associated with a Geom
+
+   INTERFACE:
+       subroutine ESMF_GeomDestroy(geom, rc)
+
+   ARGUMENTS:
+       type(ESMF_Geom)            :: geom
+       integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Destroys an ESMF_Geom object. This call does not destroy wrapped Grid,
+   LocStream, or other objects.
+
+   The arguments are:
+
+   geom
+          ESMF_Geom to be destroyed.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

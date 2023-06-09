@@ -1,0 +1,48 @@
+  42.5.14 ESMF_CalendarSetDefault - Set the default Calendar kind
+
+   INTERFACE:
+       ! Private name; call using ESMF_CalendarSetDefault()
+       subroutine ESMF_CalendarSetDefaultKind(calkindflag, rc)
+
+   ARGUMENTS:
+       type(ESMF_CalKind_Flag), intent(in)            :: calkindflag
+       integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Sets the default calendar to the given type. Subsequent Time Manager
+   operations requiring a calendar where one isn't specified will use the
+   internal calendar of this type.
+
+   The arguments are:
+
+   calkindflag
+          The calendar kind to be the default.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  42.5.15 ESMF_CalendarSetDefault - Set the default Calendar
+
+   INTERFACE:
+       ! Private name; call using ESMF_CalendarSetDefault()
+       subroutine ESMF_CalendarSetDefaultCal(calendar, rc)
+
+   ARGUMENTS:
+       type(ESMF_Calendar),     intent(in)            :: calendar
+       integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Sets the default calendar to the one given. Subsequent Time Manager
+   operations requiring a calendar where one isn't specified will use this
+   calendar.
+
+   The arguments are:
+
+   calendar
+          The object instance to be the default.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

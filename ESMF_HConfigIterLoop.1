@@ -1,0 +1,40 @@
+  48.5.40 ESMF_HConfigIterLoop - Step iterator forward
+
+   INTERFACE:
+   function ESMF_HConfigIterLoop(hconfig, hconfigBegin, hconfigEnd, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_HConfigIterLoop
+
+   ARGUMENTS:
+     type(ESMF_HConfigIter), intent(inout)     :: hconfig
+     type(ESMF_HConfigIter), intent(in)        :: hconfigBegin
+     type(ESMF_HConfigIter), intent(in)        :: hconfigEnd
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Step the iterator hconfig forward. starting at hconfigBegin until
+   hconfigEnd is reached. Returns .true. as long as hconfig has not
+   reached hconfigEnd. Once this condition has been reached, returns
+   .false..
+
+   The intended usage of ESMF_HConfigIterLoop() is as the conditional in a
+   do while loop, iterating over the elements of a HConfig object.
+
+   The arguments are:
+
+   hconfig
+          The ESMF_HConfigIter object. Must enter equal to hconfigBegin on
+          the first loop step.
+
+   hconfigBegin
+          The ESMF_HConfigIter to begin at.
+
+   hconfigEnd
+          The ESMF_HConfigIter that marks the end of the loop.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

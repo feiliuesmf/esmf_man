@@ -1,0 +1,25 @@
+  40.4.22 ESMF_InfoReadJSON - Read JSON data from file
+
+   INTERFACE:
+ function ESMF_InfoReadJSON(filename, rc) result(info_r)
+
+   ARGUMENTS:
+   character(len=*), intent(in) :: filename
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(out), optional :: rc
+
+   RETURN VALUE:
+   type(ESMF_Info) :: info_r
+
+   DESCRIPTION:
+
+   Read JSON data from a file and return a new ESMF_Info object.
+
+   The arguments are:
+
+   filename
+          Path to the input file.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

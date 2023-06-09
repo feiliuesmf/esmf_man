@@ -1,0 +1,1722 @@
+          + [265]28 Array Class
+               o [266]28.1 Description
+               o [267]28.2 Use and Examples
+                    # [268]28.2.1 Array from native Fortran array with 1
+                      DE per PET
+                    # [269]28.2.2 Array from native Fortran array with
+                      extra elements for halo or padding
+                    # [270]28.2.3 Array from ESMF_LocalArray
+                    # [271]28.2.4 Create Array with automatic memory
+                      allocation
+                    # [272]28.2.5 Native language memory access
+                    # [273]28.2.6 Regions and default bounds
+                    # [274]28.2.7 Array bounds
+                    # [275]28.2.8 Computational region and extra elements
+                      for halo or padding
+                    # [276]28.2.9 Create 1D and 3D Arrays
+                    # [277]28.2.10 Working with Arrays of different rank
+                    # [278]28.2.11 Array and DistGrid rank - 2D+1 Arrays
+                    # [279]28.2.12 Arrays with replicated dimensions
+                    # [280]28.2.13 Shared memory features: DE pinning,
+                      sharing, and migration
+                                 28 Array Class
+
+28.1 Description
+
+   The Array class is an alternative to the Field class for representing
+   distributed, structured data. Unlike Fields, which are built to carry
+   grid coordinate information, Arrays only carry information about the
+   indices associated with grid cells. Since they do not have coordinate
+   information, Arrays cannot be used to calculate interpolation weights.
+   However, if the user supplies interpolation weights, the Array sparse
+   matrix multiply (SMM) operation can be used to apply the weights and
+   transfer data to the new grid. Arrays carry enough information to
+   perform redistribution, scatter, and gather communication operations.
+
+   Like Fields, Arrays can be added to a State and used in inter-Component
+   data communications. Arrays can also be grouped together into
+   ArrayBundles, allowing operations to be performed collectively on the
+   whole group. One motivation for this is convenience; another is the
+   ability to schedule optimized, collective data transfers.
+
+   From a technical standpoint, the ESMF Array class is an index space
+   based, distributed data storage class. Its purpose is to hold
+   distributed user data. Each decompositon element (DE) is associated
+   with its own memory allocation. The index space relationship between
+   DEs is described by the ESMF DistGrid class. DEs, and their associated
+   memory allocation, are pinned either to a specific perisistent
+   execution thread (PET), virtual address space (VAS), or a single system
+   image (SSI). This aspect is managed by the ESMF DELayout class. Pinning
+   to PET is the most common mode and is the default.
+
+   The Array class offers common communication patterns within the index
+   space formalism. All RouteHandle based communication methods of the
+   Field, FieldBundle, and ArrayBundle layers are implemented via the
+   Array SMM operation.
+
+28.2 Use and Examples
+
+   An ESMF_Array is a distributed object that must exist on all PETs of
+   the current context. Each PET-local instance of an Array object
+   contains memory allocations for all PET-local DEs. There may be 0, 1,
+   or more DEs per PET and the number of DEs per PET can differ between
+   PETs for the same Array object. Memory allocations may be provided for
+   each PET by the user during Array creation or can be allocated as part
+   of the Array create call. Many of the concepts of the ESMF_Array class
+   are illustrated by the following examples.
+
+  28.2.1 Array from native Fortran array with 1 DE per PET
+
+   The create call of the ESMF_Array class has been overloaded extensively
+   to facilitate the need for generality while keeping simple cases
+   simple. The following program demonstrates one of the simpler cases,
+   where existing local Fortran arrays are to be used to provide the
+   PET-local memory allocations for the Array object.
+
+program ESMF_ArrayFarrayEx
+
+  use ESMF
+  use ESMF_TestMod
+
+  implicit none
+
+   The Fortran language provides a variety of ways to define and allocate
+   an array. Actual Fortran array objects must either be explicit-shape or
+   deferred-shape. In the first case the memory allocation and
+   deallocation is automatic from the user's perspective and the details
+   of the allocation (static or dynamic, heap or stack) are left to the
+   compiler. (Compiler flags may be used to control some of the details).
+   In the second case, i.e. for deferred-shape actual objects, the array
+   definition must include the pointer or allocatable attribute and it is
+   the user's responsibility to allocate memory. While it is also the
+   user's responsibility to deallocate memory for arrays with the pointer
+   attribute the compiler will automatically deallocate allocatable arrays
+   under certain circumstances defined by the Fortran standard.
+
+   The ESMF_ArrayCreate() interface has been written to accept native
+   Fortran arrays of any flavor as a means to allow user-controlled memory
+   management. The Array create call will check on each PET if sufficient
+   memory has been provided by the specified Fortran arrays and will
+   indicate an error if a problem is detected. However, the Array create
+   call cannot validate the lifetime of the provided memory allocations.
+   If, for instance, an Array object was created in a subroutine from an
+   automatic explicit-shape array or an allocatable array, the memory
+   allocations referenced by the Array object will be automatically
+   deallocated on return from the subroutine unless provisions are made by
+   the application writer to prevent such behavior. The Array object
+   cannot control when memory that has been provided by the user during
+   Array creation becomes deallocated, however, the Array will indicate an
+   error if its memory references have been invalidated.
+
+   The easiest, portable way to provide safe native Fortran memory
+   allocations to Array create is to use arrays with the pointer
+   attribute. Memory allocated for an array pointer will not be
+   deallocated automatically. However, in this case the possibility of
+   memory leaks becomes an issue of concern. The deallocation of memory
+   provided to an Array in form of a native Fortran allocation will remain
+   the users responsibility.
+
+   None of the concerns discussed above are an issue in this example where
+   the native Fortran array farray is defined in the main program. All
+   different types of array memory allocation are demonstrated in this
+   example. First farrayE is defined as a 2D explicit-shape array on each
+   PET which will automatically provide memory for $10\times 10$ elements.
+
+  ! local variables
+  real(ESMF_KIND_R8)       :: farrayE(10,10)  ! explicit shape Fortran array
+
+   Then an allocatable array farrayA is declared which will be used to
+   show user-controlled dynamic memory allocation.
+
+  real(ESMF_KIND_R8), allocatable :: farrayA(:,:) ! allocatable Fortran array
+
+   Finally an array with pointer attribute farrayP is declared, also used
+   for user-controlled dynamic memory allocation.
+
+  real(ESMF_KIND_R8), pointer :: farrayP(:,:)   ! Fortran array pointer
+
+   A matching array pointer must also be available to gain access to the
+   arrays held by an Array object.
+
+  real(ESMF_KIND_R8), pointer :: farrayPtr(:,:) ! matching Fortran array ptr
+  type(ESMF_DistGrid)         :: distgrid       ! DistGrid object
+  type(ESMF_Array)            :: array          ! Array object
+  integer                     :: rc
+
+  call ESMF_Initialize(defaultlogfilename="ArrayFarrayEx.Log", &
+                    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   On each PET farrayE can be accessed directly to initialize the entire
+   PET-local array.
+
+  farrayE = 12.45d0 ! initialize to some value
+
+   In order to create an Array object a DistGrid must first be created
+   that describes the total index space and how it is decomposed and
+   distributed. In the simplest case only the minIndex and maxIndex of the
+   total space must be provided.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/40,10/), rc=rc)
+
+   This example is assumed to run on 4 PETs. The default 2D decomposition
+   will then be into 4 x 1 DEs as to ensure 1 DE per PET.
+
+   Now the Array object can be created using the farrayE and the DistGrid
+   just created.
+
+  array = ESMF_ArrayCreate(farray=farrayE, distgrid=distgrid, &
+    indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+
+   The 40 x 10 index space defined by the minIndex and maxIndex arguments
+   paired with the default decomposition will result in the following
+   distributed Array.
+
+
+         +---------------------------> 2nd dimension
+         |   (1,1)-------+
+         |     |         |
+         |     |   DE 0  |   <--- farray on PET 0
+         |     |         |
+         |     +------(10,10)
+         |  (11,1)-------+
+         |     |         |
+         |     |   DE 1  |   <--- farray on PET 1
+         |     |         |
+         |     +------(20,10)
+         |  (21,1)-------+
+         |     |         |
+         |     |   DE 2  |   <--- farray on PET 2
+         |     |         |
+         |     +------(30,10)
+         |  (31,1)-------+
+         |     |         |
+         |     |   DE 3  |   <--- farray on PET 3
+         |     |         |
+         |     +------(40,10)
+         v
+       1st dimension
+
+   Providing farrayE during Array creation does not change anything about
+   the actual farrayE object. This means that each PET can use its local
+   farrayE directly to access the memory referenced by the Array object.
+
+  print *, farrayE
+
+   Another way of accessing the memory associated with an Array object is
+   to use ArrayGet() to obtain an Fortran pointer that references the
+   PET-local array.
+
+  call ESMF_ArrayGet(array, farrayPtr=farrayPtr, rc=rc)
+
+  print *, farrayPtr
+
+   Finally the Array object must be destroyed. The PET-local memory of the
+   farrayEs will remain in user control and will not be altered by
+   ArrayDestroy().
+
+  call ESMF_ArrayDestroy(array, rc=rc)
+
+   Since the memory allocation for each farrayE is automatic there is
+   nothing more to do.
+
+   The interaction between farrayE and the Array class is representative
+   also for the two other cases farrayA and farrayP. The only difference
+   is in the handling of memory allocations.
+
+  allocate(farrayA(10,10))    ! user controlled allocation
+  farrayA = 23.67d0           ! initialize to some value
+  array = ESMF_ArrayCreate(farray=farrayA, distgrid=distgrid, &
+    indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+
+  print *, farrayA            ! print PET-local farrayA directly
+  call ESMF_ArrayGet(array, farrayPtr=farrayPtr, rc=rc)! obtain array pointer
+  print *, farrayPtr          ! print PET-local piece of Array through pointer
+  call ESMF_ArrayDestroy(array, rc=rc) ! destroy the Array
+  deallocate(farrayA)         ! user controlled de-allocation
+
+   The farrayP case is identical.
+
+  allocate(farrayP(10,10))    ! user controlled allocation
+  farrayP = 56.81d0           ! initialize to some value
+  array = ESMF_ArrayCreate(farray=farrayP, distgrid=distgrid, &
+    indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+
+  print *, farrayP            ! print PET-local farrayA directly
+  call ESMF_ArrayGet(array, farrayPtr=farrayPtr, rc=rc)! obtain array pointer
+  print *, farrayPtr          ! print PET-local piece of Array through pointer
+  call ESMF_ArrayDestroy(array, rc=rc) ! destroy the Array
+  deallocate(farrayP)         ! user controlled de-allocation
+
+   To wrap things up the DistGrid object is destroyed and ESMF can be
+   finalized.
+
+  call ESMF_DistGridDestroy(distgrid, rc=rc) ! destroy the DistGrid
+
+  call ESMF_Finalize(rc=rc)
+
+end program
+
+  28.2.2 Array from native Fortran array with extra elements for halo or padding
+
+   The example of the previous section showed how easy it is to create an
+   Array object from existing PET-local Fortran arrays. The example did,
+   however, not define any halo elements around the DE-local regions. The
+   following code demonstrates how an Array object with space for a halo
+   can be set up.
+
+program ESMF_ArrayFarrayHaloEx
+
+  use ESMF
+  use ESMF_TestMod
+
+  implicit none
+
+   The allocatable array farrayA will be used to provide the PET-local
+   Fortran array for this example.
+
+  ! local variables
+  real(ESMF_KIND_R8), allocatable :: farrayA(:,:) ! allocatable Fortran array
+  real(ESMF_KIND_R8), pointer :: farrayPtr(:,:)   ! matching Fortran array ptr
+  type(ESMF_DistGrid)         :: distgrid         ! DistGrid object
+  type(ESMF_Array)            :: array            ! Array object
+  integer                     :: rc, i, j
+  real(ESMF_KIND_R8)          :: localSum
+
+  call ESMF_Initialize(defaultlogfilename="ArrayFarrayHaloEx.Log", &
+                    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   The Array is to cover the exact same index space as in the previous
+   example. Furthermore decomposition and distribution are also kept the
+   same. Hence the same DistGrid object will be created and it is expected
+   to execute this example with 4 PETs.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/40,10/), rc=rc)
+
+   This DistGrid describes a 40 x 10 index space that will be decomposed
+   into 4 DEs when executed on 4 PETs, associating 1 DE per PET. Each
+   DE-local exclusive region contains 10 x 10 elements. The DistGrid also
+   stores and provides information about the relationship between DEs in
+   index space, however, DistGrid does not contain information about
+   halos. Arrays contain halo information and it is possible to create
+   multiple Arrays covering the same index space with identical
+   decomposition and distribution using the same DistGrid object, while
+   defining different, Array-specific halo regions.
+
+   The extra memory required to cover the halo in the Array object must be
+   taken into account when allocating the PET-local farrayA arrays. For a
+   halo of 2 elements in each direction the following allocation will
+   suffice.
+
+  allocate(farrayA(14,14))    ! Fortran array with halo: 14 = 10 + 2 * 2
+
+   The farrayA can now be used to create an Array object with enough space
+   for a two element halo in each direction. The Array creation method
+   checks for each PET that the local Fortran array can accommodate the
+   requested regions.
+
+   The default behavior of ArrayCreate() is to center the exclusive region
+   within the total region. Consequently the following call will provide
+   the 2 extra elements on each side of the exclusive 10 x 10 region
+   without having to specify any additional arguments.
+
+  array = ESMF_ArrayCreate(farray=farrayA, distgrid=distgrid, &
+    indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+
+   The exclusive Array region on each PET can be accessed through a
+   suitable Fortran array pointer. See section [1058]28.2.6 for more
+   details on Array regions.
+
+  call ESMF_ArrayGet(array, farrayPtr=farrayPtr, rc=rc)
+
+   Following Array bounds convention, which by default puts the beginning
+   of the exclusive region at (1, 1, ...), the following loop will add up
+   the values of the local exclusive region for each DE, regardless of how
+   the bounds were chosen for the original PET-local farrayA arrays.
+
+  localSum = 0.
+  do j=1, 10
+    do i=1, 10
+      localSum = localSum + farrayPtr(i, j)
+    enddo
+  enddo
+
+   Elements with $i$ or $j$ in the [-1,0] or [11,12] ranges are located
+   outside the exclusive region and may be used to define extra
+   computational points or halo operations.
+
+   Cleanup and shut down ESMF.
+
+  call ESMF_ArrayDestroy(array, rc=rc)
+
+  deallocate(farrayA)
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+  call ESMF_Finalize(rc=rc)
+
+end program
+
+  28.2.3 Array from ESMF_LocalArray
+
+   Alternative to the direct usage of Fortran arrays during Array creation
+   it is also possible to first create an ESMF_LocalArray and create the
+   Array from it. While this may seem more burdensome for the 1 DE per PET
+   cases discussed in the previous sections it allows a straightforward
+   generalization to the multiple DE per PET case. The following example
+   first recaptures the previous example using an ESMF_LocalArray and then
+   expands to the multiple DE per PET case.
+
+program ESMF_ArrayLarrayEx
+
+  use ESMF
+  use ESMF_TestMod
+
+  implicit none
+
+   The current ESMF_LocalArray interface requires Fortran arrays to be
+   defined with pointer attribute.
+
+  ! local variables
+  real(ESMF_KIND_R8), pointer :: farrayP(:,:)   ! Fortran array pointer
+  real(ESMF_KIND_R8), pointer :: farrayPtr(:,:) ! matching Fortran array ptr
+  type(ESMF_LocalArray)       :: larray         ! ESMF_LocalArray object
+  type(ESMF_LocalArray)       :: larrayRef      ! ESMF_LocalArray object
+  type(ESMF_DistGrid)         :: distgrid       ! DistGrid object
+  type(ESMF_Array)            :: array          ! Array object
+  integer                     :: rc, i, j, de
+  real(ESMF_KIND_R8)          :: localSum
+  type(ESMF_LocalArray), allocatable :: larrayList(:) ! LocalArray object list
+  type(ESMF_LocalArray), allocatable :: larrayRefList(:)!LocalArray obj. list
+
+  type(ESMF_VM):: vm
+  integer:: localPet, petCount
+
+  call ESMF_Initialize(vm=vm, defaultlogfilename="ArrayLarrayEx.Log", &
+                    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+  call ESMF_VMGet(vm, localPet=localPet, petCount=petCount, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  if (petCount /= 4) then
+    finalrc = ESMF_FAILURE
+    goto 10
+  endif
+
+   DistGrid and array allocation remains unchanged.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/40,10/), rc=rc)
+
+  allocate(farrayP(14,14))    ! allocate Fortran array on each PET with halo
+
+   Now instead of directly creating an Array object using the PET-local
+   farrayPs an ESMF_LocalArray object will be created on each PET.
+
+  larray = ESMF_LocalArrayCreate(farrayP, &
+               datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+
+   The Array object can now be created from larray. The Array creation
+   method checks for each PET that the LocalArray can accommodate the
+   requested regions.
+
+  array = ESMF_ArrayCreate(localarrayList=(/larray/), distgrid=distgrid, rc=rc)
+
+   Once created there is no difference in how the Array object can be
+   used. The exclusive Array region on each PET can be accessed through a
+   suitable Fortran array pointer as before.
+
+  call ESMF_ArrayGet(array, farrayPtr=farrayPtr, rc=rc)
+
+   Alternatively it is also possible (independent of how the Array object
+   was created) to obtain the reference to the array allocation held by
+   Array in form of an ESMF_LocalArray object. The farrayPtr can then be
+   extracted using LocalArray methods.
+
+  call ESMF_ArrayGet(array, localarray=larrayRef, rc=rc)
+
+  call ESMF_LocalArrayGet(larrayRef, farrayPtr, rc=rc)
+
+   Either way the farrayPtr reference can be used now to add up the values
+   of the local exclusive region for each DE. The following loop works
+   regardless of how the bounds were chosen for the original PET-local
+   farrayP arrays and consequently the PET-local larray objects.
+
+  localSum = 0.
+  do j=1, 10
+    do i=1, 10
+      localSum = localSum + farrayPtr(i, j)
+    enddo
+  enddo
+  print *, "localSum=", localSum
+
+   Cleanup.
+
+  call ESMF_ArrayDestroy(array, rc=rc)
+  call ESMF_LocalArrayDestroy(larray, rc=rc)
+  deallocate(farrayP)   ! use the pointer that was used in allocate statement
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+   While the usage of LocalArrays is unnecessarily cumbersome for 1 DE per
+   PET Arrays, it provides a straightforward path for extending the
+   interfaces to multiple DEs per PET.
+
+   In the following example a 8 x 8 index space will be decomposed into 2
+   x 4 = 8 DEs. The situation is captured by the following DistGrid
+   object.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/8,8/), &
+    regDecomp=(/2,4/), rc=rc)
+
+   The distgrid object created in this manner will contain 8 DEs no matter
+   how many PETs are available during execution. Assuming an execution on
+   4 PETs will result in the following distribution of the decomposition.
+
+
+    +---------------------------------------> 2nd dimension
+    |  (1,1)
+    |    +-----------+-----------+-----------+-----------+
+    |    | DE0, PET0 | DE2, PET1 | DE4, PET2 | DE6, PET3 |
+    |    |  *    *   |  *    *   |  *    *   |  *    *   |
+    |    |           |           |           |           |
+    |    |  *    *   |  *    *   |  *    *   |  *    *   |
+    |    |           |           |           |           |
+    |    |  *    *   |  *    *   |  *    *   |  *    *   |
+    |    |           |           |           |           |
+    |    |  *    *   |  *    *   |  *    *   |  *    *   |
+    |    +-----------+-----------+-----------+-----------+
+    |    | DE1, PET0 | DE3, PET1 | DE5, PET2 | DE7, PET3 |
+    |    |  *    *   |  *    *   |  *    *   |  *    *   |
+    |    |           |           |           |           |
+    |    |  *    *   |  *    *   |  *    *   |  *    *   |
+    |    |           |           |           |           |
+    |    |  *    *   |  *    *   |  *    *   |  *    *   |
+    |    |           |           |           |           |
+    |    |  *    *   |  *    *   |  *    *   |  *    *   |
+    |    +-----------+-----------+-----------+-----------+
+    |                                                    (8,8)
+    v
+   1st dimension
+
+   Obviously each PET is associated with 2 DEs. Each PET must allocate
+   enough space for all its DEs. This is done by allocating as many
+   DE-local arrays as there are DEs on the PET. The reference to these
+   array allocations is passed into ArrayCreate via a LocalArray list
+   argument that holds as many elements as there are DEs on the PET. Here
+   each PET must allocate for two DEs.
+
+  allocate(larrayList(2))   ! 2 DEs per PET
+  allocate(farrayP(4, 2))   ! without halo each DE is of size 4 x 2
+  farrayP = 123.456d0
+  larrayList(1) = ESMF_LocalArrayCreate(farrayP, &
+    datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc) !1st DE
+  allocate(farrayP(4, 2))   ! without halo each DE is of size 4 x 2
+  farrayP = 456.789d0
+  larrayList(2) = ESMF_LocalArrayCreate(farrayP, &
+    datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc) !2nd DE
+
+   Notice that it is perfectly fine to re-use farrayP for all allocations
+   of DE-local Fortran arrays. The allocated memory can be deallocated at
+   the end using the array pointer contained in the larrayList.
+
+   With this information an Array object can be created. The distgrid
+   object indicates 2 DEs for each PET and ArrayCreate() expects to find
+   two LocalArray elements in larrayList.
+
+  array = ESMF_ArrayCreate(localarrayList=larrayList, distgrid=distgrid, rc=rc)
+
+   Usage of a LocalArray list is the only way to provide a list of
+   variable length of Fortran array allocations to ArrayCreate() for each
+   PET. The array object created by the above call is an ESMF distributed
+   object. As such it must follow the ESMF convention that requires that
+   the call to ESMF_ArrayCreate() must be issued in unison by all PETs of
+   the current context. Each PET only calls ArrayCreate() once, even if
+   there are multiple DEs per PET.
+
+   The ArrayGet() method provides access to the list of LocalArrays on
+   each PET.
+
+  allocate(larrayRefList(2))
+  call ESMF_ArrayGet(array, localarrayList=larrayRefList, rc=rc)
+
+   Finally, access to the actual Fortran pointers is done on a per DE
+   basis. Generally each PET will loop over its DEs.
+
+  do de=1, 2
+    call ESMF_LocalArrayGet(larrayRefList(de), farrayPtr, rc=rc)
+    localSum = 0.
+    do j=1, 2
+      do i=1, 4
+        localSum = localSum + farrayPtr(i, j)
+      enddo
+    enddo
+    print *, "localSum=", localSum
+  enddo
+
+   Note: If the VM associates multiple PEs with a PET the application
+   writer may decide to use OpenMP loop parallelization on the de loop.
+
+   Cleanup requires that the PET-local deallocations are done before the
+   pointers to the actual Fortran arrays are lost. Notice that larrayList
+   is used to obtain the pointers used in the deallocate statement.
+   Pointers obtained from the larrayRefList, while pointing to the same
+   data, cannot be used to deallocate the array allocations!
+
+  do de=1, 2
+    call ESMF_LocalArrayGet(larrayList(de), farrayPtr, rc=rc)
+
+    deallocate(farrayPtr)
+    call ESMF_LocalArrayDestroy(larrayList(de), rc=rc)
+
+  enddo
+  deallocate(larrayList)
+  deallocate(larrayRefList)
+  call ESMF_ArrayDestroy(array, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   With that ESMF can be shut down cleanly.
+
+  call ESMF_Finalize(rc=rc)
+
+end program
+
+  28.2.4 Create Array with automatic memory allocation
+
+   In the examples of the previous sections the user provided memory
+   allocations for each of the DE-local regions for an Array object. The
+   user was able to use any of the Fortran methods to allocate memory, or
+   go through the ESMF_LocalArray interfaces to obtain memory allocations
+   before passing them into ArrayCreate(). Alternatively ESMF offers
+   methods that handle Array memory allocations inside the library.
+
+   As before, to create an ESMF_Array object an ESMF_DistGrid must be
+   created. The DistGrid object holds information about the entire index
+   space and how it is decomposed into DE-local exclusive regions. The
+   following line of code creates a DistGrid for a 5x5 global index space
+   that is decomposed into 2 x 3 = 6 DEs.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), rc=rc)
+
+   The following is a representation of the index space and its
+   decomposition into DEs. Each asterisk (*) represents a single element.
+
+
+    +---------------------------------------> 2nd dimension
+    |  (1,1)
+    |    +-----------+-----------+------+
+    |    | DE 0      | DE 2      | DE 4 |
+    |    |           |           |      |
+    |    |  *    *   |  *    *   |  *   |
+    |    |           |           |      |
+    |    |  *    *   |  *    *   |  *   |
+    |    |           |           |      |
+    |    |  *    *   |  *    *   |  *   |
+    |    +-----------+-----------+------+
+    |    |           |           |      |
+    |    | DE 1      | DE 3      | DE 5 |
+    |    |           |           |      |
+    |    |  *    *   |  *    *   |  *   |
+    |    |           |           |      |
+    |    |  *    *   |  *    *   |  *   |
+    |    +-----------+-----------+------+
+    |                                 (5,5)
+    v
+   1st dimension
+
+   Besides the DistGrid it is the type, kind and rank information, "tkr"
+   for short, that is required to create an Array object. It turns out
+   that the rank of the Array object is fully determined by the DistGrid
+   and other (optional) arguments passed into ArrayCreate(), so that
+   explicit specification of the Array rank is redundant.
+
+   The simplest way to supply the type and kind information of the Array
+   is directly through the typekind argument. Here a double precision
+   Array is created on the previously created DistGrid. Since no other
+   arguments are specified that could alter the rank of the Array it
+   becomes equal to the dimCount of the DistGrid, i.e a 2D Array is
+   created on top of the DistGrid.
+
+  array = ESMF_ArrayCreate(typekind=ESMF_TYPEKIND_R8, distgrid=distgrid, rc=rc)
+
+   The different methods on how an Array object is created have no effect
+   on the use of ESMF_ArrayDestroy().
+
+  call ESMF_ArrayDestroy(array, rc=rc)
+
+   Alternatively the same Array can be created specifying the "tkr"
+   information in form of an ArraySpec variable. The ArraySpec explicitly
+   contains the Array rank and thus results in an over specification on
+   the ArrayCreate() interface. ESMF checks all input information for
+   consistency and returns appropriate error codes in case any
+   inconsistencies are found.
+
+  call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_R8, rank=2, rc=rc)
+
+  array = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, rc=rc)
+
+   The Array object created by the above call is an ESMF distributed
+   object. As such it must follow the ESMF convention that requires that
+   the call to ESMF_ArrayCreate() must be issued in unison by all PETs of
+   the current context.
+
+  28.2.5 Native language memory access
+
+   There are two different methods by which the user can access the data
+   held inside an ESMF Array object. The first method provides direct
+   access to a native language array object. Specifically, the farrayPtr
+   argument returned by ESMF_ArrayGet() is a Fortran array pointer that
+   can be used to access the PET-local data inside the Array object.
+
+   Many applications work in the 1 DE per PET mode, with exactly one DE on
+   every PET. Accessing the Array memory on each PET for this situation is
+   especially simple as is shown in section [1059]28.2.1. However, the
+   Array class is not restricted to the special 1 DE per PET case, but
+   supports multiple separate memory allocations on each PET. The number
+   of such PET-local allocations is given by the localDeCount, i.e. there
+   is one memory allocation for every DE that is associated with the local
+   PET.
+
+   Access to a specific local memory allocation of an Array object is
+   still accomplished by returning the farrayPtr argument. However, for
+   $localDeCount > 1 $ the formally optional localDe argument to
+   ESMF_ArrayGet() turns into a practically required argument. While in
+   general the localDe in ESMF is simply a local index variable that
+   enumerates the DEs that are associated with the local PET (e.g. see
+   section [1060]50.3.7), the bounds of this index variable are strictly
+   defined as [0,...,localDeCount-1] when it is used as an input argument.
+   The following code demonstrates this.
+
+   First query the Array for localDeCount. This number may be different on
+   each PET and indicates how many DEs are mapped against the local PET.
+
+  call ESMF_ArrayGet(array, localDeCount=localDeCount, rc=rc)
+
+   Looping the localDe index variable from 0 to localDeCount-1 allows
+   access to each of the local memory allocations of the Array object:
+
+  do localDe=0, localDeCount-1
+    call ESMF_ArrayGet(array, farrayPtr=myFarray, localDe=localDe, rc=rc)
+
+    ! use myFarray to access local DE data
+  enddo
+
+   The second method to access the memory allocations in an Array object
+   is to go through the ESMF LocalArray object. To this end the Array is
+   queried for a list of PET-local LocalArray objects. The LocalArray
+   objects in the list correspond to the DEs on the local PET. Here the
+   localDe argument is solely a user level index variable, and in
+   principle the lower bound can be chosen freely. However, for better
+   alignment with the previous case (where localDe served as an input
+   argument to an ESMF method) the following example again fixes the lower
+   bound at zero.
+
+  allocate(larrayList(0:localDeCount-1))
+  call ESMF_ArrayGet(array, localarrayList=larrayList, rc=rc)
+
+  do localDe=0, localDeCount-1
+    call ESMF_LocalArrayGet(larrayList(localDe), myFarray, &
+       datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+
+    ! use myFarray to access local DE data
+  enddo
+
+   See section [1061]28.2.3 for more on LocalArray usage in Array. In most
+   cases memory access through a LocalArray list is less convenient than
+   the direct farrayPtr method because it adds an extra object level
+   between the ESMF Array and the native language array.
+
+  28.2.6 Regions and default bounds
+
+   Each ESMF_Array object is decomposed into DEs as specified by the
+   associated ESMF_DistGrid object. Each piece of this decomposition, i.e.
+   each DE, holds a chunk of the Array data in its own local piece of
+   memory. The details of the Array decomposition are described in the
+   following paragraphs.
+
+   At the center of the Array decomposition is the ESMF_DistGrid class.
+   The DistGrid object specified during Array creation contains three
+   essential pieces of information:
+     * The extent and topology of the global domain covered by the Array
+       object in terms of indexed elements. The total extent may be a
+       composition of smaller logically rectangular (LR) domain pieces
+       called tiles.
+     * The decomposition of the entire domain into "element exclusive"
+       DE-local LR chunks. Element exclusive means that there is no
+       element overlap between DE-local chunks. This, however, does not
+       exclude degeneracies on edge boundaries for certain topologies
+       (e.g. bipolar).
+     * The layout of DEs over the available PETs and thus the distribution
+       of the Array data.
+
+   Each element of an Array is associated with a single DE. The union of
+   elements associated with a DE, as defined by the DistGrid above,
+   corresponds to a LR chunk of index space, called the exclusive region
+   of the DE.
+
+   There is a hierarchy of four regions that can be identified for each DE
+   in an Array object. Their definition and relationship to each other is
+   as follows:
+     * Interior Region: Region that only contains local elements that are
+       not mapped into the halo of any other DE. The shape and size of
+       this region for a particular DE depends non-locally on the halos
+       defined by other DEs and may change during computation as halo
+       operations are precomputed and released. Knowledge of the interior
+       elements may be used to improve performance by overlapping
+       communications with ongoing computation for a DE.
+     * Exclusive Region: Elements for which a DE claims exclusive
+       ownership. Practically this means that the DE will be the sole
+       source for these elements in halo and reduce operations. There are
+       exceptions to this in some topologies. The exclusive region
+       includes all elements of the interior region.
+     * Computational Region: Region that can be set arbitrarily within the
+       bounds of the total region (defined next). The typical use of the
+       computation region is to define bounds that only include elements
+       that are updated by a DE-local computation kernel. The
+       computational region does not need to include all exclusive
+       elements and it may also contain elements that lie outside the
+       exclusive region.
+     * Total (Memory) Region: Total of all DE-locally allocated elements.
+       The size and shape of the total memory region must accommodate the
+       union of exclusive and computational region but may contain
+       additional elements. Elements outside the exclusive region may
+       overlap with the exclusive region of another DE which makes them
+       potential receivers for Array halo operations. Elements outside the
+       exclusive region that do not overlap with the exclusive region of
+       another DE can be used to set boundary conditions and/or serve as
+       extra memory padding.
+
+
+     +-totalLBound(:)----------------------------------+
+     |\                                                |
+     | \ <--- totalLWidth(:)                           |
+     |  \                                              |
+     |   +-computationalLBound(:)------------------+   |
+     |   |\                                        |   |
+     |   | \ <--- computationalLWidth(:)           |   |
+     |   |  \                                      |   |
+     |   |   +-exclusiveLBound(:)-------------+    |   |
+     |   |   |                                |    |   |
+     |   |   |     +------+      +-----+      |    |   |
+     |   |   |     |      |      |     |      |    |   |
+     |   |   |     |      +------+     |      |    |   |
+     |   |   |     | "Interior Region" |      |    |   |
+     |   |   |     +-----+             |      |    |   |
+     |   |   |           |             |      |    |   |
+     |   |   |           +-------------+      |    |   |
+     |   |   |                                |    |   |
+     |   |   | "Exclusive Region"             |    |   |
+     |   |   +-------------exclusiveUBound(:)-+    |   |
+     |   |                                     \   |   |
+     |   |           computationalUWidth(:) --> \  |   |
+     |   |                                       \ |   |
+     |   | "Computational Region"                 \|   |
+     |   +------------------computationalUBound(:)-+   |
+     |                                              \  |
+     |                             totalUWidth(:) -> \ |
+     | "Total Region"                                 \|
+     +--------------------------------- totalUBound(:)-+
+
+   With the following definitions:
+
+   computationalLWidth(:) = exclusiveLBound(:) - computationalLBound(:)
+   computationalUWidth(:) = computationalUBound(:) - exclusiveUBound(:)
+
+   and
+
+   totalLWidth(:) = exclusiveLBound(:) - totalLBound(:)
+   totalUWidth(:) = totalUBound(:) - exclusiveUBound(:)
+
+   The exclusive region is determined during Array creation by the
+   DistGrid argument. Optional arguments may be used to specify the
+   computational region when the Array is created, by default it will be
+   set equal to the exclusive region. The total region, i.e. the actual
+   memory allocation for each DE, is also determined during Array
+   creation. When creating the Array object from existing Fortran arrays
+   the total region is set equal to the memory provided by the Fortran
+   arrays. Otherwise the default is to allocate as much memory as is
+   needed to accommodate the union of the DE-local exclusive and
+   computational region. Finally it is also possible to use optional
+   arguments to the ArrayCreate() call to specify the total region of the
+   object explicitly.
+
+   The ESMF_ArrayCreate() call checks that the input parameters are
+   consistent and will result in an Array that fulfills all of the above
+   mentioned requirements for its DE-local regions.
+
+   Once an Array object has been created the exclusive and total regions
+   are fixed. The computational region, however, may be adjusted within
+   the limits of the total region using the ArraySet() call.
+
+   The interior region is very different from the other regions in that it
+   cannot be specified. The interior region for each DE is a consequence
+   of the choices made for the other regions collectively across all DEs
+   into which an Array object is decomposed. An Array object can be
+   queried for its DE-local interior regions as to offer additional
+   information to the user necessary to write more efficient code.
+
+   By default the bounds of each DE-local total region are defined as to
+   put the start of the DE-local exclusive region at the "origin" of the
+   local index space, i.e. at (1, 1, ..., 1). With that definition the
+   following loop will access each element of the DE-local memory segment
+   for each PET-local DE of the Array object used in the previous sections
+   and print its content.
+
+  do localDe=0, localDeCount-1
+    call ESMF_LocalArrayGet(larrayList(localDe), myFarray, &
+       datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+    do i=1, size(myFarray, 1)
+      do j=1, size(myFarray, 2)
+        print *, "localPET=", localPet, " localDE=", &
+            localDe, ": array(",i,",",j,")=", myFarray(i,j)
+      enddo
+    enddo
+  enddo
+
+  28.2.7 Array bounds
+
+   The loop over Array elements at the end of the last section only works
+   correctly because of the default definition of the computational and
+   total regions used in the example. In general, without such specific
+   knowledge about an Array object, it is necessary to use a more formal
+   approach to access its regions with DE-local indices.
+
+   The DE-local exclusive region takes a central role in the definition of
+   Array bounds. Even as the computational region may adjust during the
+   course of execution the exclusive region remains unchanged. The
+   exclusive region provides a unique reference frame for the index space
+   of all Arrays associated with the same DistGrid.
+
+   There is a choice between two indexing options that needs to be made
+   during Array creation. By default each DE-local exclusive region starts
+   at (1, 1, ..., 1). However, for some computational kernels it may be
+   more convenient to choose the index bounds of the DE-local exclusive
+   regions to match the index space coordinates as they are defined in the
+   corresponding DistGrid object. The second option is only available if
+   the DistGrid object does not contain any non-contiguous decompositions
+   (such as cyclically decomposed dimensions).
+
+   The following example code demonstrates the safe way of dereferencing
+   the DE-local exclusive regions of the previously created array object.
+
+  allocate(exclusiveUBound(2, 0:localDeCount-1))  ! dimCount=2
+  allocate(exclusiveLBound(2, 0:localDeCount-1))  ! dimCount=2
+  call ESMF_ArrayGet(array, indexflag=indexflag, &
+    exclusiveLBound=exclusiveLBound, exclusiveUBound=exclusiveUBound, rc=rc)
+  if (indexflag == ESMF_INDEX_DELOCAL) then
+    ! this is the default
+!    print *, "DE-local exclusive regions start at (1,1)"
+    do localDe=0, localDeCount-1
+      call ESMF_LocalArrayGet(larrayList(localDe), myFarray, &
+          datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+      do i=1, exclusiveUBound(1, localDe)
+        do j=1, exclusiveUBound(2, localDe)
+!          print *, "DE-local exclusive region for localDE=", localDe, &
+!            ": array(",i,",",j,")=", myFarray(i,j)
+        enddo
+      enddo
+    enddo
+  else if (indexflag == ESMF_INDEX_GLOBAL) then
+    ! only if set during ESMF_ArrayCreate()
+!    print *, "DE-local exclusive regions of this Array have global bounds"
+    do localDe=0, localDeCount-1
+      call ESMF_LocalArrayGet(larrayList(localDe), myFarray, &
+         datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+      do i=exclusiveLBound(1, localDe), exclusiveUBound(1, localDe)
+        do j=exclusiveLBound(2, localDe), exclusiveUBound(2, localDe)
+!          print *, "DE-local exclusive region for localDE=", localDe, &
+!            ": array(",i,",",j,")=", myFarray(i,j)
+        enddo
+      enddo
+    enddo
+  endif
+  call ESMF_ArrayDestroy(array, rc=rc) ! destroy the array object
+
+   Obviously the second branch of this simple code will work for either
+   case, however, if a complex computational kernel was written assuming
+   ESMF_INDEX_DELOCAL type bounds the second branch would simply be used
+   to indicate the problem and bail out.
+
+   The advantage of the ESMF_INDEX_GLOBAL index option is that the Array
+   bounds directly contain information on where the DE-local Array piece
+   is located in a global index space sense. When the ESMF_INDEX_DELOCAL
+   option is used the correspondence between local and global index space
+   must be made by querying the associated DistGrid for the DE-local
+   indexList arguments.
+
+  28.2.8 Computational region and extra elements for halo or padding
+
+   In the previous examples the computational region of array was chosen
+   by default to be identical to the exclusive region defined by the
+   DistGrid argument during Array creation. In the following the same
+   arrayspec and distgrid objects as before will be used to create an
+   Array but now a larger computational region shall be defined around
+   each DE-local exclusive region. Furthermore, extra space will be
+   defined around the computational region of each DE to accommodate a
+   halo and/or serve as memory padding.
+
+   In this example the indexflag argument is set to ESMF_INDEX_GLOBAL
+   indicating that the bounds of the exclusive region correspond to the
+   index space coordinates as they are defined by the DistGrid object.
+
+   The same arrayspec and distgrid objects as before are used which also
+   allows the reuse of the already allocated larrayList variable.
+
+  array = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, &
+    computationalLWidth=(/0,3/), computationalUWidth=(/1,1/), &
+    totalLWidth=(/1,4/), totalUWidth=(/3,1/), &
+    indexflag=ESMF_INDEX_GLOBAL, rc=rc)
+
+   Obtain the larrayList on every PET.
+
+  allocate(localDeToDeMap(0:localDeCount-1))
+  call ESMF_ArrayGet(array, localarrayList=larrayList, &
+    localDeToDeMap=localDeToDeMap, rc=rc)
+
+   The bounds of DE 1 for array are shown in the following diagram to
+   illustrate the situation. Notice that the totalLWidth and totalUWidth
+   arguments in the ArrayCreate() call define the total region with
+   respect to the exclusive region given for each DE by the distgrid
+   argument.
+
+        +-(3,-3)---------------------------------+
+        |\                                       |
+        | +-(4,-2)-+-(4,1)--------------------+--+
+        | |        |                          |  |
+        | |        |                          |  |
+        | |        |          DE 1            |  |
+        | |        |                          |  |
+        | |        |                          |  |
+        | |        | Exclusive Region         |  |
+        | |        +--------------------(5,2)-+  |
+        | | Computational Region                 |
+        | +-------------------------------(6,3)--+
+        |                                        |
+        | Total Region                           |
+        +---------------------------------(8,3)--+
+
+   When working with this array it is possible for the computational
+   kernel to overstep the exclusive region for both read/write access
+   (computational region) and potentially read-only access into the total
+   region outside of the computational region, if a halo operation
+   provides valid entries for these elements.
+
+   The Array object can be queried for absolute bounds
+
+  allocate(computationalLBound(2, 0:localDeCount-1))  ! dimCount=2
+  allocate(computationalUBound(2, 0:localDeCount-1))  ! dimCount=2
+  allocate(totalLBound(2, 0:localDeCount-1))          ! dimCount=2
+  allocate(totalUBound(2, 0:localDeCount-1))          ! dimCount=2
+  call ESMF_ArrayGet(array, exclusiveLBound=exclusiveLBound, &
+    exclusiveUBound=exclusiveUBound, &
+    computationalLBound=computationalLBound, &
+    computationalUBound=computationalUBound, &
+    totalLBound=totalLBound, &
+    totalUBound=totalUBound, rc=rc)
+
+   or for the relative widths.
+
+  allocate(computationalLWidth(2, 0:localDeCount-1))  ! dimCount=2
+  allocate(computationalUWidth(2, 0:localDeCount-1))  ! dimCount=2
+  allocate(totalLWidth(2, 0:localDeCount-1))          ! dimCount=2
+  allocate(totalUWidth(2, 0:localDeCount-1))          ! dimCount=2
+  call ESMF_ArrayGet(array, computationalLWidth=computationalLWidth, &
+    computationalUWidth=computationalUWidth, totalLWidth=totalLWidth, &
+    totalUWidth=totalUWidth, rc=rc)
+
+   Either way the dereferencing of Array data is centered around the
+   DE-local exclusive region:
+
+  do localDe=0, localDeCount-1
+    call ESMF_LocalArrayGet(larrayList(localDe), myFarray, &
+       datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+    ! initialize the DE-local array
+    myFarray = 0.1d0 * localDeToDeMap(localDe)
+    ! first time through the total region of array
+!    print *, "myFarray bounds for DE=", localDeToDeMap(localDe), &
+!      lbound(myFarray),  ubound(myFarray)
+    do j=exclusiveLBound(2, localDe), exclusiveUBound(2, localDe)
+      do i=exclusiveLBound(1, localDe), exclusiveUBound(1, localDe)
+!        print *, "Excl region DE=", localDeToDeMap(localDe), &
+!        ": array(",i,",",j,")=",  myFarray(i,j)
+      enddo
+    enddo
+    do j=computationalLBound(2, localDe), computationalUBound(2, localDe)
+      do i=computationalLBound(1, localDe), computationalUBound(1, localDe)
+!        print *, "Excl region DE=", localDeToDeMap(localDe), &
+!        ": array(",i,",",j,")=", myFarray(i,j)
+      enddo
+    enddo
+    do j=totalLBound(2, localDe), totalUBound(2, localDe)
+      do i=totalLBound(1, localDe), totalUBound(1, localDe)
+!        print *, "Total region DE=", localDeToDeMap(localDe), &
+!        ": array(",i,",",j,")=", myFarray(i,j)
+      enddo
+    enddo
+
+    ! second time through the total region of array
+    do j=exclusiveLBound(2, localDe)-totalLWidth(2, localDe), &
+      exclusiveUBound(2, localDe)+totalUWidth(2, localDe)
+      do i=exclusiveLBound(1, localDe)-totalLWidth(1, localDe), &
+        exclusiveUBound(1, localDe)+totalUWidth(1, localDe)
+!        print *, "Excl region DE=", localDeToDeMap(localDe), &
+!        ": array(",i,",",j,")=", myFarray(i,j)
+      enddo
+    enddo
+  enddo
+
+  28.2.9 Create 1D and 3D Arrays
+
+   All previous examples were written for the 2D case. There is, however,
+   no restriction within the Array or DistGrid class that limits the
+   dimensionality of Array objects beyond the language-specific
+   limitations (7D for Fortran).
+
+   In order to create an n-dimensional Array the rank indicated by both
+   the arrayspec and the distgrid arguments specified during Array create
+   must be equal to n. A 1D Array of double precision real data hence
+   requires the following arrayspec.
+
+  call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_R8, rank=1, rc=rc)
+
+   The index space covered by the Array and the decomposition description
+   is provided to the Array create method by the distgrid argument. The
+   index space in this example has 16 elements and covers the interval
+   $[-10, 5]$ . It is decomposed into as many DEs as there are PETs in the
+   current context.
+
+  distgrid1D = ESMF_DistGridCreate(minIndex=(/-10/), maxIndex=(/5/), &
+    regDecomp=(/petCount/), rc=rc)
+
+   A 1D Array object with default regions can now be created.
+
+  array1D = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid1D, rc=rc)
+
+   The creation of a 3D Array proceeds analogous to the 1D case. The rank
+   of the arrayspec must be changed to 3
+  call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_R8, rank=3, rc=rc)
+
+   and an appropriate 3D DistGrid object must be created
+  distgrid3D = ESMF_DistGridCreate(minIndex=(/1,1,1/), &
+    maxIndex=(/16,16,16/), regDecomp=(/4,4,4/), rc=rc)
+
+   before an Array object can be created.
+
+  array3D = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid3D, rc=rc)
+
+   The distgrid3D object decomposes the 3-dimensional index space into
+   $4\times 4\times 4 = 64$ DEs. These DEs are laid out across the
+   computational resources (PETs) of the current component according to a
+   default DELayout that is created during the DistGrid create call.
+   Notice that in the index space proposal a DELayout does not have a
+   sense of dimensionality. The DELayout function is simply to map DEs to
+   PETs. The DistGrid maps chunks of index space against DEs and thus its
+   rank is equal to the number of index space dimensions.
+
+   The previously defined DistGrid and the derived Array object decompose
+   the index space along all three dimension. It is, however, not a
+   requirement that the decomposition be along all dimensions. An Array
+   with the same 3D index space could as well be decomposed along just one
+   or along two of the dimensions. The following example shows how for the
+   same index space only the last two dimensions are decomposed while the
+   first Array dimension has full extent on all DEs.
+
+  call ESMF_ArrayDestroy(array3D, rc=rc)
+  call ESMF_DistGridDestroy(distgrid3D, rc=rc)
+  distgrid3D = ESMF_DistGridCreate(minIndex=(/1,1,1/), &
+    maxIndex=(/16,16,16/), regDecomp=(/1,4,4/), rc=rc)
+  array3D = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid3D, rc=rc)
+
+  28.2.10 Working with Arrays of different rank
+
+   Assume a computational kernel that involves the array3D object as it
+   was created at the end of the previous section. Assume further that the
+   kernel also involves a 2D Array on a 16x16 index space where each point
+   (j,k) was interacting with each (i,j,k) column of the 3D Array. An
+   efficient formulation would require that the decomposition of the 2D
+   Array must match that of the 3D Array and further the DELayout be
+   identical. The following code shows how this can be accomplished.
+
+  call ESMF_DistGridGet(distgrid3D, delayout=delayout, rc=rc) ! get DELayout
+  distgrid2D = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/16,16/), &
+    regDecomp=(/4,4/), delayout=delayout, rc=rc)
+  call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_R8, rank=2, rc=rc)
+  array2D = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid2D, rc=rc)
+
+   Now the following kernel is sure to work with array3D and array2D.
+
+  call ESMF_DELayoutGet(delayout, localDeCount=localDeCount, rc=rc)
+  allocate(larrayList1(0:localDeCount-1))
+  call ESMF_ArrayGet(array3D, localarrayList=larrayList1, rc=rc)
+  allocate(larrayList2(0:localDeCount-1))
+  call ESMF_ArrayGet(array2D, localarrayList=larrayList2, rc=rc)
+  do localDe=0, localDeCount-1
+    call ESMF_LocalArrayGet(larrayList1(localDe), myFarray3D, &
+      datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+    myFarray3D = 0.1d0 * localDe ! initialize
+    call ESMF_LocalArrayGet(larrayList2(localDe), myFarray2D, &
+      datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+    myFarray2D = 0.5d0 * localDe ! initialize
+    do k=1, 4
+      do j=1, 4
+        dummySum = 0.d0
+        do i=1, 16
+          dummySum = dummySum + myFarray3D(i,j,k) ! sum up the (j,k) column
+        enddo
+        dummySum = dummySum * myFarray2D(j,k) ! multiply with local 2D element
+!        print *, "dummySum(",j,k,")=",dummySum
+      enddo
+    enddo
+  enddo
+
+  28.2.11 Array and DistGrid rank - 2D+1 Arrays
+
+   Except for the special Array create interface that implements a copy
+   from an existing Array object all other Array create interfaces require
+   the specification of at least two arguments: farray and distgrid,
+   larrayList and distgrid, or arrayspec and distgrid. In all these cases
+   both required arguments contain a sense of dimensionality. The
+   relationship between these two arguments deserves extra attention.
+
+   The first argument, farray, larrayList or arrayspec, determines the
+   rank of the created Array object, i.e. the dimensionality of the actual
+   data storage. The rank of a native language array, extracted from an
+   Array object, is equal to the rank specified by either of these
+   arguments. So is the rank that is returned by the ESMF_ArrayGet() call.
+
+   The rank specification contained in the distgrid argument, which is of
+   type ESMF_DistGrid, on the other hand has no effect on the rank of the
+   Array. The dimCount specified by the DistGrid object, which may be
+   equal, greater or less than the Array rank, determines the
+   dimensionality of the decomposition.
+
+   While there is no constraint between DistGrid dimCount and Array rank,
+   there is an important relationship between the two, resulting in the
+   concept of index space dimensionality. Array dimensions can be
+   arbitrarily mapped against DistGrid dimension, rendering them
+   decomposed dimensions. The index space dimensionality is equal to the
+   number of decomposed Array dimensions.
+
+   Array dimensions that are not mapped to DistGrid dimensions are the
+   undistributed dimensions of the Array. They are not part of the index
+   space. The mapping is specified during ESMF_ArrayCreate() via the
+   distgridToArrayMap argument. DistGrid dimensions that have not been
+   associated with Array dimensions are replicating dimensions. The Array
+   will be replicated across the DEs that lie along replication DistGrid
+   dimensions.
+
+   Undistributed Array dimensions can be used to store multi-dimensional
+   data for each Array index space element. One application of this is to
+   store the components of a vector quantity in a single Array. The same
+   2D distgrid object as before will be used.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), rc=rc)
+
+   The rank in the arrayspec argument, however, must change from 2 to 3 in
+   order to provide for the extra Array dimension.
+
+  call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_R8, rank=3, rc=rc)
+
+   During Array creation with extra dimension(s) it is necessary to
+   specify the bounds of these undistributed dimension(s). This requires
+   two additional arguments, undistLBound and undistUBound, which are
+   vectors in order to accommodate multiple undistributed dimensions. The
+   other arguments remain unchanged and apply across all undistributed
+   components.
+
+  array = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, &
+    totalLWidth=(/0,1/), totalUWidth=(/0,1/), &
+    undistLBound=(/1/), undistUBound=(/2/), rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   This will create array with 2+1 dimensions. The 2D DistGrid is used to
+   describe decomposition into DEs with 2 Array dimensions mapped to the
+   DistGrid dimensions resulting in a 2D index space. The extra Array
+   dimension provides storage for multi component user data within the
+   Array object.
+
+   By default the distgrid dimensions are associated with the first Array
+   dimensions in sequence. For the example above this means that the first
+   2 Array dimensions are decomposed according to the provided 2D
+   DistGrid. The 3rd Array dimension does not have an associated DistGrid
+   dimension, rendering it an undistributed Array dimension.
+
+   Native language access to an Array with undistributed dimensions is in
+   principle the same as without extra dimensions.
+
+  call ESMF_ArrayGet(array, localDeCount=localDeCount, rc=rc)
+  allocate(larrayList(0:localDeCount-1))
+  call ESMF_ArrayGet(array, localarrayList=larrayList, rc=rc)
+
+   The following loop shows how a Fortran pointer to the DE-local data
+   chunks can be obtained and used to set data values in the exclusive
+   regions. The myFarray3D variable must be of rank 3 to match the Array
+   rank of array. However, variables such as exclusiveUBound that store
+   the information about the decomposition, remain to be allocated for the
+   2D index space.
+
+  call ESMF_ArrayGet(array, exclusiveLBound=exclusiveLBound, &
+    exclusiveUBound=exclusiveUBound, rc=rc)
+  do localDe=0, localDeCount-1
+    call ESMF_LocalArrayGet(larrayList(localDe), myFarray3D, &
+       datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+    myFarray3D = 0.0 ! initialize
+    myFarray3D(exclusiveLBound(1,localDe):exclusiveUBound(1,localDe), &
+      exclusiveLBound(2,localDe):exclusiveUBound(2,localDe), &
+      1) = 5.1 ! dummy assignment
+    myFarray3D(exclusiveLBound(1,localDe):exclusiveUBound(1,localDe), &
+      exclusiveLBound(2,localDe):exclusiveUBound(2,localDe), &
+      2) = 2.5 ! dummy assignment
+  enddo
+  deallocate(larrayList)
+
+   For some applications the default association rules between DistGrid
+   and Array dimensions may not satisfy the user's needs. The optional
+   distgridToArrayMap argument can be used during Array creation to
+   explicitly specify the mapping between DistGrid and Array dimensions.
+   To demonstrate this the following lines of code reproduce the above
+   example but with rearranged dimensions. Here the distgridToArrayMap
+   argument is a list with two elements corresponding to the DistGrid
+   dimCount of 2. The first element indicates which Array dimension the
+   first DistGrid dimension is mapped against. Here the 1st DistGrid
+   dimension maps against the 3rd Array dimension and the 2nd DistGrid
+   dimension maps against the 1st Array dimension. This leaves the 2nd
+   Array dimension to be the extra and undistributed dimension in the
+   resulting Array object.
+
+  call ESMF_ArrayDestroy(array, rc=rc)
+  array = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, &
+    distgridToArrayMap=(/3, 1/), totalLWidth=(/0,1/), totalUWidth=(/0,1/), &
+    undistLBound=(/1/), undistUBound=(/2/), rc=rc)
+
+   Operations on the Array object as a whole are unchanged by the
+   different mapping of dimensions.
+
+   When working with Arrays that contain explicitly mapped Array and
+   DistGrid dimensions it is critical to know the order in which the
+   entries of width and bound arguments that are associated with
+   distributed Array dimensions are specified. The size of these arguments
+   is equal to the DistGrid dimCount, because the maximum number of
+   distributed Array dimensions is given by the dimensionality of the
+   index space.
+
+   The order of dimensions in these arguments, however, is not that of the
+   associated DistGrid. Instead each entry corresponds to the distributed
+   Array dimensions in sequence. In the example above the entries in
+   totalLWidth and totalUWidth correspond to Array dimensions 1 and 3 in
+   this sequence.
+
+   The distgridToArrrayMap argument optionally provided during Array
+   create indicates how the DistGrid dimensions map to Array dimensions.
+   The inverse mapping, i.e. Array to DistGrid dimensions, is just as
+   important. The ESMF_ArrayGet() call offers both mappings as
+   distgridToArrrayMap and arrayToDistGridMap, respectively. The number of
+   elements in arrayToDistGridMap is equal to the rank of the Array. Each
+   element corresponds to an Array dimension and indicates the associated
+   DistGrid dimension by an integer number. An entry of "0" in
+   arrayToDistGridMap indicates that the corresponding Array dimension is
+   undistributed.
+
+   Correct understanding about the association between Array and DistGrid
+   dimensions becomes critical for correct data access into the Array.
+
+  allocate(arrayToDistGridMap(3))  ! arrayRank = 3
+  call ESMF_ArrayGet(array, arrayToDistGridMap=arrayToDistGridMap, &
+    exclusiveLBound=exclusiveLBound, exclusiveUBound=exclusiveUBound, &
+    localDeCount=localDeCount, rc=rc)
+  if (arrayToDistGridMap(2) /= 0) then   ! check if extra dimension at
+    ! expected index indicate problem and bail out
+  endif
+  ! obtain larrayList for local DEs
+  allocate(larrayList(0:localDeCount-1))
+  call ESMF_ArrayGet(array, localarrayList=larrayList, rc=rc)
+  do localDe=0, localDeCount-1
+    call ESMF_LocalArrayGet(larrayList(localDe), myFarray3D, &
+       datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+    myFarray3D(exclusiveLBound(1,localDe):exclusiveUBound(1,localDe), &
+      1, exclusiveLBound(2,localDe):exclusiveUBound(2, &
+      localDe)) = 10.5 !dummy assignment
+    myFarray3D(exclusiveLBound(1,localDe):exclusiveUBound(1,localDe), &
+      2, exclusiveLBound(2,localDe):exclusiveUBound(2, &
+      localDe)) = 23.3 !dummy assignment
+  enddo
+  deallocate(exclusiveLBound, exclusiveUBound)
+  deallocate(arrayToDistGridMap)
+  deallocate(larrayList)
+  call ESMF_ArrayDestroy(array, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  28.2.12 Arrays with replicated dimensions
+
+   Thus far most examples demonstrated cases where the DistGrid dimCount
+   was equal to the Array rank. The previous section introduced the
+   concept of Array tensor dimensions when dimCount < rank. In this
+   section dimCount and rank are assumed completely unconstrained and the
+   relationship to distgridToArrayMap and arrayToDistGridMap will be
+   discussed.
+
+   The Array class allows completely arbitrary mapping between Array and
+   DistGrid dimensions. Most cases considered in the previous sections
+   used the default mapping which assigns the DistGrid dimensions in
+   sequence to the lower Array dimensions. Extra Array dimensions, if
+   present, are considered non-distributed tensor dimensions for which the
+   optional undistLBound and undistUBound arguments must be specified.
+
+   The optional distgridToArrayMap argument provides the option to
+   override the default DistGrid to Array dimension mapping. The entries
+   of the distgridToArrayMap array correspond to the DistGrid dimensions
+   in sequence and assign a unique Array dimension to each DistGrid
+   dimension. DistGrid and Array dimensions are indexed starting at 1 for
+   the lowest dimension. A value of "0" in the distgridToArrayMap array
+   indicates that the respective DistGrid dimension is not mapped against
+   any Array dimension. What this means is that the Array will be
+   replicated along this DistGrid dimension.
+
+   As a first example consider the case where a 1D Array
+  call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_R8, rank=1, rc=rc)
+
+   is created on the 2D DistGrid used during the previous section.
+
+  array = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, rc=rc)
+
+   Here the default DistGrid to Array dimension mapping is used which
+   assigns the Array dimensions in sequence to the DistGrid dimensions
+   starting with dimension "1". Extra DistGrid dimensions are considered
+   replicator dimensions because the Array will be replicated along those
+   dimensions. In the above example the 2nd DistGrid dimension will cause
+   1D Array pieces to be replicated along the DEs of the 2nd DistGrid
+   dimension. Replication in the context of ESMF_ArrayCreate() does not
+   mean that data values are communicated and replicated between different
+   DEs, but it means that different DEs provide memory allocations for
+   identical exclusive elements.
+
+   Access to the data storage of an Array that has been replicated along
+   DistGrid dimensions is the same as for Arrays without replication.
+
+  call ESMF_ArrayGet(array, localDeCount=localDeCount, rc=rc)
+
+  allocate(larrayList(0:localDeCount-1))
+  allocate(localDeToDeMap(0:localDeCount-1))
+  call ESMF_ArrayGet(array, localarrayList=larrayList, &
+    localDeToDeMap=localDeToDeMap, rc=rc)
+
+   The array object was created without additional padding which means
+   that the bounds of the Fortran array pointer correspond to the bounds
+   of the exclusive region. The following loop will cycle through all
+   local DEs, print the DE number as well as the Fortran array pointer
+   bounds. The bounds should be:
+            lbound       ubound
+
+   DE 0:      1            3         --+
+   DE 2:      1            3         --|  1st replication set
+   DE 4:      1            3         --+
+
+   DE 1:      1            2         --+
+   DE 3:      1            2         --|  2nd replication set
+   DE 5:      1            2         --+
+
+  do localDe=0, localDeCount-1
+    call ESMF_LocalArrayGet(larrayList(localDe), myFarray1D, &
+      datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+
+    print *, "localPet: ", localPet, "DE ",localDeToDeMap(localDe)," [", &
+      lbound(myFarray1D), ubound(myFarray1D),"]"
+  enddo
+  deallocate(larrayList)
+  deallocate(localDeToDeMap)
+  call ESMF_ArrayDestroy(array, rc=rc)
+
+   The Fortran array pointer in the above loop was of rank 1 because the
+   Array object was of rank 1. However, the distgrid object associated
+   with array is 2-dimensional! Consequently DistGrid based information
+   queried from array will be 2D. The distgridToArrayMap and
+   arrayToDistGridMap arrays provide the necessary mapping to correctly
+   associate DistGrid based information with Array dimensions.
+
+   The next example creates a 2D Array
+  call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_R8, rank=2, rc=rc)
+
+   on the previously used 2D DistGrid. By default, i.e. without the
+   distgridToArrayMap argument, both DistGrid dimensions would be
+   associated with the two Array dimensions. However, the
+   distgridToArrayMap specified in the following call will only associate
+   the second DistGrid dimension with the first Array dimension. This will
+   render the first DistGrid dimension a replicator dimension and the
+   second Array dimension a tensor dimension for which 1D undistLBound and
+   undistUBound arguments must be supplied.
+
+  array = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, &
+    distgridToArrayMap=(/0,1/), undistLBound=(/11/), &
+    undistUBound=(/14/), rc=rc)
+
+  call ESMF_ArrayDestroy(array, rc=rc)
+
+   Finally, the same arrayspec and distgrid arguments are used to create a
+   2D Array that is fully replicated in both dimensions of the DistGrid.
+   Both Array dimensions are now tensor dimensions and both DistGrid
+   dimensions are replicator dimensions.
+
+  array = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, &
+    distgridToArrayMap=(/0,0/), undistLBound=(/11,21/), &
+    undistUBound=(/14,22/), rc=rc)
+
+   The result will be an Array with local lower bound (/11,21/) and upper
+   bound (/14,22/) on all 6 DEs of the DistGrid.
+
+  call ESMF_ArrayDestroy(array, rc=rc)
+
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+   Replicated Arrays can also be created from existing local Fortran
+   arrays. The following Fortran array allocation will provide a 3 x 10
+   array on each PET.
+
+  allocate(myFarray2D(3,10))
+
+   Assuming a petCount of 4 the following DistGrid defines a 2D index
+   space that is distributed across the PETs along the first dimension.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/40,10/), rc=rc)
+
+   The following call creates an Array object on the above distgrid using
+   the locally existing myFarray2D Fortran arrays. The difference compared
+   to the case with automatic memory allocation is that instead of
+   arrayspec the Fortran array is provided as argument. Furthermore, the
+   undistLBound and undistUBound arguments can be omitted, defaulting into
+   Array tensor dimension lower bound of 1 and an upper bound equal to the
+   size of the respective Fortran array dimension.
+
+  array = ESMF_ArrayCreate(farray=myFarray2D, distgrid=distgrid, &
+    indexflag=ESMF_INDEX_DELOCAL, distgridToArrayMap=(/0,2/), rc=rc)
+
+   The array object associates the 2nd DistGrid dimension with the 2nd
+   Array dimension. The first DistGrid dimension is not associated with
+   any Array dimension and will lead to replication of the Array along the
+   DEs of this direction.
+
+  call ESMF_ArrayDestroy(array, rc=rc)
+
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+  28.2.13 Shared memory features: DE pinning, sharing, and migration
+
+   Practically all modern computer systems today utilize multi-core
+   processors, supporting the concurrent execution of multiple hardware
+   threads. A number of these multi-core processors are commonly packaged
+   into the same compute node, having access to the same physical memory.
+   Under ESMF each hardware thread (or core) is identified as a unique
+   Processing Element (PE). The collection of PEs that share the same
+   physical memory (i.e. compute node) is referred to as a Single System
+   Image (SSI). The ESMF Array class implements features that allow the
+   user to leverage the shared memory within each SSI to efficiently
+   exchange data without copies or explicit communication calls.
+
+   The software threads executing an ESMF application on the hardware, and
+   that ESMF is aware of, are referred to as Persistent Execution Threads
+   (PETs). In practice a PET can typically be thought of as an MPI rank,
+   i.e. an OS process, defining its own private virtual address space
+   (VAS). The ESMF Virtual Machine (VM) class keeps track of the mapping
+   between PETs and PEs, and their location on the available SSIs.
+
+   When an ESMF Array object is created, the specified DistGrid indicates
+   how many Decomposition Elements (DEs) are created. Each DE has its own
+   memory allocation to hold user data. The DELayout, referenced by the
+   DistGrid, determines which PET is considered the owner of each of the
+   DEs. Queried for the local DEs, the Array object returns the list of
+   DEs that are owned by the local PET making the query.
+
+   By default DEs are pinned to the PETs under which they were created.
+   The memory allocation associated with a specific DE is only defined in
+   the VAS of the PET to which the DE is pinned. As a consequence, only
+   the PET owning a DE has access to its memory allocation.
+
+   On shared memory systems, however, ESMF allows DEs to be pinned to SSIs
+   instead of PETs. In this case the PET under which a DE was created is
+   still consider the owner, but now all PETs under the same SSI have
+   access to the DE. For this the memory allocation associated with the DE
+   is mapped into the VAS of all the PETs under the SSI.
+
+   To create an Array with each DE pinned to SSI instead of PET, first
+   query the VM for the available level of support.
+
+  call ESMF_VMGet(vm, ssiSharedMemoryEnabledFlag=ssiSharedMemoryEnabled, rc=rc)
+
+  if (ssiSharedMemoryEnabled) then
+
+   Knowing that the SSI shared memory feature is available, it is now
+   possible to create an Array object with DE to SSI pinning.
+
+    distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/40,10/), rc=rc)
+
+    array = ESMF_ArrayCreate(typekind=ESMF_TYPEKIND_R8, distgrid=distgrid, &
+      pinflag=ESMF_PIN_DE_TO_SSI, rc=rc)
+
+   Just as in the cases discussed before, where the same DistGrid was
+   used, a default DELayout with as many DEs as PETs in the VM is
+   constructed. Setting the pinflag to ESMF_PIN_DE_TO_SSI does not change
+   the fact that each PET owns exactly one of the DEs. However, assuming
+   that this code is run on a set of PETs that are all located under the
+   same SSI, every PET now has access to all of the DEs. The situation can
+   be observed by querying for both the localDeCount, and the
+   ssiLocalDeCount.
+
+    call ESMF_ArrayGet(array, localDeCount=localDeCount, &
+      ssiLocalDeCount=ssiLocalDeCount, rc=rc)
+
+   Assuming execution on 4 PETs, all located on the same SSI, the values
+   of the returned variable are localDeCount==1 and ssiLocalDeCount==4 on
+   all of the PETs. The mapping between each PET's local DE, and the
+   global DE index is provided through the localDeToDeMap array argument.
+   The amount of mapping information returned is dependent on how large
+   localDeToDeMap has been sized by the user. For
+   size(localDeToDeMap)==localDeCount, only mapping information for those
+   DEs owned by the local PET is filled in. However for
+   size(localDeToDeMap)==ssiLocalDeCount, mapping information for all
+   locally accessible DEs is returned, including those owned by other PETs
+   on the same SSI.
+
+    allocate(localDeToDeMap(0:ssiLocalDeCount-1))
+    call ESMF_ArrayGet(array, localDeToDeMap=localDeToDeMap, rc=rc)
+
+   The first localDeCount entries of localDeToDeMap are always the global
+   DE indices of the DEs owned by the local PET. The remaining
+   ssiLocalDeCount-localDeCount entries are the global DE indices of DEs
+   shared by other PETs. The ordering of the shared DEs is from smallest
+   to greatest, excluding the locally owned DEs, which were already listed
+   at the beginning of localDeToDeMap. For the current case, again
+   assuming execution on 4 PETs all located on the same SSI, we expect the
+   following situation:
+
+   PET 0: localDeToDeMap==(/0,1,2,3/)
+   PET 1: localDeToDeMap==(/1,0,2,3/)
+   PET 2: localDeToDeMap==(/2,0,1,3/)
+   PET 3: localDeToDeMap==(/3,0,1,2/)
+
+   Each PET can access the memory allocations associated with all of the
+   DEs listed in the localDeToDeMap returned by the Array object. Direct
+   access to the Fortran array pointer of a specific memory allocation is
+   available through ESMF_ArrayGet(). Here each PET queries for the
+   farrayPtr of localDe==2, i.e. the 2nd shared DE.
+
+    call ESMF_ArrayGet(array, farrayPtr=myFarray, localDe=2, rc=rc)
+
+   Now variable myFarray on PETs 0 and 1 both point to the same memory
+   allocation for global DE 2. Both PETs have access to the same piece of
+   shared memory! The same is true for PETs 2 and 3, pointing to the
+   shared memory allocation of global DE 1.
+
+   It is important to note that all of the typical considerations
+   surrounding shared memory programming apply when accessing shared DEs!
+   Proper synchronization between PETs accessing shared DEs is critical to
+   avoid race conditions. Also performance issues like false sharing need
+   to be considered for optimal use.
+
+   For a simple demonstration, PETs 0 and 2 fill the entire memory
+   allocation of DE 2 and 1, respectively, to a unique value.
+
+    if (localPet==0) then
+      myFarray = 12345.6789d0
+    else if (localPet==2) then
+      myFarray = 6789.12345d0
+    endif
+
+   Here synchronization is needed before any PETs that share access to the
+   same DEs can safely access the data without race condition. The Array
+   class provides a simple synchronization method that can be used.
+
+    call ESMF_ArraySync(array, rc=rc) ! prevent race condition
+
+   Now it is safe for PETs 1 and 3 to access the shared DEs. We expect to
+   find the data that was set above. For simplicity of the code only the
+   first array element is inspected here.
+
+    if (localPet==1) then
+      if (abs(myFarray(1,1)-12345.6789d0)>1.d10) print *, "bad data detected"
+    else if (localPet==3) then
+      if (abs(myFarray(1,1)-6789.12345d0)>1.d10) print *, "bad data detected"
+    endif
+
+   Working with shared DEs requires additional bookkeeping on the user
+   code level. In some situations, however, DE sharing is simply used as a
+   mechanism to move DEs between PETs without requiring data copies. One
+   practical application of this case is the transfer of an Array between
+   two components, both of which use the same PEs, but run with different
+   number of PETs. These would typically be sequential components that use
+   OpenMP on the user level with varying threading levels.
+
+   DEs that are pinned to SSI can be moved or migrated to any PET within
+   the SSI. This is accomplished by creating a new Array object from an
+   existing Array that was created with pinflag=ESMF_PIN_DE_TO_SSI. The
+   information of how the DEs are to migrate between the old and the new
+   Array is provided through a DELayout object. This object must have the
+   same number of DEs and describes how they map to the PETs on the
+   current VM. If this is in the context of a different component, the
+   number of PETs might differ from the original VM under which the
+   existing Array was created. This situation is explicitly supported,
+   still the number of DEs must match.
+
+   Here a simple DELayout is created on the same 4 PETs, but with rotated
+   DE ownerships:
+
+   DE 0 -> PET 1 (old PET 0)
+   DE 1 -> PET 2 (old PET 1)
+   DE 2 -> PET 3 (old PET 2)
+   DE 3 -> PET 0 (old PET 3)
+    delayout = ESMF_DELayoutCreate(petMap=(/1,2,3,0/), rc=rc) ! DE->PET mapping
+
+   The creation of the new Array is done by reference, i.e.
+   datacopyflag=ESMF_DATACOPY_REFERENCE, since the new Array does not
+   create its own memory allocations. Instead the new Array references the
+   shared memory resources held by the incoming Array object.
+
+    arrayMigrated = ESMF_ArrayCreate(array, delayout=delayout, &
+      datacopyflag=ESMF_DATACOPY_REFERENCE, rc=rc)
+
+   Querying arrayMigrated for the number of local DEs will return 1 on
+   each PET. Sizing the localDeToDeMap accordingly and querying for it.
+
+    deallocate(localDeToDeMap) ! free previous allocation
+    allocate(localDeToDeMap(0:1))
+    call ESMF_ArrayGet(arrayMigrated, localDeToDeMap=localDeToDeMap, rc=rc)
+
+   This yields the following expected outcome:
+
+   PET 0: localDeToDeMap==(/1/)
+   PET 1: localDeToDeMap==(/2/)
+   PET 2: localDeToDeMap==(/3/)
+   PET 3: localDeToDeMap==(/0/)
+
+   On each PET the respective Fortran array pointer is returned by the
+   Array.
+
+    call ESMF_ArrayGet(arrayMigrated, farrayPtr=myFarray, rc=rc)
+
+   The same situation could have been achieved with the original array.
+   However, it would have required first finding the correct local DE for
+   the target global DE on each PET, and then querying array accordingly.
+   If needed more repeatedly, this bookkeeping would need to be kept in a
+   user code data structure. The DE migration feature on the other hand
+   provides a formal way to create a standard ESMF Array object that can
+   be used directly in any Array level method as usual, letting ESMF
+   handle the extra bookkeeping needed.
+
+   Before destroying an Array whose DEs are shared between PETs, it is
+   advisable to issue one more synchronization. This prevents cases where
+   a PET still might be accessing a shared DE, while the owner PET is
+   already destroying the Array, therefore deallocating the shared memory
+   resource.
+
+    call ESMF_ArraySync(array, rc=rc) ! prevent race condition
+
+    call ESMF_ArrayDestroy(array, rc=rc)
+
+   Remember that arrayMigrated shares the same memory allocations that
+   were held by array. Array arrayMigrated must therefore not be used
+   beyond the life time of array. Best to destroy it now.
+
+    call ESMF_ArrayDestroy(arrayMigrated, rc=rc)
+
+  endif ! ending the ssiSharedMemoryEnabled conditional
+

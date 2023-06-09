@@ -1,0 +1,335 @@
+  19.4.10 ESMF_SciCompValidate - Check validity of a SciComp
+
+   INTERFACE:
+   subroutine ESMF_SciCompValidate(scicomp, rc)
+
+   ARGUMENTS:
+     type(ESMF_SciComp), intent(in)             :: scicomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Currently all this method does is to check that the scicomp was
+   created.
+
+   The arguments are:
+
+   scicomp
+          ESMF_SciComp to validate.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+                       20 Fault-tolerant Component Tunnel
+
+20.1 Description
+
+   For ensemble runs with many ensemble members, fault-tolerance becomes
+   an issue of very critical practical impact. The meaning of
+   fault-tolerance in this context refers to the ability of an ensemble
+   application to continue with normal execution after one or more
+   ensemble members have experienced catastrophic conditions, from which
+   they cannot recover. ESMF implements this type of fault-tolerance on
+   the Component level via a timeout paradigm: A timeout parameter is
+   specified for all interactions that need to be fault-tolerant. When a
+   connection to a component times out, maybe because it has become
+   inaccessible due to some catastrophic condition, the driver application
+   can react to this condition, for example by not further interacting
+   with the component during the otherwise normal continuation of the
+   model execution.
+
+   The fault-tolerant connection between a driver application and a
+   Component is established through a Component Tunnel. There are two
+   sides to a Component Tunnel: the "actual" side is where the component
+   is actually executing, and the "dual" side is the portal through which
+   the Component becomes accessible on the driver side. Both the actual
+   and the dual side of a Component Tunnel are implemented in form of a
+   regular ESMF Gridded or Coupler Component.
+
+   Component Tunnels between Components can be based on a number of low
+   level implementations. The only implementation that currently provides
+   fault-tolerance is socket based. In this case an actual Component
+   typically runs as a separate executable, listening to a specific port
+   for connections from the driver application. The dual Component is
+   created on the driver side. It connects to the actual Component during
+   the SetServices() call.
+
+20.2 Use and Examples
+
+   A Component Tunnel connects a dual Component to an actual Component.
+   This connection can be based on a number of different low level
+   implementations, e.g. VM-based or socket-based. VM-based Component
+   Tunnels require that both dual and actual Components run within the
+   same application (i.e. execute under the same MPI_COMM_WORLD).
+   Fault-tolerant Component Tunnels require that dual and actual
+   Components run in separate applications, under different MPI_COMM_WORLD
+   communicators. This mode is implemented in the socket-based Component
+   Tunnels.
+
+  20.2.1 Creating an actual Component
+
+   The creation process of an actual Gridded Component, which will become
+   one of the two end points of a Component Tunnel, is identical to the
+   creation of a regular Gridded Component. On the actual side, an actual
+   Component is very similar to a regular Component. Here the actual
+   Component is created with a custom petList.
+
+  petList = (/0,1,2/)
+  actualComp = ESMF_GridCompCreate(petList=petList, name="actual", rc=rc)
+
+  20.2.2 Creating a dual Component
+
+   The same way an actual Component appears as a regular Component in the
+   context of the actual side application, a dual Component is created as
+   a regular Component on the dual side. A dual Gridded Component with
+   custom petList is created using the regular create call.
+
+  petList = (/4,3,5/)
+  dualComp = ESMF_GridCompCreate(petList=petList, name="dual", rc=rc)
+
+  20.2.3 Setting up the actual side of a Component Tunnel
+
+   After creation, the regular procedure for registering the standard
+   Component methods is followed for the actual Gridded Component.
+
+  call ESMF_GridCompSetServices(actualComp, userRoutine=setservices, &
+    userRc=userRc, rc=rc)
+
+   So far the actualComp object is no different from a regular Gridded
+   Component. In order to turn it into the actual end point of a Component
+   Tunnel the ServiceLoop() method is called. Here the socket-based
+   implementation is chosen.
+
+  call ESMF_GridCompServiceLoop(actualComp, port=61010, timeout=20, rc=rc)
+
+   This call opens the actual side of the Component Tunnel in form of a
+   socket-based server, listening on port 61010. The timeout argument
+   specifies how long the actual side will wait for the dual side to
+   connect, before the actual side returns with a time out condition. The
+   time out is set to 20 seconds.
+
+   At this point, before a dual Component connects to the other side of
+   the Component Tunnel, it is possible to manually connect to the waiting
+   actual Component. This can be useful when debugging connection issues.
+   A convenient tool for this is the standard telnet application. Below is
+   a transcript of such a connection. The manually typed commands are
+   separate from the previous responses by a blank line.
+
+   $ telnet localhost 61010
+   Trying 127.0.0.1...
+   Connected to localhost.
+   Escape character is '^]'.
+   Hello from ESMF Actual Component server!
+
+   date
+   Tue Apr  3 21:53:03 2012
+
+   version
+   ESMF_VERSION_STRING: 5.3.0
+
+   If at any point the telnet session is manually shut down, the
+   ServiceLoop() on the actual side will return with an error condition.
+   The clean way to disconnect the telnet session, and to have the
+   ServiceLoop() wait for a new connection, e.g. from a dual Component, is
+   to send the reconnect command. This will automatically shut down the
+   telnet connection.
+
+   reconnect
+   Actual Component server will reconnect now!
+   Connection closed by foreign host.
+   $
+
+   At this point the actual Component is back in listening mode, with a
+   time out of 20 seconds, as specified during the ServiceLoop() call.
+
+   Before moving on to the dual side of the GridComp based Component
+   Tunnel example, it should be pointed out that the exact same procedure
+   is used to set up the actual side of a CplComp based Component Tunnel.
+   Assuming that actualCplComp is a CplComp object for which SetServices
+   has already been called, the actual side uses ESMF_CplCompServiceLoop()
+   to start listening for connections from the dual side.
+
+  call ESMF_CplCompServiceLoop(actualCplComp, port=61011, timeout=2, &
+    timeoutFlag=timeoutFlag, rc=rc)
+
+   Here the timeoutFlag is specified in order to prevent the expected
+   time-out condition to be indicated through the return code. Instead,
+   when timeoutFlag is present, the return code is still ESMF_SUCCESS, but
+   timeoutFlag is set to .true. when a time-out occurs.
+
+  20.2.4 Setting up the dual side of a Component Tunnel
+
+   On the dual side, the dualComp object needs to be connected to the
+   actual Component in order to complete the Component Tunnel. Instead of
+   registering standard Component methods locally, a special variant of
+   the SetServices() call is used to connect to the actual Component.
+
+  call ESMF_GridCompSetServices(dualComp, port=61010, server="localhost", &
+    timeout=10, timeoutFlag=timeoutFlag, rc=rc)
+
+   The port and server arguments are used to connect to the desired actual
+   Component. The time out of 10 seconds ensures that if the actual
+   Component is not available, a time out condition is returned instead of
+   resulting in a hang. The timeoutFlag argument further absorbs the time
+   out condition, either returning as .true. or .false.. In this mode the
+   standard rc will indicate success even when a time out condition was
+   reached.
+
+  20.2.5 Invoking standard Component methods through a Component Tunnel
+
+   Once a Component Tunnel is established, the actual Component is fully
+   under the control of the dual Component. A standard Component method
+   invoked on the dual Component is not executed by the dual Component
+   itself, but by the actual Component instead. In fact, it is the entry
+   points registered with the actual Component that are executed when
+   standard methods are invoked on the dual Component. The connected
+   dualComp object serves as a portal through which the connected
+   actualComp becomes accessible on the dual side.
+
+   Typically the first standard method called is the CompInitialize()
+   routine.
+
+  call ESMF_GridCompInitialize(dualComp, timeout=10, timeoutFlag=timeoutFlag, &
+    userRc=userRc, rc=rc)
+
+   Again, the timeout argument serves to prevent the dual side from
+   hanging if the actual Component application has experienced a
+   catastrophic condition and is no longer available, or takes longer than
+   expected. The presence of the timeoutFlag allows time out conditions to
+   be caught gracefully, so the dual side can deal with it in an orderly
+   fashion, instead of triggering an application abort due to an error
+   condition.
+
+   The CompRun() and CompFinalize() methods follow the same format.
+
+  call ESMF_GridCompRun(dualComp, timeout=10, timeoutFlag=timeoutFlag, &
+    userRc=userRc, rc=rc)
+
+  call ESMF_GridCompFinalize(dualComp, timeout=10, timeoutFlag=timeoutFlag, &
+    userRc=userRc, rc=rc)
+
+  20.2.6 The non-blocking option to invoke standard Component methods through a
+  Component Tunnel
+
+   Standard Component methods called on a connected dual Component are
+   executed on the actual side, across the PETs of the actual Component.
+   By default the dual Component PETs are blocked until the actual
+   Component has finished executing the invoked Component method, or until
+   a time out condition has been reached. In many practical applications a
+   more loose synchronization between dual and actual Components is
+   useful. Having the PETs of a dual Component return immediately from a
+   standard Component method allows multiple dual Component, on the same
+   PETs, to control multiple actual Components. If the actual Components
+   are executing in separate executables, or the same executable but on
+   exclusive sets of PETs, they can execute concurrently, even with the
+   controlling dual Components all running on the same PETs. The
+   non-blocking dual side regains control over the actual Component by
+   synchronizing through the CompWait() call.
+
+   Any of the standard Component methods can be called in non-blocking
+   mode by setting the optional syncflag argument to
+   ESMF_SYNC_NONBLOCKING.
+
+  call ESMF_GridCompInitialize(dualComp, syncflag=ESMF_SYNC_NONBLOCKING, rc=rc)
+
+   If communication between the dual and the actual Component was
+   successful, this call will return immediately on all of the dual
+   Component PETs, while the actual Component continues to execute the
+   invoked Component method. However, if the dual Component has
+   difficulties reaching the actual Component, the call will block on all
+   dual PETs until successful contact was made, or the default time out
+   (3600 seconds, i.e. 1 hour) has been reached. In most cases a shorter
+   time out condition is desired with the non-blocking option, as shown
+   below.
+
+   First the dual Component must wait for the outstanding method.
+
+  call ESMF_GridCompWait(dualComp, rc=rc)
+
+   Now the same non-blocking CompInitialize() call is issued again, but
+   this time with an explicit 10 second time out.
+
+  call ESMF_GridCompInitialize(dualComp, syncflag=ESMF_SYNC_NONBLOCKING, &
+    timeout=10, timeoutFlag=timeoutFlag, rc=rc)
+
+   This call is guaranteed to return within 10 seconds, or less, on the
+   dual Component PETs, either without time out condition, indicating that
+   the actual Component has been contacted successfully, or with time out
+   condition, indicating that the actual Component was unreachable at the
+   time. Either way, the dual Component PETs are back under user control
+   quickly.
+
+   Calling the CompWait() method on the dual Component causes the dual
+   Component PETs to block until the actual Component method has returned,
+   or a time out condition has been reached.
+
+  call ESMF_GridCompWait(dualComp, userRc=userRc, rc=rc)
+
+   The default time out for CompWait() is 3600 seconds, i.e. 1 hour, just
+   like for the other Component methods. However, the semantics of a time
+   out condition under CompWait() is different from the other Component
+   methods. Typically the timeout is simply the maximum time that any
+   communication between dual and actual Component is allowed to take
+   before a time out condition is raised. For CompWait(), the timeout is
+   the maximum time that an actual Component is allowed to execute before
+   reporting back to the dual Component. Here, even with the default time
+   out, the dual Component would return from CompWait() immediately with a
+   time out condition if the actual Component has already been executing
+   for over 1 hour, and is not already waiting to report back when the
+   dual Component calls CompWait(). On the other hand, if it has only been
+   30 minutes since CompInitialize() was called on the dual Component,
+   then the actual Component still has 30 minutes before CompWait()
+   returns with a time out condition. During this time (or until the
+   actual Component returns) the dual Component PETs are blocked.
+
+   A standard Component method is invoked in non-blocking mode.
+
+  call ESMF_GridCompRun(dualComp, syncflag=ESMF_SYNC_NONBLOCKING, &
+    timeout=10, timeoutFlag=timeoutFlag, rc=rc)
+
+   Once the user code on the dual side is ready to regain control over the
+   actual Component it calls CompWait() on the dual Component. Here a
+   timeout of 60s is specified, meaning that the total execution time the
+   actual Component spends in the registered Run() routine may not exceed
+   60s before CompWait() returns with a time out condition.
+
+  call ESMF_GridCompWait(dualComp, timeout=60, userRc=userRc, rc=rc)
+
+  20.2.7 Destroying a connected dual Component
+
+   A dual Component that is connected to an actual Component through a
+   Component Tunnel is destroyed the same way a regular Component is. The
+   only difference is that a connected dual Component may specify a
+   timeout argument to the CompDestroy() call.
+
+  call ESMF_GridCompDestroy(dualComp, timeout=10, rc=rc)
+
+   The timeout argument again ensures that the dual side does not hang
+   indefinitely in case the actual Component has become unavailable. If
+   the actual Component is available, the destroy call will indicate to
+   the actual Component that it should break out of the ServiceLoop().
+   Either way, the local dual Component is destroyed.
+
+  20.2.8 Destroying a connected actual Component
+
+   An actual Component that is in a ServiceLoop() must first return from
+   that call before it can be destroyed. This can either happen when a
+   connected dual Component calls its CompDestroy() method, or if the
+   ServiceLoop() reaches the specified time out condition. Either way,
+   once control has been returned to the user code, the actual Component
+   is destroyed in the same way a regular Component is, by calling the
+   destroy method.
+
+  call ESMF_GridCompDestroy(actualComp, rc=rc)
+
+20.3 Restrictions and Future Work
+
+    1. No data flow through States. The current implementation does not
+       support data flow (Fields, FieldBundles, etc.) between actual and
+       dual Components. The current work-around is to employ user
+       controlled, file based transfer methods. The next implementation
+       phase will offer transparent data flow through the Component
+       Tunnel, where the user code interacts with the States on the actual
+       and dual side in the same way as if they were the same Component.
+

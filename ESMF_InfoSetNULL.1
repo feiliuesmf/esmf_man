@@ -1,0 +1,33 @@
+  40.4.28 ESMF_InfoSetNULL - Set a value to null
+
+   INTERFACE:
+ subroutine ESMF_InfoSetNULL(info, key, force, rc)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(inout) :: info
+   character(len=*), intent(in) :: key
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   logical, intent(in), optional :: force
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set a value to null [[508]7].
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [509]40.2
+          for an overview of the key format.
+
+   [force]
+          Default is true. When true, insert the key even if it already
+          exists in storage. If false, rc will not return ESMF_SUCCESS if
+          the key already exists.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,2745 @@
+          + [97]26 Field Class
+               o [98]26.1 Description
+                    # [99]26.1.1 Operations
+               o [100]26.2 Constants
+                    # [101]26.2.1 ESMF_FIELDSTATUS
+               o [102]26.3 Use and Examples
+                    # [103]26.3.1 Field create and destroy
+                    # [104]26.3.2 Get Fortran data pointer, bounds, and
+                      counts information from a Field
+                    # [105]26.3.3 Get Grid, Array, and other information
+                      from a Field
+                    # [106]26.3.4 Create a Field with a Grid, typekind,
+                      and rank
+                    # [107]26.3.5 Create a Field with a Grid and Arrayspec
+                    # [108]26.3.6 Create a Field with a Grid and Array
+                    # [109]26.3.7 Create an empty Field and complete it
+                      with FieldEmptySet and FieldEmptyComplete
+                    # [110]26.3.8 Create an empty Field and complete it
+                      with FieldEmptyComplete
+                    # [111]26.3.9 Create a 7D Field with a 5D Grid and 2D
+                      ungridded bounds from a Fortran data array
+                    # [112]26.3.10 Shared memory features: DE pinning,
+                      sharing, and migration
+                    # [113]26.3.11 Create a 2D Field with a 2D Grid and a
+                      Fortran data array
+                    # [114]26.3.12 Create a 2D Field with a 2D Grid and a
+                      Fortran data pointer
+                    # [115]26.3.13 Create a 3D Field with a 2D Grid and a
+                      3D Fortran data array
+                    # [116]26.3.14 Create a 3D Field with a 2D Grid and a
+                      3D Fortran data array with gridToFieldMap argument
+                    # [117]26.3.15 Create a 3D Field with a 2D Grid and a
+                      3D Fortran data array with halos
+                    # [118]26.3.16 Create a Field from a LocStream,
+                      typekind, and rank
+                    # [119]26.3.17 Create a Field from a LocStream and
+                      arrayspec
+                    # [120]26.3.18 Create a Field from a Mesh, typekind,
+                      and rank
+                    # [121]26.3.19 Create a Field from a Mesh and
+                      arrayspec
+                    # [122]26.3.20 Create a Field from a Mesh and an Array
+                    # [123]26.3.21 Create a Field from a Mesh and an
+                      ArraySpec with optional features
+                    # [124]26.3.22 Create a Field with replicated
+                      dimensions
+                    # [125]26.3.23 Create a Field on an arbitrarily
+                      distributed Grid
+                    # [126]26.3.24 Create a Field on an arbitrarily
+                      distributed Grid with replicated dimensions &
+                      ungridded bounds
+                    # [127]26.3.25 Field regridding
+                    # [128]26.3.26 Field regrid with masking
+                    # [129]26.3.27 Field regrid example: Mesh to Mesh
+                    # [130]26.3.28 Gather Field data onto root PET
+                    # [131]26.3.29 Scatter Field data from root PET onto
+                      its set of joint PETs
+                    # [132]26.3.30 Redistribute data from source Field to
+                      destination Field
+                    # [133]26.3.31 FieldRedist as a form of scatter
+                      involving arbitrary distribution
+                    # [134]26.3.32 FieldRedist as a form of gather
+                      involving arbitrary distribution
+                    # [135]26.3.33 Sparse matrix multiplication from
+                      source Field to destination Field
+                    # [136]26.3.34 Field Halo solving a domain decomposed
+                      heat transfer problem
+               o [137]26.4 Restrictions and Future Work
+               o [138]26.5 Design and Implementation Notes
+               o [139]26.6 Class API
+                    # [140]26.6.1 ESMF_FieldAssignment(=)
+                    # [141]26.6.2 ESMF_FieldOperator(==)
+                    # [142]26.6.3 ESMF_FieldOperator(/=)
+                    # [143]26.6.4 ESMF_FieldCopy
+                    # [144]26.6.5 ESMF_FieldCreate
+                    # [145]26.6.6 ESMF_FieldCreate
+                    # [146]26.6.7 ESMF_FieldCreate
+                    # [147]26.6.8 ESMF_FieldCreate
+                    # [148]26.6.9 ESMF_FieldCreate
+                    # [149]26.6.10 ESMF_FieldCreate
+                    # [150]26.6.11 ESMF_FieldCreate
+                    # [151]26.6.12 ESMF_FieldCreate
+                    # [152]26.6.13 ESMF_FieldCreate
+                    # [153]26.6.14 ESMF_FieldCreate
+                    # [154]26.6.15 ESMF_FieldCreate
+                    # [155]26.6.16 ESMF_FieldCreate
+                    # [156]26.6.17 ESMF_FieldCreate
+                    # [157]26.6.18 ESMF_FieldCreate
+                    # [158]26.6.19 ESMF_FieldCreate
+                    # [159]26.6.20 ESMF_FieldCreate
+                    # [160]26.6.21 ESMF_FieldCreate
+                    # [161]26.6.22 ESMF_FieldCreate
+                    # [162]26.6.23 ESMF_FieldCreate
+                    # [163]26.6.24 ESMF_FieldCreate
+                    # [164]26.6.25 ESMF_FieldCreate
+                    # [165]26.6.26 ESMF_FieldCreate
+                    # [166]26.6.27 ESMF_FieldCreate
+                    # [167]26.6.28 ESMF_FieldCreate
+                    # [168]26.6.29 ESMF_FieldDestroy
+                    # [169]26.6.30 ESMF_FieldEmptyComplete
+                    # [170]26.6.31 ESMF_FieldEmptyComplete
+                    # [171]26.6.32 ESMF_FieldEmptyComplete
+                    # [172]26.6.33 ESMF_FieldEmptyComplete
+                    # [173]26.6.34 ESMF_FieldEmptyComplete
+                    # [174]26.6.35 ESMF_FieldEmptyComplete
+                    # [175]26.6.36 ESMF_FieldEmptyComplete
+                    # [176]26.6.37 ESMF_FieldEmptyComplete
+                    # [177]26.6.38 ESMF_FieldEmptyComplete
+                    # [178]26.6.39 ESMF_FieldEmptyComplete
+                    # [179]26.6.40 ESMF_FieldEmptyComplete
+                    # [180]26.6.41 ESMF_FieldEmptyComplete
+                    # [181]26.6.42 ESMF_FieldEmptyComplete
+                    # [182]26.6.43 ESMF_FieldEmptyComplete
+                    # [183]26.6.44 ESMF_FieldEmptyCreate
+                    # [184]26.6.45 ESMF_FieldEmptySet
+                    # [185]26.6.46 ESMF_FieldEmptySet
+                    # [186]26.6.47 ESMF_FieldEmptySet
+                    # [187]26.6.48 ESMF_FieldEmptySet
+                    # [188]26.6.49 ESMF_FieldEmptySet
+                    # [189]26.6.50 ESMF_FieldFill
+                    # [190]26.6.51 ESMF_FieldGather
+                    # [191]26.6.52 ESMF_FieldGet
+                    # [192]26.6.53 ESMF_FieldGet
+                    # [193]26.6.54 ESMF_FieldGetBounds
+                    # [194]26.6.55 ESMF_FieldHalo
+                    # [195]26.6.56 ESMF_FieldHaloRelease
+                    # [196]26.6.57 ESMF_FieldHaloStore
+                    # [197]26.6.58 ESMF_FieldIsCreated
+                    # [198]26.6.59 ESMF_FieldPrint
+                    # [199]26.6.60 ESMF_FieldRead
+                    # [200]26.6.61 ESMF_FieldRedist
+                    # [201]26.6.62 ESMF_FieldRedistRelease
+                    # [202]26.6.63 ESMF_FieldRedistStore
+                    # [203]26.6.64 ESMF_FieldRedistStore
+                    # [204]26.6.65 ESMF_FieldRegrid
+                    # [205]26.6.66 ESMF_FieldRegridRelease
+                    # [206]26.6.67 ESMF_FieldRegridStore
+                    # [207]26.6.68 ESMF_FieldRegridStore
+                    # [208]26.6.69 ESMF_FieldRegridGetArea
+                    # [209]26.6.70 ESMF_FieldScatter
+                    # [210]26.6.71 ESMF_FieldSet
+                    # [211]26.6.72 ESMF_FieldSync
+                    # [212]26.6.73 ESMF_FieldSMM
+                    # [213]26.6.74 ESMF_FieldSMMRelease
+                    # [214]26.6.75 ESMF_FieldSMMStore
+                    # [215]26.6.76 ESMF_FieldSMMStore
+                    # [216]26.6.77 ESMF_FieldSMMStore
+                    # [217]26.6.78 ESMF_FieldSMMStore
+                    # [218]26.6.79 ESMF_FieldSMMStore
+                    # [219]26.6.80 ESMF_FieldSMMStore
+                    # [220]26.6.81 ESMF_FieldValidate
+                    # [221]26.6.82 ESMF_FieldWrite
+               o [222]26.7 Class API: Field Utilities
+                    # [223]26.7.1 ESMF_GridGetFieldBounds
+                    # [224]26.7.2 ESMF_LocStreamGetFieldBounds
+                    # [225]26.7.3 ESMF_MeshGetFieldBounds
+                    # [226]26.7.4 ESMF_XGridGetFieldBounds
+                                 26 Field Class
+
+26.1 Description
+
+   An ESMF Field represents a physical field, such as temperature. The
+   motivation for including Fields in ESMF is that bundles of Fields are
+   the entities that are normally exchanged when coupling Components.
+
+   The ESMF Field class contains distributed and discretized field data, a
+   reference to its associated grid, and metadata. The Field class stores
+   the grid staggering for that physical field. This is the relationship
+   of how the data array of a field maps onto a grid (e.g. one item per
+   cell located at the cell center, one item per cell located at the NW
+   corner, one item per cell vertex, etc.). This means that different
+   Fields which are on the same underlying ESMF Grid but have different
+   staggerings can share the same Grid object without needing to replicate
+   it multiple times.
+
+   Fields can be added to States for use in inter-Component data
+   communications. Fields can also be added to FieldBundles, which are
+   groups of Fields on the same underlying Grid. One motivation for
+   packing Fields into FieldBundles is convenience; another is the ability
+   to perform optimized collective data transfers.
+
+   Field communication capabilities include: data redistribution,
+   regridding, scatter, gather, sparse-matrix multiplication, and halo
+   update. These are discussed in more detail in the documentation for the
+   specific method calls. ESMF does not currently support vector fields,
+   so the components of a vector field must be stored as separate Field
+   objects.
+
+  26.1.1 Operations
+
+   The Field class allows the user to easily perform a number of
+   operations on the data stored in a Field. This section gives a brief
+   summary of the different types of operations and the range of their
+   capabilities. The operations covered here are: redistribution
+   (ESMF_FieldRedistStore()), sparse matrix multiply
+   (ESMF_FieldSMMStore()), and regridding (ESMF_FieldRegridStore()).
+
+   The redistribution operation (ESMF_FieldRedistStore()) allows the user
+   to move data between two Fields with the same size, but different
+   distribution. This operation is useful, for example, to move data
+   between two components with different distributions. Please see
+   Section [784]26.3.30 for an example of the redistribution capability.
+
+   The sparse matrix multiplication operation (ESMF_FieldSMMStore())
+   allows the user to multiply the data in a Field by a sparse matrix.
+   This operation is useful, for example, if the user has an interpolation
+   matrix and wants to apply it to the data in a Field. Please see
+   Section [785]26.3.33 for an example of the sparse matrix multiply
+   capability.
+
+   The regridding operation (ESMF_FieldRegridStore()) allows the user to
+   move data from one grid to another while maintaining certain properties
+   of the data. Regridding is also called interpolation or remapping. In
+   the Field regridding operation the grids the data is being moved
+   between are the grids associated with the Fields storing the data. The
+   regridding operation works on Fields built on Meshes, Grids, or
+   Location Streams. There are six regridding methods available: bilinear,
+   higher-order patch, two types of nearest neighbor, first-order
+   conservative, and second-order conservative. Please see
+   section [786]24.2 for a more indepth description of regridding
+   including in which situations each method is supported. Please see
+   section [787]26.3.25 for a description of the regridding capability as
+   it applies to Fields. Several sections following section [788]26.3.25
+   contain examples of using regridding.
+
+26.2 Constants
+
+  26.2.1 ESMF_FIELDSTATUS
+
+   DESCRIPTION:
+   An ESMF_Field can be in different status after initialization. Field
+   status can be queried using ESMF_FieldGet() method.
+
+   The type of this flag is:
+
+   type(ESMF_FieldStatus_Flag)
+
+   The valid values are:
+
+   ESMF_FIELDSTATUS_EMPTY
+          Field is empty without geombase or data storage. Such a Field
+          can be added to a ESMF_State and participate
+          ESMF_StateReconcile().
+
+   ESMF_FIELDSTATUS_GRIDSET
+          Field is partially created. It has a geombase object internally
+          created and the geombase object associates with either a
+          ESMF_Grid, or a ESMF_Mesh, or an ESMF_XGrid, or a
+          ESMF_LocStream. It's an error to set another geombase object in
+          such a Field. It can also be added to a ESMF_State and
+          participate ESMF_StateReconcile().
+
+   ESMF_FIELDSTATUS_COMPLETE
+          Field is completely created with geombase and data storage
+          internally allocated.
+
+26.3 Use and Examples
+
+   A Field serves as an annotator of data, since it carries a description
+   of the grid it is associated with and metadata such as name and units.
+   Fields can be used in this capacity alone, as convenient, descriptive
+   containers into which arrays can be placed and retrieved. However, for
+   most codes the primary use of Fields is in the context of import and
+   export States, which are the objects that carry coupling information
+   between Components. Fields enable data to be self-describing, and a
+   State holding ESMF Fields contains data in a standard format that can
+   be queried and manipulated.
+
+   The sections below go into more detail about Field usage.
+
+  26.3.1 Field create and destroy
+
+   Fields can be created and destroyed at any time during application
+   execution. However, these Field methods require some time to complete.
+   We do not recommend that the user create or destroy Fields inside
+   performance-critical computational loops.
+
+   All versions of the ESMF_FieldCreate() routines require a Grid object
+   as input, or require a Grid be added before most operations involving
+   Fields can be performed. The Grid contains the information needed to
+   know which Decomposition Elements (DEs) are participating in the
+   processing of this Field, and which subsets of the data are local to a
+   particular DE.
+
+   The details of how the create process happens depend on which of the
+   variants of the ESMF_FieldCreate() call is used. Some of the variants
+   are discussed below.
+
+   There are versions of the ESMF_FieldCreate() interface which create the
+   Field based on the input Grid. The ESMF can allocate the proper amount
+   of space but not assign initial values. The user code can then get the
+   pointer to the uninitialized buffer and set the initial data values.
+
+   Other versions of the ESMF_FieldCreate() interface allow user code to
+   attach arrays that have already been allocated by the user. Empty
+   Fields can also be created in which case the data can be added at some
+   later time.
+
+   For versions of Create which do not specify data values, user code can
+   create an ArraySpec object, which contains information about the
+   typekind and rank of the data values in the array. Then at Field create
+   time, the appropriate amount of memory is allocated to contain the data
+   which is local to each DE.
+
+   When finished with a ESMF_Field, the ESMF_FieldDestroy method removes
+   it. However, the objects inside the ESMF_Field created externally
+   should be destroyed separately, since objects can be added to more than
+   one ESMF_Field. For example, the same ESMF_Grid can be referenced by
+   multiple ESMF_Fields. In this case the internal Grid is not deleted by
+   the ESMF_FieldDestroy call.
+
+  26.3.2 Get Fortran data pointer, bounds, and counts information from a Field
+
+   A user can get bounds and counts information from an ESMF_Field through
+   the ESMF_FieldGet() interface. Also available through this interface is
+   the intrinsic Fortran data pointer contained in the internal ESMF_Array
+   object of an ESMF_Field. The bounds and counts information are DE
+   specific for the associated Fortran data pointer.
+
+   For a better discussion of the terminologies, bounds and widths in ESMF
+   e.g. exclusive, computational, total bounds for the lower and upper
+   corner of data region, etc.., user can refer to the explanation of
+   these concepts for Grid and Array in their respective sections in the
+   Reference Manual, e.g. Section [789]28.2.6 on Array and Section
+   [790]31.3.19 on Grid.
+
+   In this example, we first create a 3D Field based on a 3D Grid and
+   Array. Then we use the ESMF_FieldGet() interface to retrieve the data
+   pointer, potentially updating or verifying its values. We also retrieve
+   the bounds and counts information of the 3D Field to assist in data
+   element iteration.
+
+    xdim = 180
+    ydim = 90
+    zdim = 50
+
+    ! create a 3D data Field from a Grid and Array.
+    ! first create a Grid
+    grid3d = ESMF_GridCreateNoPeriDim(minIndex=(/1,1,1/), &
+            maxIndex=(/xdim,ydim,zdim/), &
+            regDecomp=(/2,2,1/), name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_GridGet(grid=grid3d, staggerloc=ESMF_STAGGERLOC_CENTER, &
+           distgrid=distgrid3d, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_GridGetFieldBounds(grid=grid3d, localDe=0, &
+        staggerloc=ESMF_STAGGERLOC_CENTER, totalCount=fa_shape, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    allocate(farray(fa_shape(1), fa_shape(2), fa_shape(3)) )
+
+    ! create an Array
+    array3d = ESMF_ArrayCreate(distgrid3d, farray, &
+        indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create a Field
+    field = ESMF_FieldCreate(grid=grid3d, array=array3d, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! retrieve the Fortran data pointer from the Field
+    call ESMF_FieldGet(field=field, localDe=0, farrayPtr=farray1, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! retrieve the Fortran data pointer from the Field and bounds
+    call ESMF_FieldGet(field=field, localDe=0, farrayPtr=farray1, &
+        computationalLBound=compLBnd, computationalUBound=compUBnd, &
+        exclusiveLBound=exclLBnd, exclusiveUBound=exclUBnd, &
+        totalLBound=totalLBnd, totalUBound=totalUBnd, &
+        computationalCount=comp_count, &
+        exclusiveCount=excl_count, &
+        totalCount=total_count, &
+        rc=rc)
+
+
+    ! iterate through the total bounds of the field data pointer
+    do k = totalLBnd(3), totalUBnd(3)
+        do j = totalLBnd(2), totalUBnd(2)
+            do i = totalLBnd(1), totalUBnd(1)
+                farray1(i, j, k) = sin(2*i/total_count(1)*PI) + &
+                    sin(4*j/total_count(2)*PI) + &
+                    sin(8*k/total_count(2)*PI)
+            enddo
+        enddo
+    enddo
+
+  26.3.3 Get Grid, Array, and other information from a Field
+
+   A user can get the internal ESMF_Grid and ESMF_Array from a ESMF_Field.
+   Note that the user should not issue any destroy command on the
+   retrieved grid or array object since they are referenced from within
+   the ESMF_Field. The retrieved objects should be used in a read-only
+   fashion to query additional information not directly available through
+   the ESMF_FieldGet() interface.
+
+    call ESMF_FieldGet(field, grid=grid, array=array, &
+        typekind=typekind, dimCount=dimCount, staggerloc=staggerloc, &
+        gridToFieldMap=gridToFieldMap, &
+        ungriddedLBound=ungriddedLBound, ungriddedUBound=ungriddedUBound, &
+        totalLWidth=totalLWidth, totalUWidth=totalUWidth, &
+        name=name, &
+        rc=rc)
+
+  26.3.4 Create a Field with a Grid, typekind, and rank
+
+   A user can create an ESMF_Field from an ESMF_Grid and typekind/rank.
+   This create method associates the two objects.
+
+   We first create a Grid with a regular distribution that is 10x20 index
+   in 2x2 DEs. This version of Field create simply associates the data
+   with the Grid. The data is referenced explicitly on a regular 2x2
+   uniform grid. Finally we create a Field from the Grid, typekind, rank,
+   and a user specified StaggerLoc.
+
+   This example also illustrates a typical use of this Field creation
+   method. By creating a Field from a Grid and typekind/rank, the user
+   allows the ESMF library to create a internal Array in the Field. Then
+   the user can use ESMF_FieldGet() to retrieve the Fortran data array and
+   necessary bounds information to assign initial values to it.
+
+    ! create a grid
+    grid = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/10,20/), &
+          regDecomp=(/2,2/), name="atmgrid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create a Field from the Grid and arrayspec
+    field1 = ESMF_FieldCreate(grid, typekind=ESMF_TYPEKIND_R4, &
+        indexflag=ESMF_INDEX_DELOCAL, &
+        staggerloc=ESMF_STAGGERLOC_CENTER, name="pressure", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_FieldGet(field1, localDe=0, farrayPtr=farray2dd, &
+        totalLBound=ftlb, totalUBound=ftub, totalCount=ftc, rc=rc)
+
+    do i = ftlb(1), ftub(1)
+        do j = ftlb(2), ftub(2)
+            farray2dd(i, j) = sin(i/ftc(1)*PI) * cos(j/ftc(2)*PI)
+        enddo
+    enddo
+
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.5 Create a Field with a Grid and Arrayspec
+
+   A user can create an ESMF_Field from an ESMF_Grid and a ESMF_Arrayspec
+   with corresponding rank and type. This create method associates the two
+   objects.
+
+   We first create a Grid with a regular distribution that is 10x20 index
+   in 2x2 DEs. This version of Field create simply associates the data
+   with the Grid. The data is referenced explicitly on a regular 2x2
+   uniform grid. Then we create an ArraySpec. Finally we create a Field
+   from the Grid, ArraySpec, and a user specified StaggerLoc.
+
+   This example also illustrates a typical use of this Field creation
+   method. By creating a Field from a Grid and an ArraySpec, the user
+   allows the ESMF library to create a internal Array in the Field. Then
+   the user can use ESMF_FieldGet() to retrieve the Fortran data array and
+   necessary bounds information to assign initial values to it.
+
+    ! create a grid
+    grid = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/10,20/), &
+          regDecomp=(/2,2/), name="atmgrid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! setup arrayspec
+    call ESMF_ArraySpecSet(arrayspec, 2, ESMF_TYPEKIND_R4, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create a Field from the Grid and arrayspec
+    field1 = ESMF_FieldCreate(grid, arrayspec, &
+         indexflag=ESMF_INDEX_DELOCAL, &
+         staggerloc=ESMF_STAGGERLOC_CENTER, name="pressure", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_FieldGet(field1, localDe=0, farrayPtr=farray2dd, &
+        totalLBound=ftlb, totalUBound=ftub, totalCount=ftc, rc=rc)
+
+    do i = ftlb(1), ftub(1)
+        do j = ftlb(2), ftub(2)
+            farray2dd(i, j) = sin(i/ftc(1)*PI) * cos(j/ftc(2)*PI)
+        enddo
+    enddo
+
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   A user can also create an ArraySpec that has a different rank from the
+   Grid, For example, the following code shows creation of of 3D Field
+   from a 2D Grid using a 3D ArraySpec.
+
+   This example also demonstrates the technique to create a typical 3D
+   data Field that has 2 gridded dimensions and 1 ungridded dimension.
+
+   First we create a 2D grid with an index space of 180x360 equivalent to
+   180x360 Grid cells (note that for a distributed memory computer, this
+   means each grid cell will be on a separate PE!). In the FieldCreate
+   call, we use gridToFieldMap to indicate the mapping between Grid
+   dimension and Field dimension. For the ungridded dimension (typically
+   the altitude), we use ungriddedLBound and ungriddedUBound to describe
+   its bounds. Internally the ungridded dimension has a stride of 1, so
+   the number of elements of the ungridded dimension is ungriddedUBound -
+   ungriddedLBound + 1.
+
+   Note that gridToFieldMap in this specific example is (/1,2/) which is
+   the default value so the user can neglect this argument for the
+   FieldCreate call.
+
+    grid2d = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), &
+          maxIndex=(/180,360/), regDecomp=(/2,2/), name="atmgrid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_ArraySpecSet(arrayspec, 3, ESMF_TYPEKIND_R4, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    field1 = ESMF_FieldCreate(grid2d, arrayspec, &
+         indexflag=ESMF_INDEX_DELOCAL, &
+         staggerloc=ESMF_STAGGERLOC_CENTER, &
+         gridToFieldMap=(/1,2/), &
+         ungriddedLBound=(/1/), ungriddedUBound=(/50/), &
+         name="pressure", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.6 Create a Field with a Grid and Array
+
+   A user can create an ESMF_Field from an ESMF_Grid and a ESMF_Array. The
+   Grid was created in the previous example.
+
+   This example creates a 2D ESMF_Field from a 2D ESMF_Grid and a 2D
+   ESMF_Array.
+
+    ! Get necessary information from the Grid
+    call ESMF_GridGet(grid, staggerloc=ESMF_STAGGERLOC_CENTER, &
+        distgrid=distgrid, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! Create a 2D ESMF_TYPEKIND_R4 arrayspec
+    call ESMF_ArraySpecSet(arrayspec, 2, ESMF_TYPEKIND_R4, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! Create a ESMF_Array from the arrayspec and distgrid
+    array2d = ESMF_ArrayCreate(arrayspec=arrayspec, &
+            distgrid=distgrid, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! Create a ESMF_Field from the grid and array
+    field4 = ESMF_FieldCreate(grid, array2d, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.7 Create an empty Field and complete it with FieldEmptySet and
+  FieldEmptyComplete
+
+   A user can create an ESMF_Field in three steps: first create an empty
+   ESMF_Field; then set a ESMF_Grid on the empty ESMF_Field; and finally
+   complete the ESMF_Field by calling ESMF_FieldEmptyComplete.
+
+    ! create an empty Field
+    field3 = ESMF_FieldEmptyCreate(name="precip", rc=rc)
+
+    ! use FieldGet to retrieve the Field Status
+    call ESMF_FieldGet(field3, status=fstatus, rc=rc)
+
+   Once the Field is created, we can verify that the status of the Field
+   is ESMF_FIELDSTATUS_EMPTY.
+
+    ! Test the status of the Field
+    if (fstatus /= ESMF_FIELDSTATUS_EMPTY) then
+         call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    endif
+
+   Next we set a Grid on the empty Field. We use the 2D grid created in a
+   previous example simply to demonstrate the method. The Field data
+   points will be on east edge of the Grid cells with the specified
+   ESMF_STAGGERLOC_EDGE1.
+
+    ! Set a grid on the Field
+    call ESMF_FieldEmptySet(field3, grid2d, &
+             staggerloc=ESMF_STAGGERLOC_EDGE1, rc=rc)
+
+    ! use FieldGet to retrieve the Field Status again
+    call ESMF_FieldGet(field3, status=fstatus, rc=rc)
+
+    ! Test the status of the Field
+    if (fstatus /= ESMF_FIELDSTATUS_GRIDSET) then
+         call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    endif
+
+   The partially created Field is completed by specifying the typekind of
+   its data storage. This method is overloaded with one of the following
+   parameters, arrayspec, typekind, Fortran array, or Fortran array
+   pointer. Additional optional arguments can be used to specify ungridded
+   dimensions and halo regions similar to the other Field creation
+   methods.
+
+    ! Complete the Field by specifying the data typekind
+    ! to be allocated internally.
+    call ESMF_FieldEmptyComplete(field3, typekind=ESMF_TYPEKIND_R8, &
+      ungriddedLBound=(/1/), ungriddedUBound=(/5/), rc=rc)
+
+    ! use FieldGet to retrieve the Field Status again
+    call ESMF_FieldGet(field3, status=fstatus, rc=rc)
+
+    ! Test the status of the Field
+    if (fstatus /= ESMF_FIELDSTATUS_COMPLETE) then
+         call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    endif
+
+  26.3.8 Create an empty Field and complete it with FieldEmptyComplete
+
+   A user can create an empty ESMF_Field. Then the user can finalize the
+   empty ESMF_Field from a ESMF_Grid and an intrinsic Fortran data array.
+   This interface is overloaded for typekind and rank of the Fortran data
+   array.
+
+   In this example, both the grid and the Fortran array pointer are 2
+   dimensional and each dimension of the grid is mapped to the
+   corresponding dimension of the Fortran array pointer, i.e. 1st
+   dimension of grid maps to 1st dimension of Fortran array pointer, 2nd
+   dimension of grid maps to 2nd dimension of Fortran array pointer, so on
+   and so forth.
+
+   In order to create or complete a Field from a Grid and a Fortran array
+   pointer, certain rules of the Fortran array bounds must be obeyed. We
+   will discuss these rules as we progress in Field creation examples. We
+   will make frequent reference to the terminologies for bounds and widths
+   in ESMF. For a better discussion of these terminologies and concepts
+   behind them, e.g. exclusive, computational, total bounds for the lower
+   and upper corner of data region, etc.., users can refer to the
+   explanation of these concepts for Grid and Array in their respective
+   sections in the Reference Manual, e.g. Section [791]28.2.6 on Array and
+   Section [792]31.3.19 on Grid. The examples here are designed to help a
+   user to get up to speed with creating Fields for typical use.
+
+   This example introduces a helper method, the ESMF_GridGetFieldBounds
+   interface that facilitates the computation of Fortran data array bounds
+   and shape to assist ESMF_FieldEmptyComplete finalizing a Field from an
+   intrinsic Fortran data array and a Grid.
+
+    ! create an empty Field
+    field3 = ESMF_FieldEmptyCreate(name="precip", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! use FieldGet to retrieve total counts
+    call ESMF_GridGetFieldBounds(grid2d, localDe=0, &
+        staggerloc=ESMF_STAGGERLOC_CENTER, totalCount=ftc, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! allocate the 2d Fortran array based on retrieved total counts
+    allocate(farray2d(ftc(1), ftc(2)))
+
+    ! finalize the Field
+    call ESMF_FieldEmptyComplete(field3, grid2d, farray2d, rc=rc)
+
+  26.3.9 Create a 7D Field with a 5D Grid and 2D ungridded bounds from a Fortran
+  data array
+
+   In this example, we will show how to create a 7D Field from a 5D
+   ESMF_Grid and 2D ungridded bounds with arbitrary halo widths and
+   gridToFieldMap.
+
+   We first create a 5D DistGrid and a 5D Grid based on the DistGrid; then
+   ESMF_GridGetFieldBounds computes the shape of a 7D array in fsize. We
+   can then create a 7D Field from the 5D Grid and the 7D Fortran data
+   array with other assimilating parameters.
+
+    ! create a 5d distgrid
+    distgrid5d = ESMF_DistGridCreate(minIndex=(/1,1,1,1,1/), &
+        maxIndex=(/10,4,10,4,6/), regDecomp=(/2,1,2,1,1/), rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! Create a 5d Grid
+    grid5d = ESMF_GridCreate(distgrid=distgrid5d, name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! use FieldGet to retrieve total counts
+    call ESMF_GridGetFieldBounds(grid5d, localDe=0, ungriddedLBound=(/1,2/), &
+        ungriddedUBound=(/4,5/), &
+        totalLWidth=(/1,1,1,2,2/), totalUWidth=(/1,2,3,4,5/), &
+        gridToFieldMap=(/3,2,5,4,1/), &
+        totalCount=fsize, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! allocate the 7d Fortran array based on retrieved total counts
+    allocate(farray7d(fsize(1), fsize(2), fsize(3), fsize(4), fsize(5), &
+                        fsize(6), fsize(7)))
+
+    ! create the Field
+    field7d = ESMF_FieldCreate(grid5d, farray7d, ESMF_INDEX_DELOCAL, &
+        ungriddedLBound=(/1,2/), ungriddedUBound=(/4,5/), &
+        totalLWidth=(/1,1,1,2,2/), totalUWidth=(/1,2,3,4,5/), &
+        gridToFieldMap=(/3,2,5,4,1/), &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   A user can allocate the Fortran array in a different manner using the
+   lower and upper bounds returned from FieldGet through the optional
+   totalLBound and totalUBound arguments. In the following example, we
+   create another 7D Field by retrieving the bounds and allocate the
+   Fortran array with this approach. In this scheme, indexing the Fortran
+   array is sometimes more convenient than using the shape directly.
+
+    call ESMF_GridGetFieldBounds(grid5d, localDe=0, ungriddedLBound=(/1,2/), &
+        ungriddedUBound=(/4,5/), &
+        totalLWidth=(/1,1,1,2,2/), totalUWidth=(/1,2,3,4,5/), &
+        gridToFieldMap=(/3,2,5,4,1/), &
+        totalLBound=flbound, totalUBound=fubound, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    allocate(farray7d2(flbound(1):fubound(1), flbound(2):fubound(2), &
+                       flbound(3):fubound(3), flbound(4):fubound(4), &
+                       flbound(5):fubound(5), flbound(6):fubound(6), &
+                       flbound(7):fubound(7)) )
+
+    field7d2 = ESMF_FieldCreate(grid5d, farray7d2, ESMF_INDEX_DELOCAL, &
+        ungriddedLBound=(/1,2/), ungriddedUBound=(/4,5/), &
+        totalLWidth=(/1,1,1,2,2/), totalUWidth=(/1,2,3,4,5/), &
+        gridToFieldMap=(/3,2,5,4,1/), &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.10 Shared memory features: DE pinning, sharing, and migration
+
+   See [793]28.2.13 for a introduction of the DE pinning feature. Here we
+   focus on demonstrating the use of the DE pinning feature in the context
+   of ESMF Field.
+
+   When an ESMF Field object is created, the specified underlying DistGrid
+   indicates how many Decomposition Elements (DEs) are created. Each DE
+   has its own memory allocation to hold user data. The DELayout,
+   referenced by the DistGrid, determines which PET is considered the
+   owner of each of the DEs. Queried for the local DEs, the Field object
+   returns the list of DEs that are owned by the local PET making the
+   query.
+
+   By default DEs are pinned to the PETs under which they were created.
+   The memory allocation associated with a specific DE is only defined in
+   the VAS of the PET to which the DE is pinned. As a consequence, only
+   the PET owning a DE has access to its memory allocation.
+
+   On shared memory systems, however, ESMF allows DEs to be pinned to SSIs
+   instead of PETs. In this case the PET under which a DE was created is
+   still consider the owner, but now all PETs under the same SSI have
+   access to the DE. For this the memory allocation associated with the DE
+   is mapped into the VAS of all the PETs under the SSI.
+
+   To create an Field with each DE pinned to SSI instead of PET, first
+   query the VM for the available level of support.
+
+  call ESMF_VMGet(vm, ssiSharedMemoryEnabledFlag=ssiSharedMemoryEnabled, rc=rc)
+
+  if (ssiSharedMemoryEnabled) then
+
+   Knowing that the SSI shared memory feature is available, it is now
+   possible to create an Field object with DE to SSI pinning.
+
+    grid = ESMF_GridCreateNoPeriDim(maxIndex=(/40,10/), regDecomp=(/4,1/), &
+      coordSys = ESMF_COORDSYS_CART, &
+      rc=rc)
+
+    field = ESMF_FieldCreate(typekind=ESMF_TYPEKIND_R8, grid=grid, &
+      pinflag=ESMF_PIN_DE_TO_SSI, rc=rc)
+
+   Just as in the cases discussed before, where the same Grid was used, a
+   default DELayout with as many DEs as PETs in the VM is constructed.
+   Setting the pinflag to ESMF_PIN_DE_TO_SSI does not change the fact that
+   each PET owns exactly one of the DEs. However, assuming that this code
+   is run on a set of PETs that are all located under the same SSI, every
+   PET now has access to all of the DEs. The situation can be observed by
+   querying for both the localDeCount, and the ssiLocalDeCount.
+
+    call ESMF_FieldGet(field, localDeCount=localDeCount, &
+      ssiLocalDeCount=ssiLocalDeCount, rc=rc)
+
+   Assuming execution on 4 PETs, all located on the same SSI, the values
+   of the returned variable are localDeCount==1 and ssiLocalDeCount==4 on
+   all of the PETs. The mapping between each PET's local DE, and the
+   global DE index is provided through the localDeToDeMap array argument.
+   The amount of mapping information returned is dependent on how large
+   localDeToDeMap has been sized by the user. For
+   size(localDeToDeMap)==localDeCount, only mapping information for those
+   DEs owned by the local PET is filled in. However for
+   size(localDeToDeMap)==ssiLocalDeCount, mapping information for all
+   locally accessible DEs is returned, including those owned by other PETs
+   on the same SSI.
+
+    allocate(localDeToDeMap(0:ssiLocalDeCount-1))
+    call ESMF_FieldGet(field, localDeToDeMap=localDeToDeMap, rc=rc)
+
+   The first localDeCount entries of localDeToDeMap are always the global
+   DE indices of the DEs owned by the local PET. The remaining
+   ssiLocalDeCount-localDeCount entries are the global DE indices of DEs
+   shared by other PETs. The ordering of the shared DEs is from smallest
+   to greatest, excluding the locally owned DEs, which were already listed
+   at the beginning of localDeToDeMap. For the current case, again
+   assuming execution on 4 PETs all located on the same SSI, we expect the
+   following situation:
+
+   PET 0: localDeToDeMap==(/0,1,2,3/)
+   PET 1: localDeToDeMap==(/1,0,2,3/)
+   PET 2: localDeToDeMap==(/2,0,1,3/)
+   PET 3: localDeToDeMap==(/3,0,1,2/)
+
+   Each PET can access the memory allocations associated with all of the
+   DEs listed in the localDeToDeMap returned by the Field object. Direct
+   access to the Fortran array pointer of a specific memory allocation is
+   available through ESMF_FieldGet(). Here each PET queries for the
+   farrayPtr of localDe==2, i.e. the 2nd shared DE.
+
+    call ESMF_FieldGet(field, farrayPtr=myFarray, localDe=2, rc=rc)
+
+   Now variable myFarray on PETs 0 and 1 both point to the same memory
+   allocation for global DE 2. Both PETs have access to the same piece of
+   shared memory! The same is true for PETs 2 and 3, pointing to the
+   shared memory allocation of global DE 1.
+
+   It is important to note that all of the typical considerations
+   surrounding shared memory programming apply when accessing shared DEs!
+   Proper synchronization between PETs accessing shared DEs is critical to
+   avoid race conditions. Also performance issues like false sharing need
+   to be considered for optimal use.
+
+   For a simple demonstration, PETs 0 and 2 fill the entire memory
+   allocation of DE 2 and 1, respectively, to a unique value.
+
+    if (localPet==0) then
+      myFarray = 12345.6789d0
+    else if (localPet==2) then
+      myFarray = 6789.12345d0
+    endif
+
+   Here synchronization is needed before any PETs that share access to the
+   same DEs can safely access the data without race condition. The Field
+   class provides a simple synchronization method that can be used.
+
+    call ESMF_FieldSync(field, rc=rc) ! prevent race condition
+
+   Now it is safe for PETs 1 and 3 to access the shared DEs. We expect to
+   find the data that was set above. For simplicity of the code only the
+   first array element is inspected here.
+
+    if (localPet==1) then
+      if (abs(myFarray(1,1)-12345.6789d0)>1.d10) print *, "bad data detected"
+    else if (localPet==3) then
+      if (abs(myFarray(1,1)-6789.12345d0)>1.d10) print *, "bad data detected"
+    endif
+
+  endif ! ending the ssiSharedMemoryEnabled conditional
+
+  26.3.11 Create a 2D Field with a 2D Grid and a Fortran data array
+
+   A user can create an ESMF_Field directly from an ESMF_Grid and an
+   intrinsic Fortran data array. This interface is overloaded for typekind
+   and rank of the Fortran data array.
+
+   In the following example, each dimension size of the Fortran array is
+   equal to the exclusive bounds of its corresponding Grid dimension
+   queried from the Grid through ESMF_GridGet() public interface.
+
+   Formally let fa_shape(i) be the shape of i-th dimension of user
+   supplied Fortran array, then rule 1 states:
+
+    (1) fa_shape(i) = exclusiveCount(i)
+                  i = 1...GridDimCount
+
+   fa_shape(i) defines the shape of i-th dimension of the Fortran array.
+   ExclusiveCount are the number of data elements of i-th dimension in the
+   exclusive region queried from ESMF_GridGet interface. Rule 1 assumes
+   that the Grid and the Fortran intrinsic array have same number of
+   dimensions; and optional arguments of FieldCreate from Fortran array
+   are left unspecified using default setup. These assumptions are true
+   for most typical uses of FieldCreate from Fortran data array. This is
+   the easiest way to create a Field from a Grid and a Fortran intrinsic
+   data array.
+
+   Fortran array dimension sizes (called shape in most Fortran language
+   books) are equivalent to the bounds and counts used in this manual. The
+   following equation holds:
+
+    fa_shape(i) = shape(i) = counts(i) = upper_bound(i) - lower_bound(i) + 1
+
+   These typically mean the same concept unless specifically explained to
+   mean something else. For example, ESMF uses DimCount very often to mean
+   number of dimensions instead of its meaning implied in the above
+   equation. We'll clarify the meaning of a word when ambiguity could
+   occur.
+
+   Rule 1 is most useful for a user working with Field creation from a
+   Grid and a Fortran data array in most scenarios. It extends to higher
+   dimension count, 3D, 4D, etc... Typically, as the code example
+   demonstrates, a user first creates a Grid, then uses ESMF_GridGet() to
+   retrieve the exclusive counts. Next the user calculates the shape of
+   each Fortran array dimension according to rule 1. The Fortran data
+   array is allocated and initialized based on the computed shape. A Field
+   can either be created in one shot or created empty and finished using
+   ESMF_FieldEmptyComplete.
+
+   There are important details that can be skipped but are good to know
+   for ESMF_FieldEmptyComplete and ESMF_FieldCreate from a Fortran data
+   array. 1) these methods require each PET contains exactly one DE. This
+   implies that a code using FieldCreate from a data array or
+   FieldEmptyComplete must have the same number of DEs and PETs, formally
+   $n_{DE} = n_{PET}$ . Violation of this condition will cause run time
+   failures. 2) the bounds and counts retrieved from GridGet are DE
+   specific or equivalently PET specific, which means that the Fortran
+   array shape could be different from one PET to another.
+
+    grid = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/10,20/), &
+          regDecomp=(/2,2/), name="atmgrid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_GridGet(grid, localDE=0, staggerloc=ESMF_STAGGERLOC_CENTER, &
+        exclusiveCount=gec, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    allocate(farray(gec(1), gec(2)) )
+
+    field = ESMF_FieldCreate(grid, farray, ESMF_INDEX_DELOCAL, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.12 Create a 2D Field with a 2D Grid and a Fortran data pointer
+
+   The setup of this example is similar to the previous section except
+   that the Field is created from a data pointer instead of a data array.
+   We highlight the ability to deallocate the internal Fortran data
+   pointer queried from the Field. This gives a user more flexibility with
+   memory management.
+
+    allocate(farrayPtr(gec(1), gec(2)) )
+
+    field = ESMF_FieldCreate(grid, farrayPtr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    call ESMF_FieldGet(field, farrayPtr=farrayPtr2, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    ! deallocate the retrieved Fortran array pointer
+    deallocate(farrayPtr2)
+
+  26.3.13 Create a 3D Field with a 2D Grid and a 3D Fortran data array
+
+   This example demonstrates a typical use of ESMF_Field combining a 2D
+   grid and a 3D Fortran native data array. One immediate problem follows:
+   how does one define the bounds of the ungridded dimension? This is
+   solved by the optional arguments ungriddedLBound and ungriddedUBound of
+   the ESMF_FieldCreate interface. By definition, ungriddedLBound and
+   ungriddedUBound are both 1 dimensional integer Fortran arrays.
+
+   Formally, let fa_shape(j=1...FieldDimCount-GridDimCount) be the shape
+   of the ungridded dimensions of a Field relative to the Grid used in
+   Field creation. The Field dimension count is equal to the number of
+   dimensions of the Fortran array, which equals the number of dimensions
+   of the resultant Field. GridDimCount is the number of dimensions of the
+   Grid.
+
+   fa_shape(j) is computed as:
+
+    fa_shape(j) = ungriddedUBound(j) - ungriddedLBound(j) + 1
+
+   fa_shape is easy to compute when the gridded and ungridded dimensions
+   do not mix. However, it's conceivable that at higher dimension count,
+   gridded and ungridded dimensions can interleave. To aid the computation
+   of ungridded dimension shape we formally introduce the mapping concept.
+
+   Let $map_{A,B}(i=1...n_A) = i_B$ , and $i_B \in [\phi, 1...n_B]$ .
+   $n_A$ is the number of elements in set A, $n_B$ is the number of
+   elements in set B. $map_{A,B}(i)$ defines a mapping from i-th element
+   of set A to $i_B$ -th element in set B. $i_B = \phi$ indicates there
+   does not exist a mapping from i-th element of set A to set B.
+
+   Suppose we have a mapping from dimension index of ungriddedLBound (or
+   ungriddedUBound) to Fortran array dimension index, called ugb2fa. By
+   definition, $n_A$ equals to the dimension count of ungriddedLBound (or
+   ungriddedUBound), $n_B$ equals to the dimension count of the Fortran
+   array. We can now formulate the computation of ungridded dimension
+   shape as rule 2:
+
+    (2) fa_shape(ugb2fa(j)) = ungriddedUBound(j) - ungriddedLBound(j) + 1
+                          j = 1..FortranArrayDimCount - GridDimCount
+
+   The mapping can be computed in linear time proportional to the Fortran
+   array dimension count (or rank) using the following algorithm in
+   pseudocode:
+
+    map_index = 1
+    do i = 1, farray_rank
+        if i-th dimension of farray is ungridded
+            ugb2fa(map_index) = i
+            map_index = map_index + 1
+        endif
+    enddo
+
+   Here we use rank and dimension count interchangeably. These 2
+   terminologies are typically equivalent. But there are subtle
+   differences under certain conditions. Rank is the total number of
+   dimensions of a tensor object. Dimension count allows a finer
+   description of the heterogeneous dimensions in that object. For
+   example, a Field of rank 5 can have 3 gridded dimensions and 2
+   ungridded dimensions. Rank is precisely the summation of dimension
+   count of all types of dimensions.
+
+   For example, if a 5D array is used with a 3D Grid, there are 2
+   ungridded dimensions: ungriddedLBound=(/1,2/) and
+   ungriddedUBound=(/5,7/). Suppose the distribution of dimensions looks
+   like (O, X, O, X, O), O means gridded, X means ungridded. Then the
+   mapping from ungridded bounds to Fortran array is ugb2fa=(/2, 4/). The
+   shape of 2nd and 4th dimension of Fortran array should equal (5, 8).
+
+   Back to our 3D Field created from a 2D Grid and 3D Fortran array
+   example, suppose the 3rd Field dimension is ungridded,
+   ungriddedLBound=(/3/), ungriddedUBound=(/9/). First we use rule 1 to
+   compute shapes of the gridded Fortran array dimension, then we use rule
+   2 to compute shapes of the ungridded Fortran array dimension. In this
+   example, we used the exclusive bounds obtained in the previous example.
+
+    fa_shape(1) = gec(1) ! rule 1
+    fa_shape(2) = gec(2)
+    fa_shape(3) = 7 ! rule 2 9-3+1
+    allocate(farray3d(fa_shape(1), fa_shape(2), fa_shape(3)))
+    field = ESMF_FieldCreate(grid, farray3d, ESMF_INDEX_DELOCAL, &
+        ungriddedLBound=(/3/), ungriddedUBound=(/9/), &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.14 Create a 3D Field with a 2D Grid and a 3D Fortran data array with
+  gridToFieldMap argument
+
+   Building upon the previous example, we will create a 3D Field from a 2D
+   grid and 3D array but with a slight twist. In this example, we
+   introduce the gridToFieldMap argument that allows a user to map Grid
+   dimension index to Field dimension index.
+
+   In this example, both dimensions of the Grid are distributed and the
+   mapping from DistGrid to Grid is (/1,2/). We will introduce rule 3
+   assuming distgridToGridMap=(/1,2,3...gridDimCount/), and
+   distgridDimCount equals to gridDimCount. This is a reasonable
+   assumption in typical Field use.
+
+   We apply the mapping gridToFieldMap on rule 1 to create rule 3:
+
+    (3) fa_shape(gridToFieldMap(i)) = exclusiveCount(i)
+                                  i = 1,..GridDimCount.
+
+   Back to our example, suppose the 2nd Field dimension is ungridded,
+   ungriddedLBound=(/3/), ungriddedUBound=(/9/). gridToFieldMap=(/3,1/),
+   meaning the 1st Grid dimension maps to 3rd Field dimension, and 2nd
+   Grid dimension maps to 1st Field dimension.
+
+   First we use rule 3 to compute shapes of the gridded Fortran array
+   dimension, then we use rule 2 to compute shapes of the ungridded
+   Fortran array dimension. In this example, we use the exclusive bounds
+   obtained in the previous example.
+
+    gridToFieldMap2d(1) = 3
+    gridToFieldMap2d(2) = 1
+    do i = 1, 2
+        fa_shape(gridToFieldMap2d(i)) = gec(i)
+    end do
+    fa_shape(2) = 7
+    allocate(farray3d(fa_shape(1), fa_shape(2), fa_shape(3)))
+    field = ESMF_FieldCreate(grid, farray3d, ESMF_INDEX_DELOCAL, &
+        ungriddedLBound=(/3/), ungriddedUBound=(/9/), &
+        gridToFieldMap=gridToFieldMap2d, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.15 Create a 3D Field with a 2D Grid and a 3D Fortran data array with
+  halos
+
+   This example is similar to example [794]26.3.14. In addition, here we
+   will show how a user can associate different halo widths to a Fortran
+   array to create a Field through the totalLWidth and totalUWidth
+   optional arguments. A diagram of the dimension configuration from Grid,
+   halos, and Fortran data array is shown here.
+
+   CAPTION: Figure 12: Field dimension configuration from Grid, halos, and
+   Fortran data array.
+
+           \scalebox{0.75}{\includegraphics{FieldParameterSetup}}
+
+   The ESMF_FieldCreate() interface supports creating a Field from a Grid
+   and a Fortran array padded with halos on the distributed dimensions of
+   the Fortran array. Using this technique one can avoid passing
+   non-contiguous Fortran array slice to FieldCreate. It guarantees the
+   same exclusive region, and by using halos, it also defines a bigger
+   total region to contain the entire contiguous memory block of the
+   Fortran array.
+
+   The elements of totalLWidth and totalUWidth are applied in the order
+   distributed dimensions appear in the Fortran array. By definition,
+   totalLWidth and totalUWidth are 1 dimensional arrays of non-negative
+   integer values. The size of haloWidth arrays is equal to the number of
+   distributed dimensions of the Fortran array, which is also equal to the
+   number of distributed dimensions of the Grid used in the Field
+   creation.
+
+   Because the order of totalWidth (representing both totalLWidth and
+   totalUWidth) element is applied to the order distributed dimensions
+   appear in the Fortran array dimensions, it's quite simple to compute
+   the shape of distributed dimensions of the Fortran array. They are done
+   in a similar manner when applying ungriddedLBound and ungriddedUBound
+   to ungridded dimensions of the Fortran array defined by rule 2.
+
+   Assume we have the mapping from the dimension index of totalWidth to
+   the dimension index of Fortran array, called mhw2fa; and we also have
+   the mapping from dimension index of Fortran array to dimension index of
+   the Grid, called fa2g. The shape of distributed dimensions of a Fortran
+   array can be computed by rule 4:
+
+
+    (4) fa_shape(mhw2fa(k)) = exclusiveCount(fa2g(mhw2fa(k)) +
+                              totalUWidth(k) + totalLWidth(k)
+                          k = 1...size(totalWidth)
+
+   This rule may seem confusing but algorithmically the computation can be
+   done by the following pseudocode:
+
+
+    fa_index = 1
+    do i = 1, farray_rank
+       if i-th dimension of Fortran array is distributed
+           fa_shape(i) = exclusiveCount(fa2g(i)) +
+                         totalUWidth(fa_index) + totalLWidth(fa_index)
+           fa_index = fa_index + 1
+       endif
+    enddo
+
+   The only complication then is to figure out the mapping from Fortran
+   array dimension index to Grid dimension index. This process can be done
+   by computing the reverse mapping from Field to Grid.
+
+   Typically, we don't have to consider these complications if the
+   following conditions are met: 1) All Grid dimensions are distributed.
+   2) DistGrid in the Grid has a dimension index mapping to the Grid in
+   the form of natural order (/1,2,3,.../). This natural order mapping is
+   the default mapping between various objects throughout ESMF. 3) Grid to
+   Field mapping is in the form of natural order, i.e. default mapping.
+   These seem like a lot of conditions but they are the default case in
+   the interaction among DistGrid, Grid, and Field. When these conditions
+   are met, which is typically true, the shape of distributed dimensions
+   of Fortran array follows rule 5 in a simple form:
+
+
+    (5) fa_shape(k) = exclusiveCount(k) +
+                      totalUWidth(k) + totalLWidth(k)
+                  k = 1...size(totalWidth)
+
+   Let's examine an example on how to apply rule 5. Suppose we have a 5D
+   array and a 3D Grid that has its first 3 dimensions mapped to the first
+   3 dimensions of the Fortran array. totalLWidth=(/1,2,3/),
+   totalUWidth=(/7,9,10/), then by rule 5, the following pseudo code can
+   be used to compute the shape of the first 3 dimensions of the Fortran
+   array. The shape of the remaining two ungridded dimensions can be
+   computed according to rule 2.
+
+
+    do k = 1, 3
+        fa_shape(k) = exclusiveCount(k) +
+                      totalUWidth(k) + totalLWidth(k))
+    enddo
+
+   Suppose now gridToFieldMap=(/2,3,4/) instead which says the first
+   dimension of Grid maps to the 2nd dimension of Field (or Fortran array)
+   and so on and so forth, we can obtain a more general form of rule 5 by
+   introducing first_distdim_index shift when Grid to Field map
+   (gridToFieldMap) is in the form of (/a,a+1,a+2.../).
+
+
+    (6) fa_shape(k+first_distdim_index-1) = exclusiveCount(k) +
+                                            totalUWidth(k) + totalLWidth(k)
+                                        k = 1...size(totalWidth)
+
+   It's obvious that first_distdim_index=a. If the first dimension of the
+   Fortran array is distributed, then rule 6 degenerates into rule 5,
+   which is the typical case.
+
+   Back to our example creating a 3D Field from a 2D Grid and a 3D
+   intrinsic Fortran array, we will use the Grid created from previous
+   example that satisfies condition 1 and 2. We'll also use a simple
+   gridToFieldMap (1,2) which is the default mapping that satisfies
+   condition 3. First we use rule 5 to compute the shape of distributed
+   dimensions then we use rule 2 to compute the shape of the ungridded
+   dimensions.
+
+    gridToFieldMap2d(1) = 1
+    gridToFieldMap2d(2) = 2
+    totalLWidth2d(1) = 3
+    totalLWidth2d(2) = 4
+    totalUWidth2d(1) = 3
+    totalUWidth2d(2) = 5
+    do k = 1, 2
+        fa_shape(k) = gec(k) + totalLWidth2d(k) + totalUWidth2d(k)
+    end do
+    fa_shape(3) = 7          ! 9-3+1
+    allocate(farray3d(fa_shape(1), fa_shape(2), fa_shape(3)))
+    field = ESMF_FieldCreate(grid, farray3d, ESMF_INDEX_DELOCAL, &
+        ungriddedLBound=(/3/), ungriddedUBound=(/9/), &
+        totalLWidth=totalLWidth2d, totalUWidth=totalUWidth2d, &
+        gridToFieldMap=gridToFieldMap2d, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.16 Create a Field from a LocStream, typekind, and rank
+
+   In this example, an ESMF_Field is created from an ESMF_LocStream and
+   typekind/rank. The location stream object is uniformly distributed in a
+   1 dimensional space on 4 DEs. The rank is 1 dimensional. Please refer
+   to LocStream examples section for more information on LocStream
+   creation.
+
+    locs = ESMF_LocStreamCreate(minIndex=1, maxIndex=16, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    field = ESMF_FieldCreate(locs, typekind=ESMF_TYPEKIND_I4, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.17 Create a Field from a LocStream and arrayspec
+
+   In this example, an ESMF_Field is created from an ESMF_LocStream and an
+   ESMF_Arrayspec. The location stream object is uniformly distributed in
+   a 1 dimensional space on 4 DEs. The arrayspec is 1 dimensional. Please
+   refer to LocStream examples section for more information on LocStream
+   creation.
+
+    locs = ESMF_LocStreamCreate(minIndex=1, maxIndex=16, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_ArraySpecSet(arrayspec, 1, ESMF_TYPEKIND_I4, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    field = ESMF_FieldCreate(locs, arrayspec, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.18 Create a Field from a Mesh, typekind, and rank
+
+   In this example, an ESMF_Field is created from an ESMF_Mesh and
+   typekind/rank. The mesh object is on a Euclidean surface that is
+   partitioned to a 2x2 rectangular space with 4 elements and 9 nodes. The
+   nodal space is represented by a distgrid with 9 indices. A Field is
+   created on locally owned nodes on each PET. Therefore, the created
+   Field has 9 data points globally. The mesh object can be represented by
+   the picture below. For more information on Mesh creation, please see
+   Section [795]33.3.1.
+                Mesh Ids
+
+    2.0   7 ------- 8 -------- 9
+          |         |          |
+          |    3    |    4     |
+          |         |          |
+    1.0   4 ------- 5 -------- 6
+          |         |          |
+          |    1    |    2     |
+          |         |          |
+    0.0   1 ------- 2 -------- 3
+
+         0.0       1.0        2.0
+
+        Node Ids at corners
+        Element Ids in centers
+
+
+               Mesh Owners
+
+    2.0   2 ------- 2 -------- 3
+          |         |          |
+          |    2    |    3     |
+          |         |          |
+    1.0   0 ------- 0 -------- 1
+          |         |          |
+          |    0    |    1     |
+          |         |          |
+    0.0   0 ------- 0 -------- 1
+
+         0.0       1.0        2.0
+
+        Node Owners at corners
+        Element Owners in centers
+
+      ! Create Mesh structure in 1 step
+      mesh=ESMF_MeshCreate(parametricDim=2,spatialDim=2, &
+             nodeIds=nodeIds, nodeCoords=nodeCoords, &
+             nodeOwners=nodeOwners, elementIds=elemIds,&
+             elementTypes=elemTypes, elementConn=elemConn, &
+             rc=rc)
+      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+      ! Field is created on the 1 dimensional nodal distgrid. On
+      ! each PET, Field is created on the locally owned nodes.
+      field = ESMF_FieldCreate(mesh, typekind=ESMF_TYPEKIND_I4, rc=rc)
+      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.19 Create a Field from a Mesh and arrayspec
+
+   In this example, an ESMF_Field is created from an ESMF_Mesh and an
+   ESMF_Arrayspec. The mesh object is on a Euclidean surface that is
+   partitioned to a 2x2 rectangular space with 4 elements and 9 nodes. The
+   nodal space is represented by a distgrid with 9 indices. Field is
+   created on locally owned nodes on each PET. Therefore, the created
+   Field has 9 data points globally. The mesh object can be represented by
+   the picture below. For more information on Mesh creation, please see
+   Section [796]33.3.1.
+
+      ! Create Mesh structure in 1 step
+      mesh=ESMF_MeshCreate(parametricDim=2,spatialDim=2, &
+             nodeIds=nodeIds, nodeCoords=nodeCoords, &
+             nodeOwners=nodeOwners, elementIds=elemIds,&
+             elementTypes=elemTypes, elementConn=elemConn, &
+             rc=rc)
+      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+      call ESMF_ArraySpecSet(arrayspec, 1, ESMF_TYPEKIND_I4, rc=rc)
+      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+      ! Field is created on the 1 dimensional nodal distgrid. On
+      ! each PET, Field is created on the locally owned nodes.
+      field = ESMF_FieldCreate(mesh, arrayspec, rc=rc)
+      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.20 Create a Field from a Mesh and an Array
+
+   In this example, an ESMF_Field is created from an ESMF_Mesh and an
+   ESMF_Array. The mesh object is created in the previous example and the
+   array object is retrieved from the field created in the previous
+   example too.
+
+    call ESMF_MeshGet(mesh, nodalDistgrid=distgrid, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    array = ESMF_ArrayCreate(distgrid=distgrid, arrayspec=arrayspec, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    ! query the array from the previous example
+    call ESMF_FieldGet(field, array=array, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    ! create a Field from a mesh and an array
+    field1 = ESMF_FieldCreate(mesh, array, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.21 Create a Field from a Mesh and an ArraySpec with optional features
+
+   In this example, an ESMF_Field is created from an ESMF_Mesh and an
+   ESMF_ArraySpec. The mesh object is created in the previous example. The
+   Field is also created with optional arguments such as ungridded
+   dimensions and dimension mapping.
+
+   In this example, the mesh is mapped to the 2nd dimension of the
+   ESMF_Field, with its first dimension being the ungridded dimension with
+   bounds 1,3.
+
+    call ESMF_ArraySpecSet(arrayspec, 2, ESMF_TYPEKIND_I4, rc=rc)
+    field = ESMF_FieldCreate(mesh, arrayspec=arrayspec, gridToFieldMap=(/2/), &
+        ungriddedLBound=(/1/), ungriddedUBound=(/3/), rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.22 Create a Field with replicated dimensions
+
+   In this example an ESMF_Field with replicated dimension is created from
+   an ESMF_Grid and an ESMF_Arrayspec. A user can also use other
+   ESMF_FieldCreate() methods to create replicated dimension Field, this
+   example illustrates the key concepts and use of a replicated dimension
+   Field.
+
+   Normally gridToFieldMap argument in ESMF_FieldCreate() should not
+   contain 0 value entries. However, for a Field with replicated
+   dimension, a 0 entry in gridToFieldMap indicates the corresponding Grid
+   dimension is replicated in the Field. In such a Field, the rank of the
+   Field is no longer necessarily greater than its Grid rank. An example
+   will make this clear. We will start by creating Distgrid and Grid.
+
+    ! create 4D distgrid
+    distgrid = ESMF_DistGridCreate(minIndex=(/1,1,1,1/), &
+        maxIndex=(/6,4,6,4/), regDecomp=(/2,1,2,1/), rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create 4D grid on top of the 4D distgrid
+    grid = ESMF_GridCreate(distgrid=distgrid, name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create 3D arrayspec
+    call ESMF_ArraySpecSet(arrayspec, 3, ESMF_TYPEKIND_R8, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   In this example, a user creates a 3D Field with replicated dimension
+   replicated along the 2nd and 4th dimension of its underlying 4D Grid.
+   In addition, the 2nd dimension of the Field is ungridded (why?). The
+   1st and 3rd dimensions of the Field have halos.
+
+    ! create field, 2nd and 4th dimensions of the Grid are replicated
+    field = ESMF_FieldCreate(grid, arrayspec, indexflag=ESMF_INDEX_DELOCAL, &
+        gridToFieldMap=(/1,0,2,0/), &
+        ungriddedLBound=(/1/), ungriddedUBound=(/4/), &
+        totalLWidth=(/1,1/), totalUWidth=(/4,5/), &
+        staggerloc=ESMF_STAGGERLOC_CORNER, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! get basic information from the field
+    call ESMF_FieldGet(field, grid=grid1, array=array, typekind=typekind, &
+        dimCount=dimCount, staggerloc=lstaggerloc, &
+        gridToFieldMap=lgridToFieldMap, ungriddedLBound=lungriddedLBound, &
+        ungriddedUBound=lungriddedUBound, totalLWidth=ltotalLWidth, &
+        totalUWidth=ltotalUWidth, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! get bounds information from the field
+    call ESMF_FieldGet(field, localDe=0, farrayPtr=farray, &
+        exclusiveLBound=felb, exclusiveUBound=feub, exclusiveCount=fec, &
+        computationalLBound=fclb, computationalUBound=fcub, &
+        computationalCount=fcc, totalLBound=ftlb, totalUBound=ftub, &
+        totalCount=ftc, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Next we verify that the field and array bounds agree with each other
+    call ESMF_ArrayGet(array, rank=arank, dimCount=adimCount, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    gridrank_repdim = 0
+    do i = 1, size(gridToFieldMap)
+        if(gridToFieldMap(i) == 0) gridrank_repdim = gridrank_repdim + 1
+    enddo
+
+   Number of undistributed dimension of the array X is computed from total
+   rank of the array A, the dimension count of its underlying distgrid B
+   and number of replicated dimension in the distgrid C. We have the
+   following formula: X = A - (B - C)
+
+    allocate(audlb(arank-adimCount+gridrank_repdim), &
+        audub(arank-adimCount+gridrank_repdim))
+    call ESMF_ArrayGet(array, exclusiveLBound=aelb, exclusiveUBound=aeub, &
+        computationalLBound=aclb, computationalUBound=acub, &
+        totalLBound=atlb, totalUBound=atub, &
+        undistLBound=audlb, undistUBound=audub, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! verify the ungridded bounds from field match
+    ! undistributed bounds from its underlying array
+    do i = 1, arank-adimCount
+        if(lungriddedLBound(i) .ne. audlb(i) ) &
+            rc = ESMF_FAILURE
+    enddo
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    do i = 1, arank-adimCount
+        if(lungriddedUBound(i) .ne. audub(i) ) &
+            rc = ESMF_FAILURE
+    enddo
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   We then verify the data in the replicated dimension Field can be
+   updated and accessed.
+
+    do ik = ftlb(3), ftub(3)
+     do ij = ftlb(2), ftub(2)
+      do ii = ftlb(1), ftub(1)
+        farray(ii,ij,ik) = ii+ij*2+ik
+      enddo
+     enddo
+    enddo
+    ! access and verify
+    call ESMF_FieldGet(field, localDe=0, farrayPtr=farray1, &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    do ik = ftlb(3), ftub(3)
+     do ij = ftlb(2), ftub(2)
+      do ii = ftlb(1), ftub(1)
+        n = ii+ij*2+ik
+        if(farray1(ii,ij,ik) .ne. n ) rc = ESMF_FAILURE
+      enddo
+     enddo
+    enddo
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! release resources
+    call ESMF_FieldDestroy(field)
+    call ESMF_GridDestroy(grid)
+    call ESMF_DistGridDestroy(distgrid)
+
+  26.3.23 Create a Field on an arbitrarily distributed Grid
+
+   With the introduction of Field on arbitrarily distributed Grid, Field
+   has two kinds of dimension count: one associated geometrical (or
+   physical) dimensionality, the other one associated with its memory
+   index space representation. Field and Grid dimCount reflect the
+   physical index space of the objects. A new type of dimCount rank should
+   be added to both of these entities. The rank gives the number of
+   dimensions of the memory index space of the objects. This would be the
+   dimension of the pointer pulled out of Field and the size of the bounds
+   vector, for example.
+
+   For non-arbitrary Grids rank=dimCount, but for grids and fields with
+   arbitrary dimensions rank = dimCount - (number of Arb dims) + 1
+   (Internally Field can use the Arb info from the grid to create the
+   mapping from the Field Array to the DistGrid)
+
+   When creating a Field size(GridToFieldMap)=dimCount for both Arb and
+   Non-arb grids This array specifies the mapping of Field to Grid
+   identically for both Arb and Nonarb grids If a zero occurs in an entry
+   corresponding to any arbitrary dimension, then a zero must occur in
+   every entry corresponding to an arbitrary dimension (i.e. all arbitrary
+   dimensions must either be all replicated or all not replicated, they
+   can't be broken apart).
+
+   In this example an ESMF_Field is created from an arbitrarily
+   distributed ESMF_Grid and an ESMF_Arrayspec. A user can also use other
+   ESMF_FieldCreate() methods to create such a Field, this example
+   illustrates the key concepts and use of Field on arbitrary distributed
+   Grid.
+
+   The Grid is 3 dimensional in physics index space but the first two
+   dimension are collapsed into a single memory index space. Thus the
+   resulting Field is 3D in physics index space and 2D in memory index
+   space. This is made obvious with the 2D arrayspec used to create this
+   Field.
+
+    ! create a 3D grid with the first 2 dimensions collapsed
+    ! and arbitrarily distributed
+    grid3d = ESMF_GridCreateNoPeriDim(coordTypeKind=ESMF_TYPEKIND_R8, &
+      minIndex=(/1,1,1/), maxIndex=(/xdim, ydim,zdim/), &
+      arbIndexList=localArbIndex,arbIndexCount=localArbIndexCount, &
+      name="arb3dgrid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create a 2D arrayspec
+    call ESMF_ArraySpecSet(arrayspec2D, rank=2, typekind=ESMF_TYPEKIND_R4, &
+         rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create a 2D Field using the Grid and the arrayspec
+    field = ESMF_FieldCreate(grid3d, arrayspec2D, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_FieldGet(field, rank=rank, dimCount=dimCount, &
+                       rc=rc)
+    if (myPet .eq. 0) print *, 'Field rank, dimCount', &
+                                rank, dimCount
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! verify that the dimension counts are correct
+    if (rank .ne. 2) correct = .false.
+    if (dimCount .ne. 3) correct = .false.
+
+  26.3.24 Create a Field on an arbitrarily distributed Grid with replicated
+  dimensions & ungridded bounds
+
+   The next example is slightly more complicated in that the Field also
+   contains one ungridded dimension and its gridded dimension is
+   replicated on the arbitrarily distributed dimension of the Grid.
+
+   The same 3D Grid and 2D arrayspec in the previous example are used but
+   a gridToFieldMap argument is supplied to the ESMF_FieldCreate() call.
+   The first 2 entries of the map are 0, the last (3rd) entry is 1. The
+   3rd dimension of the Grid is mapped to the first dimension of the
+   Field, this dimension is then replicated on the arbitrarily distributed
+   dimensions of the Grid. In addition, the Field also has one ungridded
+   dimension. Thus the final dimension count of the Field is 2 in both
+   physics and memory index space.
+
+    field = ESMF_FieldCreate(grid3d, arrayspec2D,gridToFieldMap=(/0,0,1/), &
+            ungriddedLBound=(/1/), ungriddedUBound=(/10/),rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_FieldGet(field, rank=rank, dimCount=dimCount, &
+                       rc=rc)
+    if (myPet .eq. 0) print *, 'Field rank, dimCount', &
+                                rank, dimCount
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    if (rank .ne. 2) correct = .false.
+    if (dimCount .ne. 2) correct = .false.
+
+  26.3.25 Field regridding
+
+   This section describes the Field regrid methods. For an in depth
+   description of ESMF regridding and the options available please see
+   Section [797]24.2.
+
+   The basic flow of ESMF Field regridding is as follows. First a source
+   and destination geometry object are created, depending on the regrid
+   method they can be either a Grid, a Mesh, an XGrid, or a LocStream.
+   Next Fields are built on the source and destination grid objects. These
+   Fields are then passed into ESMF_FieldRegridStore(). The user can
+   either get a sparse matrix from this call and/or a routeHandle. If the
+   user gets the sparse matrix then they are responsible for deallocating
+   it, but other than that can use it as they wish. The routeHandle can be
+   used in the ESMF_FieldRegrid() call to perform the actual interpolation
+   of data from the source to the destination field. This interpolation
+   can be repeated for the same set of Fields as long as the coordinates
+   at the staggerloc involved in the regridding in the associated grid
+   object don't change. The same routeHandle can also be used between any
+   pair of Fields that matches the original pari in type, kind, and memory
+   layout of the gridded dimensions. However, the size, number, and index
+   order of ungridded dimensions may be different. See section [798]37.2.5
+   for a more detailed discussion of RouteHandle reusability. However, if
+   you want the routehandle to be the same interpolation between the grid
+   objects upon which the Fields are built as was calculated with the
+   original ESMF_FieldRegridStore() call, then there are additional
+   constraints on the grid objects. To be the same interpolation, the grid
+   objects upon which the Fields are build must contain the same
+   coordinates at the stagger locations involved in the regridding as the
+   original source and destination Fields used in the
+   ESMF_FieldRegridStore() call. The routehandle represents the
+   interpolation between the grid objects as they were during the
+   ESMF_FieldRegridStore() call. So if the coordinates at the stagger
+   location in the grid objects change, a new call to
+   ESMF_FieldRegridStore() is necessary to compute the interpolation
+   between that new set of coordinates. When finished with the routeHandle
+   ESMF_FieldRegridRelease() should be used to free the associated memory.
+
+   The following example demonstrates doing a regrid operation between two
+   Fields.
+
+  ! (Create source Grid, Mesh, XGrid, or LocStream.)
+  ! (Create srcField on the above.)
+
+  ! (Create destination Grid, Mesh, XGrid, or LocStream.)
+  ! (Create dstField on the above.)
+
+  ! Create the routeHandle which encodes the communication and
+  ! information necessary for the regrid sparse matrix multiply.
+  call ESMF_FieldRegridStore(srcField=srcField, dstField=dstField, &
+                             routeHandle=routeHandle, rc=localrc)
+
+
+  ! Can loop here regridding from srcField to dstField
+  ! do i=1,....
+
+       ! (Put data into srcField)
+
+       ! Use the routeHandle to regrid data from srcField to dstField.
+       ! As described above, the same routeHandle can be used to
+       ! regrid a large class of different source and destination Fields.
+       call ESMF_FieldRegrid(srcField, dstField, routeHandle, rc=localrc)
+
+  !    (Use data in dstField)
+
+  ! enddo
+
+
+  ! Free the buffers and data associated with the routeHandle.
+  call ESMF_FieldRegridRelease(routeHandle, rc=localrc)
+
+  26.3.26 Field regrid with masking
+
+   As before, to create the sparse matrix regrid operator we call the
+   ESMF_FieldRegridStore() routine. However, in this case we apply masking
+   to the regrid operation. The mask value for each index location in the
+   Grids may be set using the ESMF_GridAddItem() call (see
+   Section [799]31.3.17 and Section [800]31.3.18). Mask values may be set
+   independently for the source and destination Grids. If no mask values
+   have been set in a Grid, then it is assumed no masking should be used
+   for that Grid. The srcMaskValues parameter allows the user to set the
+   list of values which indicate that a source location should be masked
+   out. The dstMaskValues parameter allows the user to set the list of
+   values which indicate that a destination location should be masked out.
+   The absence of one of these parameters indicates that no masking should
+   be used for that Field (e.g no srcMaskValue parameter indicates that
+   source masking shouldn't occur). The unmappedaction flag may be used
+   with or without masking and indicates what should occur if destination
+   points can not be mapped to a source cell. Here the
+   ESMF_UNMAPPEDACTION_IGNORE value indicates that unmapped destination
+   points are to be ignored and no sparse matrix entries should be
+   generated for them.
+
+  call ESMF_FieldRegridStore(srcField=srcField, srcMaskValues=(/1/),       &
+                             dstField=dstField, dstMaskValues=(/1/),       &
+                             unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, &
+                             routeHandle=routeHandle,                      &
+                             regridmethod=ESMF_REGRIDMETHOD_BILINEAR,     &
+                             rc=localrc)
+
+   The ESMF_FieldRegrid and ESMF_FieldRegridRelease calls may then be
+   applied as in the previous example.
+
+  26.3.27 Field regrid example: Mesh to Mesh
+
+   This example demonstrates the regridding process between Fields created
+   on Meshes. First the Meshes are created. This example omits the setup
+   of the arrays describing the Mesh, but please see Section [801]33.3.1
+   for examples of this. After creation Fields are constructed on the
+   Meshes, and then ESMF_FieldRegridStore() is called to construct a
+   RouteHandle implementing the regrid operation. Finally,
+   ESMF_FieldRegrid() is called with the Fields and the RouteHandle to do
+   the interpolation between the source Field and destination Field. Note
+   the coordinates of the source and destination Mesh should be in
+   degrees.
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Create Source Mesh
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Create the Mesh structure.
+  ! For brevity's sake, the code to fill the Mesh creation
+  ! arrays is omitted from this example. However, here
+  ! is a brief description of the arrays:
+  ! srcNodeIds    - the global ids for the src nodes
+  ! srcNodeCoords - the coordinates for the src nodes
+  ! srcNodeOwners - which PET owns each src node
+  ! srcElemIds    - the global ids of the src elements
+  ! srcElemTypes  - the topological shape of each src element
+  ! srcElemConn   - how to connect the nodes to form the elements
+  !                 in the source mesh
+  ! Several examples of setting up these arrays can be seen in
+  ! the Mesh Section "Mesh Creation".
+  srcMesh=ESMF_MeshCreate(parametricDim=2,spatialDim=2, &
+         nodeIds=srcNodeIds, nodeCoords=srcNodeCoords, &
+         nodeOwners=srcNodeOwners, elementIds=srcElemIds,&
+         elementTypes=srcElemTypes, elementConn=srcElemConn, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Create and Fill Source Field
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Set description of source Field
+  call ESMF_ArraySpecSet(arrayspec, 1, ESMF_TYPEKIND_R8, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Create source Field
+  srcField = ESMF_FieldCreate(srcMesh, arrayspec, &
+                        name="source", rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Get source Field data pointer to put data into
+  call ESMF_FieldGet(srcField, 0, fptr1D,  rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Get number of local nodes to allocate space
+  ! to hold local node coordinates
+  call ESMF_MeshGet(srcMesh, &
+         numOwnedNodes=numOwnedNodes, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Allocate space to hold local node coordinates
+  ! (spatial dimension of Mesh*number of local nodes)
+  allocate(ownedNodeCoords(2*numOwnedNodes))
+
+  ! Get local node coordinates
+  call ESMF_MeshGet(srcMesh, &
+         ownedNodeCoords=ownedNodeCoords, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Set the source Field to the function 20.0+x+y
+  do i=1,numOwnedNodes
+    ! Get coordinates
+    x=ownedNodeCoords(2*i-1)
+    y=ownedNodeCoords(2*i)
+
+   ! Set source function
+   fptr1D(i) = 20.0+x+y
+  enddo
+
+  ! Deallocate local node coordinates
+  deallocate(ownedNodeCoords)
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Create Destination Mesh
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Create the Mesh structure.
+  ! For brevity's sake, the code to fill the Mesh creation
+  ! arrays is omitted from this example. However, here
+  ! is a brief description of the arrays:
+  ! dstNodeIds    - the global ids for the dst nodes
+  ! dstNodeCoords - the coordinates for the dst nodes
+  ! dstNodeOwners - which PET owns each dst node
+  ! dstElemIds    - the global ids of the dst elements
+  ! dstElemTypes  - the topological shape of each dst element
+  ! dstElemConn   - how to connect the nodes to form the elements
+  !                 in the destination mesh
+  ! Several examples of setting up these arrays can be seen in
+  ! the Mesh Section "Mesh Creation".
+  dstMesh=ESMF_MeshCreate(parametricDim=2,spatialDim=2, &
+         nodeIds=dstNodeIds, nodeCoords=dstNodeCoords, &
+         nodeOwners=dstNodeOwners, elementIds=dstElemIds,&
+         elementTypes=dstElemTypes, elementConn=dstElemConn, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Create Destination Field
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Set description of source Field
+  call ESMF_ArraySpecSet(arrayspec, 1, ESMF_TYPEKIND_R8, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Create destination Field
+  dstField = ESMF_FieldCreate(dstMesh, arrayspec, &
+                        name="destination", rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Do Regrid
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Compute RouteHandle which contains the regrid operation
+  call ESMF_FieldRegridStore( &
+          srcField, &
+          dstField=dstField, &
+          routeHandle=routeHandle, &
+          regridmethod=ESMF_REGRIDMETHOD_BILINEAR, &
+          rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Perform Regrid operation moving data from srcField to dstField
+  call ESMF_FieldRegrid(srcField, dstField, routeHandle, rc=rc)
+
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! dstField now contains the interpolated data.
+  ! If the Meshes don't change, then routeHandle
+  ! may be used repeatedly to interpolate from
+  ! srcField to dstField.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+  ! User code to use the routeHandle, Fields, and
+  ! Meshes goes here before they are freed below.
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Free the objects created in the example.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Free the RouteHandle
+  call ESMF_FieldRegridRelease(routeHandle, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Free the Fields
+  call ESMF_FieldDestroy(srcField, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  call ESMF_FieldDestroy(dstField, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  ! Free the Meshes
+  call ESMF_MeshDestroy(dstMesh, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  call ESMF_MeshDestroy(srcMesh, rc=rc)
+
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.28 Gather Field data onto root PET
+
+   User can use ESMF_FieldGather interface to gather Field data from
+   multiple PETs onto a single root PET. This interface is overloaded by
+   type, kind, and rank.
+
+   Note that the implementation of Scatter and Gather is not sequence
+   index based. If the Field is built on arbitrarily distributed Grid,
+   Mesh, LocStream or XGrid, Gather will not gather data to rootPet from
+   source data points corresponding to the sequence index on the rootPet.
+   Instead Gather will gather a contiguous memory range from source PET to
+   rootPet. The size of the memory range is equal to the number of data
+   elements on the source PET. Vice versa for the Scatter operation. In
+   this case, the user should use ESMF_FieldRedist to achieve the same
+   data operation result. For examples how to use ESMF_FieldRedist to
+   perform Gather and Scatter, please refer to [802]26.3.32 and
+   [803]26.3.31.
+
+   In this example, we first create a 2D Field, then use ESMF_FieldGather
+   to collect all the data in this Field into a data pointer on PET 0.
+
+    ! Get current VM and pet number
+    call ESMF_VMGetCurrent(vm, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_VMGet(vm, localPet=lpe, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! Create a 2D Grid and use this grid to create a Field
+    ! farray is the Fortran data array that contains data on each PET.
+    grid = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/10,20/), &
+        regDecomp=(/2,2/), &
+        name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    field = ESMF_FieldCreate(grid, typekind=ESMF_TYPEKIND_I4, rc=localrc)
+    if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+
+    call ESMF_FieldGet(field, farrayPtr=fptr, rc=localrc)
+    if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    !---------Initialize pet specific field data----------------
+    !    1        5         10
+    ! 1  +--------+---------+
+    !    |        |         |
+    !    |   0    |    1    |
+    !    |        |         |
+    ! 10 +--------+---------+
+    !    |        |         |
+    !    |   2    |    3    |
+    !    |        |         |
+    ! 20 +--------+---------+
+    fptr = lpe
+
+    ! allocate the Fortran data array on PET 0 to store gathered data
+    if(lpe .eq. 0) then
+      allocate (farrayDst(10,20))
+    else
+      allocate (farrayDst(0,0))
+    end if
+    call ESMF_FieldGather(field, farrayDst, rootPet=0, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! check that the values gathered on rootPet are correct
+    if(lpe .eq. 0) then
+       do i = 1, 5
+          do j = 1, 10
+             if(farrayDst(i, j) .ne. 0) localrc=ESMF_FAILURE
+          enddo
+       enddo
+      if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       do i = 6, 10
+          do j = 1, 10
+             if(farrayDst(i, j) .ne. 1) localrc=ESMF_FAILURE
+          enddo
+       enddo
+      if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       do i = 1, 5
+          do j = 11, 20
+             if(farrayDst(i, j) .ne. 2) localrc=ESMF_FAILURE
+          enddo
+       enddo
+      if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       do i = 6, 10
+          do j = 11, 20
+             if(farrayDst(i, j) .ne. 3) localrc=ESMF_FAILURE
+          enddo
+       enddo
+      if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    endif
+
+    ! destroy all objects created in this example to prevent memory leak
+    call ESMF_FieldDestroy(field, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    call ESMF_GridDestroy(grid, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    if(lpe .eq. 0) deallocate(farrayDst)
+
+  26.3.29 Scatter Field data from root PET onto its set of joint PETs
+
+   User can use ESMF_FieldScatter interface to scatter Field data from
+   root PET onto its set of joint PETs. This interface is overloaded by
+   type, kind, and rank.
+
+   In this example, we first create a 2D Field, then use ESMF_FieldScatter
+   to scatter the data from a data array located on PET 0 onto this Field.
+
+    ! Create a 2D Grid and use this grid to create a Field
+    ! farray is the Fortran data array that contains data on each PET.
+    grid = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/10,20/), &
+        regDecomp=(/2,2/), &
+        name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    field = ESMF_FieldCreate(grid, typekind=ESMF_TYPEKIND_I4, rc=localrc)
+    if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! initialize values to be scattered
+    !    1        5         10
+    ! 1  +--------+---------+
+    !    |        |         |
+    !    |   0    |    1    |
+    !    |        |         |
+    ! 10 +--------+---------+
+    !    |        |         |
+    !    |   2    |    3    |
+    !    |        |         |
+    ! 20 +--------+---------+
+    if(lpe .eq. 0) then
+        allocate(farraySrc(10,20))
+        farraySrc(1:5,1:10) = 0
+        farraySrc(6:10,1:10) = 1
+        farraySrc(1:5,11:20) = 2
+        farraySrc(6:10,11:20) = 3
+    else
+      allocate (farraySrc(0,0))
+    endif
+
+    ! scatter the data onto individual PETs of the Field
+    call ESMF_FieldScatter(field, farraySrc, rootPet=0, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_FieldGet(field, localDe=0, farrayPtr=fptr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! verify that the scattered data is properly distributed
+    do i = lbound(fptr, 1), ubound(fptr, 1)
+        do j = lbound(fptr, 2), ubound(fptr, 2)
+            if(fptr(i, j) .ne. lpe) localrc = ESMF_FAILURE
+        enddo
+        if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    enddo
+
+    ! destroy all objects created in this example to prevent memory leak
+    call ESMF_FieldDestroy(field, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    call ESMF_GridDestroy(grid, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    if(lpe .eq. 0) deallocate(farraySrc)
+
+  26.3.30 Redistribute data from source Field to destination Field
+
+   User can use ESMF_FieldRedist interface to redistribute data from
+   source Field to destination Field. This interface is overloaded by type
+   and kind; In the version of ESMF_FieldRedist without factor argument, a
+   default value of 1 is used.
+
+   In this example, we first create two 1D Fields, a source Field and a
+   destination Field. Then we use ESMF_FieldRedist to redistribute data
+   from source Field to destination Field.
+
+    ! Get current VM and pet number
+    call ESMF_VMGetCurrent(vm, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_VMGet(vm, localPet=localPet, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create grid
+    distgrid = ESMF_DistGridCreate(minIndex=(/1/), maxIndex=(/16/), &
+            regDecomp=(/4/), &
+            rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    grid = ESMF_GridCreate(distgrid=distgrid, &
+        name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create srcField
+    ! +--------+--------+--------+--------+
+    !      0        1        2        3            ! value
+    ! 1        4        8        12       16       ! bounds
+    srcField = ESMF_FieldCreate(grid, typekind=ESMF_TYPEKIND_I4, &
+      indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_FieldGet(srcField, farrayPtr=srcfptr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    srcfptr(:) = localPet
+
+    ! create dstField
+    ! +--------+--------+--------+--------+
+    !      0        0        0        0            ! value
+    ! 1        4        8        12       16       ! bounds
+    dstField = ESMF_FieldCreate(grid, typekind=ESMF_TYPEKIND_I4, &
+      indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_FieldGet(dstField, farrayPtr=dstfptr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    dstfptr(:) = 0
+
+    ! perform redist
+    ! 1. setup routehandle from source Field to destination Field
+    call ESMF_FieldRedistStore(srcField, dstField, routehandle, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! 2. use precomputed routehandle to redistribute data
+    call ESMF_FieldRedist(srcfield, dstField, routehandle, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! verify redist
+    call ESMF_FieldGet(dstField, localDe=0, farrayPtr=fptr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! Verify that the redistributed data in dstField is correct.
+    ! Before the redist op, the dst Field contains all 0.
+    ! The redist op reset the values to the PE value, verify this is the case.
+    do i = lbound(fptr, 1), ubound(fptr, 1)
+        if(fptr(i) .ne. localPet) localrc = ESMF_FAILURE
+    enddo
+    if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Field redistribution can also be performed between different Field
+   pairs that match the original Fields in type, kind, and memory layout
+   of the gridded dimensions. However, the size, number, and index order
+   of ungridded dimensions may be different. See section [804]37.2.5 for a
+   more detailed discussion of RouteHandle reusability.
+
+    call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_I4, rank=2, rc=rc)
+
+   Create two fields with ungridded dimensions using the Grid created
+   previously. The new Field pair has matching number of elements. The
+   ungridded dimension is mapped to the first dimension of either Field.
+
+    srcFieldA = ESMF_FieldCreate(grid, arrayspec, gridToFieldMap=(/2/), &
+        ungriddedLBound=(/1/), ungriddedUBound=(/10/), rc=rc)
+
+    dstFieldA = ESMF_FieldCreate(grid, arrayspec, gridToFieldMap=(/2/), &
+        ungriddedLBound=(/1/), ungriddedUBound=(/10/), rc=rc)
+
+   Using the previously computed routehandle, the Fields can be
+   redistributed.
+
+    call ESMF_FieldRedist(srcfieldA, dstFieldA, routehandle, rc=rc)
+
+    call ESMF_FieldRedistRelease(routehandle, rc=rc)
+
+  26.3.31 FieldRedist as a form of scatter involving arbitrary distribution
+
+   User can use ESMF_FieldRedist interface to redistribute data from
+   source Field to destination Field, where the destination Field is built
+   on an arbitrarily distributed structure, e.g. ESMF_Mesh. The underlying
+   mechanism is explained in section [805]28.2.19.
+
+   In this example, we will create 2 one dimensional Fields, the src Field
+   has a regular decomposition and holds all its data on a single PET, in
+   this case PET 0. The destination Field is built on a Mesh which is
+   itself built on an arbitrarily distributed distgrid. Then we use
+   ESMF_FieldRedist to redistribute data from source Field to destination
+   Field, similar to a traditional scatter operation.
+
+   The src Field only has data on PET 0 where it is sequentially
+   initialized, i.e. 1,2,3...This data will be redistributed (or
+   scattered) from PET 0 to the destination Field arbitrarily distributed
+   on all the PETs.
+
+    ! a one dimensional grid whose elements are all located on PET 0
+    distgrid = ESMF_DistGridCreate(minIndex=(/1/), maxIndex=(/9/), &
+        regDecomp=(/1/), &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    grid = ESMF_GridCreate(distgrid=distgrid, &
+        indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    srcField = ESMF_FieldCreate(grid, typekind=ESMF_TYPEKIND_I4, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! initialize the source data
+    if (localPet == 0) then
+        call ESMF_FieldGet(srcField, farrayPtr=srcfptr, rc=rc)
+        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+        do i = 1, 9
+            srcfptr(i) = i
+        enddo
+    endif
+
+   For more information on Mesh creation, user can refer to Mesh examples
+   section or Field creation on Mesh example for more details.
+
+      ! Create Mesh structure
+      mesh=ESMF_MeshCreate(parametricDim=2,spatialDim=2, &
+             nodeIds=nodeIds, nodeCoords=nodeCoords, &
+             nodeOwners=nodeOwners, elementIds=elemIds,&
+             elementTypes=elemTypes, elementConn=elemConn, &
+             rc=rc)
+      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Create the destination Field on the Mesh that is arbitrarily
+   distributed on all the PETs.
+
+      dstField = ESMF_FieldCreate(mesh, typekind=ESMF_TYPEKIND_I4, rc=rc)
+      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Perform the redistribution from source Field to destination Field.
+
+     call ESMF_FieldRedistStore(srcField, dstField, &
+             routehandle=routehandle, rc=rc)
+     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+     call ESMF_FieldRedist(srcField, dstField, routehandle=routehandle, rc=rc)
+     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   We can now verify that the sequentially initialized source data is
+   scattered on to the destination Field. The data has been scattered onto
+   the destination Field with the following distribution.
+
+   4 elements on PET 0:  1 2 4 5
+   2 elements on PET 1:  3 6
+   2 elements on PET 2:  7 8
+   1 element  on PET 3:  9
+
+   Because the redistribution is index based, the elements also
+   corresponds to the index space of Mesh in the destination Field.
+
+    call ESMF_FieldGet(dstField, farrayPtr=dstfptr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   The scatter operation is successful. Since the routehandle computed
+   with ESMF_FieldRedistStore can be reused, user can use the same
+   routehandle to scatter multiple source Fields from a single PET to
+   multiple destination Fields distributed on all PETs. The gathering
+   operation is just the opposite of the demonstrated scattering
+   operation, where a user would redist from a source Field distributed on
+   multiple PETs to a destination Field that only has data storage on a
+   single PET.
+
+   Now it's time to release all the resources.
+
+    call ESMF_FieldRedistRelease(routehandle=routehandle, rc=rc)
+
+  26.3.32 FieldRedist as a form of gather involving arbitrary distribution
+
+   Similarly, one can use the same approach to gather the data from an
+   arbitrary distribution to a non-arbitrary distribution. This concept is
+   demonstrated by using the previous Fields but the data operation is
+   reversed. This time data is gathered from the Field built on the mesh
+   to the Field that has only data allocation on rootPet.
+
+   First a FieldRedist routehandle is created from the Field built on Mesh
+   to the Field that has only data allocation on rootPet.
+
+    call ESMF_FieldRedistStore(dstField, srcField, routehandle=routehandle, &
+         rc=rc)
+
+   Perform FieldRedist, this will gather the data points from the Field
+   built on mesh to the data pointer on the rootPet (default to 0) stored
+   in the srcField.
+
+    call ESMF_FieldRedist(dstField, srcField, routehandle=routehandle, rc=rc)
+
+   Release the routehandle used for the gather operation.
+
+    call ESMF_FieldRedistRelease(routehandle=routehandle, rc=rc)
+
+  26.3.33 Sparse matrix multiplication from source Field to destination Field
+
+   The ESMF_FieldSMM() interface can be used to perform sparse matrix
+   multiplication from source Field to destination Field. This interface
+   is overloaded by type and kind;
+
+   In this example, we first create two 1D Fields, a source Field and a
+   destination Field. Then we use ESMF_FieldSMM to perform sparse matrix
+   multiplication from source Field to destination Field.
+
+   The source and destination Field data are arranged such that each of
+   the 4 PETs has 4 data elements. Moreover, the source Field has all its
+   data elements initialized to a linear function based on local PET
+   number. Then collectively on each PET, a SMM according to the following
+   formula is preformed:
+   $dstField(i) = i * srcField(i), i = 1 ... 4$
+
+   Because source Field data are initialized to a linear function based on
+   local PET number, the formula predicts that the result destination
+   Field data on each PET is 1,2,3,4. This is verified in the example.
+
+   Section [806]28.2.18 provides a detailed discussion of the sparse
+   matrix multiplication operation implemented in ESMF.
+
+    ! Get current VM and pet number
+    call ESMF_VMGetCurrent(vm, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_VMGet(vm, localPet=lpe, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create distgrid and grid
+    distgrid = ESMF_DistGridCreate(minIndex=(/1/), maxIndex=(/16/), &
+        regDecomp=(/4/), &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    grid = ESMF_GridCreate(distgrid=distgrid, &
+        name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_GridGetFieldBounds(grid, localDe=0, totalCount=fa_shape, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create src\_farray, srcArray, and srcField
+    ! +--------+--------+--------+--------+
+    !      1        2        3        4            ! value
+    ! 1        4        8        12       16       ! bounds
+    allocate(src_farray(fa_shape(1)) )
+    src_farray = lpe+1
+    srcArray = ESMF_ArrayCreate(distgrid, src_farray, &
+                indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    srcField = ESMF_FieldCreate(grid, srcArray, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! create dst_farray, dstArray, and dstField
+    ! +--------+--------+--------+--------+
+    !      0        0        0        0            ! value
+    ! 1        4        8        12       16       ! bounds
+    allocate(dst_farray(fa_shape(1)) )
+    dst_farray = 0
+    dstArray = ESMF_ArrayCreate(distgrid, dst_farray, &
+                indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    dstField = ESMF_FieldCreate(grid, dstArray, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! perform sparse matrix multiplication
+    ! 1. setup routehandle from source Field to destination Field
+    ! initialize factorList and factorIndexList
+    allocate(factorList(4))
+    allocate(factorIndexList(2,4))
+    factorList = (/1,2,3,4/)
+    factorIndexList(1,:) = (/lpe*4+1,lpe*4+2,lpe*4+3,lpe*4+4/)
+    factorIndexList(2,:) = (/lpe*4+1,lpe*4+2,lpe*4+3,lpe*4+4/)
+
+    call ESMF_FieldSMMStore(srcField, dstField, routehandle, &
+        factorList, factorIndexList, rc=localrc)
+    if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! 2. use precomputed routehandle to perform SMM
+    call ESMF_FieldSMM(srcfield, dstField, routehandle, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! verify sparse matrix multiplication
+    call ESMF_FieldGet(dstField, localDe=0, farrayPtr=fptr, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! Verify that the result data in dstField is correct.
+    ! Before the SMM op, the dst Field contains all 0.
+    ! The SMM op reset the values to the index value, verify this is the case.
+    ! +--------+--------+--------+--------+
+    !  1 2 3 4  2 4 6 8  3 6 9 12  4 8 12 16       ! value
+    ! 1        4        8        12       16       ! bounds
+    do i = lbound(fptr, 1), ubound(fptr, 1)
+        if(fptr(i) /= i*(lpe+1)) rc = ESMF_FAILURE
+    enddo
+
+   Field sparse matrix multiplication can also be applied between Fields
+   that matche the original Fields in type, kind, and memory layout of the
+   gridded dimensions. However, the size, number, and index order of
+   ungridded dimensions may be different. See section [807]37.2.5 for a
+   more detailed discussion of RouteHandle reusability
+    call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_I4, rank=2, rc=rc)
+
+   Create two fields with ungridded dimensions using the Grid created
+   previously. The new Field pair has matching number of elements. The
+   ungridded dimension is mapped to the first dimension of either Field.
+
+    srcFieldA = ESMF_FieldCreate(grid, arrayspec, gridToFieldMap=(/2/), &
+        ungriddedLBound=(/1/), ungriddedUBound=(/10/), rc=rc)
+
+    dstFieldA = ESMF_FieldCreate(grid, arrayspec, gridToFieldMap=(/2/), &
+        ungriddedLBound=(/1/), ungriddedUBound=(/10/), rc=rc)
+
+   Using the previously computed routehandle, the sparse matrix
+   multiplication can be performed between the Fields.
+
+    call ESMF_FieldSMM(srcfieldA, dstFieldA, routehandle, rc=rc)
+
+    ! release route handle
+    call ESMF_FieldSMMRelease(routehandle, rc=rc)
+
+   In the following discussion, we demonstrate how to set up a SMM
+   routehandle between a pair of Fields that are different in number of
+   gridded dimensions and the size of those gridded dimensions. The source
+   Field has a 1D decomposition with 16 total elements; the destination
+   Field has a 2D decomposition with 12 total elements. For ease of
+   understanding of the actual matrix calculation, a global indexing
+   scheme is used.
+
+    distgrid = ESMF_DistGridCreate(minIndex=(/1/), maxIndex=(/16/), &
+        indexflag=ESMF_INDEX_GLOBAL, &
+        regDecomp=(/4/), &
+        rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    grid = ESMF_GridCreate(distgrid=distgrid, &
+        indexflag=ESMF_INDEX_GLOBAL, &
+        name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    call ESMF_GridGetFieldBounds(grid, localDe=0, totalLBound=tlb, &
+                       totalUBound=tub, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   create 1D src_farray, srcArray, and srcField
+   +  PET0  +  PET1  +  PET2  +  PET3  +
+   +--------+--------+--------+--------+
+        1        2        3        4            ! value
+   1        4        8        12       16       ! bounds of seq indices
+
+    allocate(src_farray2(tlb(1):tub(1)) )
+    src_farray2 = lpe+1
+    srcArray = ESMF_ArrayCreate(distgrid, src_farray2, &
+                  indexflag=ESMF_INDEX_GLOBAL, &
+      rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    !print *, lpe, '+', tlb, tub, '+', src_farray2
+
+    srcField = ESMF_FieldCreate(grid, srcArray, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Create 2D dstField on the following distribution (numbers are the
+   sequence indices):
+   +  PET0  +  PET1  +  PET2  +  PET3  +
+   +--------+--------+--------+--------+
+   |        |        |        |        |
+   |   1    |   4    |   7    |   10   |
+   |        |        |        |        |
+   +--------+--------+--------+--------+
+   |        |        |        |        |
+   |   2    |   5    |   8    |   11   |
+   |        |        |        |        |
+   +--------+--------+--------+--------+
+   |        |        |        |        |
+   |   3    |   6    |   9    |   12   |
+   |        |        |        |        |
+   +--------+--------+--------+--------+
+
+    ! Create the destination Grid
+    dstGrid = ESMF_GridCreateNoPeriDim(minIndex=(/1,1/), maxIndex=(/3,4/), &
+      indexflag = ESMF_INDEX_GLOBAL, &
+      regDecomp = (/1,4/), &
+      rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    dstField = ESMF_FieldCreate(dstGrid, typekind=ESMF_TYPEKIND_R4, &
+      indexflag=ESMF_INDEX_GLOBAL, &
+      rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Perform sparse matrix multiplication $dst_i$ = $M_{i,j}$ * $src_j$
+   First setup routehandle from source Field to destination Field with
+   prescribed factorList and factorIndexList.
+
+   The sparse matrix is of size 12x16, however only the following entries
+   are filled:
+   M(3,1) = 0.1
+   M(3,10) = 0.4
+   M(8,2) = 0.25
+   M(8,16) = 0.5
+   M(12,1) = 0.3
+   M(12,16) = 0.7
+
+   By the definition of matrix calculation, the 8th element on PET2 in the
+   dstField equals to 0.25*srcField(2) + 0.5*srcField(16) =
+   0.25*1+0.5*4=2.25 For simplicity, we will load the factorList and
+   factorIndexList on PET 0 and 1, the SMMStore engine will load balance
+   the parameters on all 4 PETs internally for optimal performance.
+
+    if(lpe == 0) then
+      allocate(factorList(3), factorIndexList(2,3))
+      factorList=(/0.1,0.4,0.25/)
+      factorIndexList(1,:)=(/1,10,2/)
+      factorIndexList(2,:)=(/3,3,8/)
+      call ESMF_FieldSMMStore(srcField, dstField, routehandle=routehandle, &
+          factorList=factorList, factorIndexList=factorIndexList, rc=localrc)
+      if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    else if(lpe == 1) then
+      allocate(factorList(3), factorIndexList(2,3))
+      factorList=(/0.5,0.3,0.7/)
+      factorIndexList(1,:)=(/16,1,16/)
+      factorIndexList(2,:)=(/8,12,12/)
+      call ESMF_FieldSMMStore(srcField, dstField, routehandle=routehandle, &
+          factorList=factorList, factorIndexList=factorIndexList, rc=localrc)
+      if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    else
+      call ESMF_FieldSMMStore(srcField, dstField, routehandle=routehandle, &
+          rc=localrc)
+      if (localrc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    endif
+
+    ! 2. use precomputed routehandle to perform SMM
+    call ESMF_FieldSMM(srcfield, dstField, routehandle=routehandle, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  26.3.34 Field Halo solving a domain decomposed heat transfer problem
+
+   The ESMF_FieldHalo() interface can be used to perform halo updates for
+   a Field. This eases communication programming from a user perspective.
+   By definition, the user program only needs to update locally owned
+   exclusive region in each domain, then call FieldHalo to communicate the
+   values in the halo region from/to neighboring domain elements. In this
+   example, we solve a 1D heat transfer problem: $u_t = \alpha^2 u_{xx}$
+   with the initial condition $u(0, x) = 20$ and boundary conditions $u(t,
+   0) = 10, u(t, 1) = 40$ . The temperature field $u$ is represented by a
+   ESMF_Field. A finite difference explicit time stepping scheme is
+   employed. During each time step, FieldHalo update is called to
+   communicate values in the halo region to neighboring domain elements.
+   The steady state (as $t \rightarrow \infty$ ) solution is a linear
+   temperature profile along $x$ . The numerical solution is an
+   approximation of the steady state solution. It can be verified to
+   represent a linear temperature profile.
+
+   Section [808]28.2.15 provides a discussion of the halo operation
+   implemented in ESMF_Array.
+
+! create 1D distgrid and grid decomposed according to the following diagram:
+! +------------+   +----------------+   +---------------+   +--------------+
+! |   DE 0  |  |   |  |   DE 1   |  |   |  |   DE 2  |  |   |  |   DE 3    |
+! |  1 x 16 |  |   |  |  1 x 16  |  |   |  |  1 x 16 |  |   |  |  1 x 16   |
+! |         | 1|<->|1 |          | 1|<->|1 |         | 1|<->|1 |           |
+! |         |  |   |  |          |  |   |  |         |  |   |  |           |
+! +------------+   +----------------+   +---------------+   +--------------+
+    distgrid = ESMF_DistGridCreate(minIndex=(/1/), maxIndex=(/npx/), &
+        regDecomp=(/4/), rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    grid = ESMF_GridCreate(distgrid=distgrid, name="grid", rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    ! set up initial condition and boundary conditions of the
+    ! temperature Field
+    if(lpe == 0) then
+        allocate(fptr(17), tmp_farray(17))
+        fptr = 20.
+        fptr(1) = 10.
+        tmp_farray(1) = 10.
+        startx = 2
+        endx = 16
+
+        field = ESMF_FieldCreate(grid, fptr, totalUWidth=(/1/), &
+                name="temperature", rc=rc)
+        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    else if(lpe == 3) then
+        allocate(fptr(17), tmp_farray(17))
+        fptr = 20.
+        fptr(17) = 40.
+        tmp_farray(17) = 40.
+        startx = 2
+        endx = 16
+
+        field = ESMF_FieldCreate(grid, fptr, totalLWidth=(/1/), &
+                name="temperature", rc=rc)
+        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    else
+        allocate(fptr(18), tmp_farray(18))
+        fptr = 20.
+        startx = 2
+        endx = 17
+
+        field = ESMF_FieldCreate(grid, fptr, &
+            totalLWidth=(/1/), totalUWidth=(/1/), name="temperature", rc=rc)
+        if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    endif
+
+    ! compute the halo update routehandle of the decomposed temperature Field
+    call ESMF_FieldHaloStore(field, routehandle=routehandle, rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    dt = 0.01
+    dx = 1./npx
+    alpha = 0.1
+
+    ! Employ explicit time stepping
+    ! Solution converges after about 9000 steps based on apriori knowledge.
+    ! The result is a linear temperature profile stored in field.
+    do iter = 1, 9000
+     ! only elements in the exclusive region are updated locally
+     ! in each domain
+     do i = startx, endx
+       tmp_farray(i) = &
+       fptr(i)+alpha*alpha*dt/dx/dx*(fptr(i+1)-2.*fptr(i)+fptr(i-1))
+      enddo
+      fptr = tmp_farray
+     ! call halo update to communicate the values in the halo region to
+     ! neighboring domains
+     call ESMF_FieldHalo(field, routehandle=routehandle, rc=rc)
+     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    enddo
+
+    ! release the halo routehandle
+    call ESMF_FieldHaloRelease(routehandle, rc=rc)
+
+26.4 Restrictions and Future Work
+
+    1. CAUTION: It depends on the specific entry point of
+       ESMF_FieldCreate() used during Field creation, which Fortran
+       operations are supported on the Fortran array pointer farrayPtr,
+       returned by ESMF_FieldGet(). Only if the ESMF_FieldCreate() from
+       pointer variant was used, will the returned farrayPtr variable
+       contain the original bounds information, and be suitable for the
+       Fortran deallocate() call. This limitation is a direct consequence
+       of the Fortran 95 standard relating to the passing of array
+       arguments.
+    2. No mathematical operators. The Fields class does not currently
+       support advanced operations on fields, such as differential or
+       other mathematical operators.
+    3. No vector Fields. ESMF does not currently support storage of
+       multiple vector Field components in the same Field component,
+       although that support is planned. At this time users need to create
+       a separate Field object to represent each vector component.
+
+26.5 Design and Implementation Notes
+
+    1. Some methods which have a Field interface are actually implemented
+       at the underlying Grid or Array level; they are inherited by the
+       Field class. This allows the user API (Application Programming
+       Interface) to present functions at the level which is most
+       consistent to the application without restricting where inside the
+       ESMF the actual implementation is done.
+    2. The Field class is implemented in Fortran, and as such is defined
+       inside the framework by a Field derived type and a set of
+       subprograms (functions and subroutines) which operate on that
+       derived type. The Field class itself is very thin; it is a
+       container class which groups a Grid and an Array object together.
+    3. Fields follow the framework-wide convention of the unison creation
+       and operation rule: All PETs which are part of the currently
+       executing VM must create the same Fields at the same point in their
+       execution. Since an early user request was that global object
+       creation not impose the overhead of a barrier or synchronization
+       point, Field creation does no inter-PET communication. For this to
+       work, each PET must query the total number of PETs in this VM, and
+       which local PET number it is. It can then compute which DE(s) are
+       part of the local decomposition, and any global information can be
+       computed in unison by all PETs independently of the others. In this
+       way the overhead of communication is avoided, at the cost of more
+       difficulty in diagnosing program bugs which result from not all
+       PETs executing the same create calls.
+    4. Related to the item above, the user request to not impose inter-PET
+       communication at object creation time means that requirement FLD
+       1.5.1, that all Fields will have unique names, and if not
+       specified, the framework will generate a unique name for it, is
+       difficult or impossible to support. A part of this requirement has
+       been implemented; a unique object counter is maintained in the Base
+       object class, and if a name is not given at create time a name such
+       as "Field003" is generated which is guaranteed to not be repeated
+       by the framework. However, it is impossible to error check that the
+       user has not replicated a name, and it is possible under certain
+       conditions that if not all PETs have created the same number of
+       objects, that the counters on different PETs may not stay
+       synchronized. This remains an open issue.
+
+26.6 Class API
+
+  26.6.1 ESMF_FieldAssignment(=) - Field assignment
+
+   INTERFACE:
+   interface assignment(=)
+   field1 = field2
+
+   ARGUMENTS:
+   type(ESMF_Field) :: field1
+   type(ESMF_Field) :: field2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign field1 as an alias to the same ESMF Field object in memory as
+   field2. If field2 is invalid, then field1 will be equally invalid after
+   the assignment.
+
+   The arguments are:
+
+   field1
+          The ESMF_Field object on the left hand side of the assignment.
+
+   field2
+          The ESMF_Field object on the right hand side of the assignment.
+
+  26.6.2 ESMF_FieldOperator(==) - Field equality operator
+
+   INTERFACE:
+   interface operator(==)
+   if (field1 == field2) then ... endif
+   OR
+   result = (field1 == field2)
+
+   RETURN VALUE:
+   logical :: result
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(in) :: field1
+   type(ESMF_Field), intent(in) :: field2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether field1 and field2 are valid aliases to the same ESMF Field
+   object in memory. For a more general comparison of two ESMF Fields,
+   going beyond the simple alias test, the ESMF_FieldMatch() function (not
+   yet implemented) must be used.
+
+   The arguments are:
+
+   field1
+          The ESMF_Field object on the left hand side of the equality
+          operation.
+
+   field2
+          The ESMF_Field object on the right hand side of the equality
+          operation.
+
+  26.6.3 ESMF_FieldOperator(/=) - Field not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+   if (field1 /= field2) then ... endif
+   OR
+   result = (field1 /= field2)
+
+   RETURN VALUE:
+   logical :: result
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(in) :: field1
+   type(ESMF_Field), intent(in) :: field2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether field1 and field2 are not valid aliases to the same ESMF
+   Field object in memory. For a more general comparison of two ESMF
+   Fields, going beyond the simple alias test, the ESMF_FieldMatch()
+   function (not yet implemented) must be used.
+
+   The arguments are:
+
+   field1
+          The ESMF_Field object on the left hand side of the non-equality
+          operation.
+
+   field2
+          The ESMF_Field object on the right hand side of the non-equality
+          operation.
+

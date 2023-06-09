@@ -1,0 +1,104 @@
+  18.4.9 ESMF_CplCompInitialize - Call the CplComp's initialize routine
+
+   INTERFACE:
+   recursive subroutine ESMF_CplCompInitialize(cplcomp, &
+     importState, exportState, clock, syncflag, phase, timeout, timeoutFlag, &
+     userRc, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp),   intent(inout)           :: cplcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_State),     intent(inout), optional :: importState
+     type(ESMF_State),     intent(inout), optional :: exportState
+     type(ESMF_Clock),     intent(inout), optional :: clock
+     type(ESMF_Sync_Flag), intent(in),    optional :: syncflag
+     integer,              intent(in),    optional :: phase
+     integer,              intent(in),    optional :: timeout
+     logical,              intent(out),   optional :: timeoutFlag
+     integer,              intent(out),   optional :: userRc
+     integer,              intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        5.3.0
+                Added argument timeout. Added argument timeoutFlag. The
+                new arguments provide access to the fault-tolerant
+                component features.
+
+   DESCRIPTION:
+
+   Call the associated user initialization routine for an ESMF_CplComp.
+
+   The arguments are:
+
+   cplcomp
+          ESMF_CplComp to call initialize routine for.
+
+   [importState]
+          ESMF_State containing import data for coupling. If not present,
+          a dummy argument will be passed to the user-supplied routine.
+          The importState argument in the user code cannot be optional.
+
+   [exportState]
+          ESMF_State containing export data for coupling. If not present,
+          a dummy argument will be passed to the user-supplied routine.
+          The exportState argument in the user code cannot be optional.
+
+   [clock]
+          External ESMF_Clock for passing in time information. This is
+          generally the parent component's clock, and will be treated as
+          read-only by the child component. The child component can
+          maintain a private clock for its own internal time computations.
+          If not present, a dummy argument will be passed to the
+          user-supplied routine. The clock argument in the user code
+          cannot be optional.
+
+   [syncflag]
+          Blocking behavior of this method call. See section [286]54.57
+          for a list of valid blocking options. Default option is
+          ESMF_SYNC_VASBLOCKING which blocks PETs and their spawned off
+          threads across each VAS but does not synchronize PETs that run
+          in different VASs.
+
+   [phase]
+          Component providers must document whether each of their routines
+          are single-phase or multi-phase. Single-phase routines require
+          only one invocation to complete their work. Multi-phase routines
+          provide multiple subroutines to accomplish the work,
+          accommodating components which must complete part of their work,
+          return to the caller and allow other processing to occur, and
+          then continue the original operation. For multiple-phase child
+          components, this is the integer phase number to be invoked. For
+          single-phase child components this argument is optional. The
+          default is 1.
+
+   [timeout]
+          The maximum period in seconds that this call will wait in
+          communications with the actual component, before returning with
+          a timeout condition. The default is 3600, i.e. 1 hour. The
+          timeout argument is only supported for connected dual
+          components.
+
+   [timeoutFlag]
+          Returns .true. if the timeout was reached, .false. otherwise. If
+          timeoutFlag was not provided, a timeout condition will lead to a
+          return code of rc \= ESMF_SUCCESS. Otherwise the return value of
+          timeoutFlag is the sole indicator of a timeout condition.
+
+   [userRc]
+          Return code set by userRoutine before returning.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

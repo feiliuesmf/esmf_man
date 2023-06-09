@@ -1,0 +1,40 @@
+  53.4.14 ESMF_UtilIOUnitGet - Scan for a free I/O unit number
+
+   INTERFACE:
+   subroutine ESMF_UtilIOUnitGet(unit, rc)
+
+   ARGUMENTS:
+     integer, intent(out)           :: unit
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Scan for, and return, a free Fortran I/O unit number. By default, the
+   range of unit numbers returned is between 50 and 99 (parameters
+   ESMF_LOG_FORTRAN_UNIT_NUMBER and ESMF_LOG_UPPER respectively.) When
+   integrating ESMF into an application where these values conflict with
+   other usages, the range of values may be moved by setting the optional
+   IOUnitLower and IOUnitUpper arguments in the initial ESMF_Initialize()
+   call with values in a safe, alternate, range.
+
+   The Fortran unit number which is returned is not reserved in any way.
+   Successive calls without intervening OPEN or CLOSE statements (or other
+   means of connecting to units), might not return a unique unit number.
+   It is recommended that an OPEN statement immediately follow the call to
+   ESMF_IOUnitGet() to activate the unit.
+
+   The arguments are:
+
+   unit
+          A Fortran I/O unit number.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

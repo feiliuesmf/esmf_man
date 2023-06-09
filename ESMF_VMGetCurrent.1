@@ -1,0 +1,49 @@
+  51.6.21 ESMF_VMGetCurrent - Get Current VM
+
+   INTERFACE:
+   subroutine ESMF_VMGetCurrent(vm, rc)
+
+   ARGUMENTS:
+     type(ESMF_VM), intent(out)           :: vm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,       intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Get the ESMF_VM object of the current execution context. Calling
+   ESMF_VMGetCurrent() within an ESMF Component, will return the same VM
+   object as ESMF_GridCompGet(..., vm=vm, ...) or ESMF_CplCompGet(...,
+   vm=vm, ...).
+
+   The main purpose of providing ESMF_VMGetCurrent() is to simplify ESMF
+   adoption in legacy code. Specifically, code that uses MPI_COMM_WORLD
+   deep within its calling tree can easily be modified to use the correct
+   MPI communicator of the current ESMF execution context. The advantage
+   is that these modifications are very local, and do not require wide
+   reaching interface changes in the legacy code to pass down the ESMF
+   component object, or the MPI communicator.
+
+   The use of ESMF_VMGetCurrent() is strongly discouraged in newly written
+   Component code. Instead, the ESMF Component object should be used as
+   the appropriate container of ESMF context information. This object
+   should be passed between the subroutines of a Component, and be queried
+   for any Component specific information.
+
+   Outside of a Component context, i.e. within the driver context, the
+   call to ESMF_VMGetCurrent() is identical to ESMF_VMGetGlobal().
+
+   The arguments are:
+
+   vm
+          Upon return this holds the ESMF_VM object of the current
+          execution context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

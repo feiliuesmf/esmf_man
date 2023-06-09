@@ -1,0 +1,58 @@
+  49.7.14 ESMF_LogSetError - Set ESMF return code for error and write msg
+
+   INTERFACE:
+       subroutine ESMF_LogSetError(rcToCheck,  &
+                                   msg, line, file, method, &
+                                   rcToReturn, log)
+
+   ARGUMENTS:
+       integer,          intent(in)              :: rcToCheck
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character(len=*), intent(in),    optional :: msg
+       integer,          intent(in),    optional :: line
+       character(len=*), intent(in),    optional :: file
+       character(len=*), intent(in),    optional :: method
+       integer,          intent(out),   optional :: rcToReturn
+       type(ESMF_Log),   intent(inout), optional :: log
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This subroutine sets the rcToReturn value to rcToCheck if rcToReturn is
+   present and writes this error code to the ESMF_Log if an error is
+   generated. A predefined error message will added to the ESMF_Log along
+   with a user added msg, line, file and method.
+
+   The arguments are:
+
+   rcToCheck
+          rc value for set
+
+   [msg]
+          User-provided message string.
+
+   [line]
+          Integer source line number. Expected to be set by using the
+          preprocessor macro __LINE__ macro.
+
+   [file]
+          User-provided source file name.
+
+   [method]
+          User-provided method string.
+
+   [rcToReturn]
+          If specified, copy the rcToCheck value to rcToreturn. This is
+          not the return code for this function; it allows the calling
+          code to do an assignment of the error code at the same time it
+          is testing the value.
+
+   [log]
+          An optional ESMF_Log object that can be used instead of the
+          default Log.
+

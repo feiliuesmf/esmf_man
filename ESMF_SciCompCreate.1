@@ -1,0 +1,28 @@
+  19.4.4 ESMF_SciCompCreate - Create a SciComp
+
+   INTERFACE:
+   recursive function ESMF_SciCompCreate(name, rc)
+
+   RETURN VALUE:
+     type(ESMF_SciComp) :: ESMF_SciCompCreate
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len=*),        intent(in),    optional :: name
+     integer,                 intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   This interface creates an ESMF_SciComp object. The return value is the
+   new ESMF_SciComp.
+
+   The arguments are:
+
+   [name]
+          Name of the newly-created ESMF_SciComp. This name can be altered
+          from within the ESMF_SciComp code once the initialization
+          routine is called.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

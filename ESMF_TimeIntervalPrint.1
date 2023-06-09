@@ -1,0 +1,41 @@
+  44.4.21 ESMF_TimeIntervalPrint - Print TimeInterval information
+
+   INTERFACE:
+       subroutine ESMF_TimeIntervalPrint(timeinterval, options, rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in)            :: timeinterval
+       character (len=*),       intent(in),  optional :: options
+       integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Prints out the contents of an ESMF_TimeInterval to stdout, in support
+   of testing and debugging. The options control the type of information
+   and level of detail.
+
+   The arguments are:
+
+   timeinterval
+          Time interval to be printed out.
+
+   [options]
+          Print options. If none specified, prints all timeinterval
+          property values.
+          "string" - prints timeinterval's value in ISO 8601 format for
+          all units through seconds. For any non-zero fractional seconds,
+          prints in integer rational fraction form n/d. Format is
+          PyYmMdDThHmMs[:n/d]S, where [:n/d] is the integer numerator and
+          denominator of the fractional seconds value, if present.
+          See [[583]26] and [[584]14]. See also method
+          ESMF_TimeIntervalGet(..., timeString= , ...)
+          "string isofrac" - prints timeinterval's value in strict ISO
+          8601 format for all units, including any fractional seconds
+          part. Format is PyYmMdDThHmMs[.f]S, where [.f] represents
+          fractional seconds in decimal form, if present. See [[585]26]
+          and [[586]14]. See also method ESMF_TimeIntervalGet(...,
+          timeStringISOFrac= , ...)
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

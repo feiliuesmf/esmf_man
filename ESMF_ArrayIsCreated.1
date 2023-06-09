@@ -1,0 +1,27 @@
+  28.5.25 ESMF_ArrayIsCreated - Check whether an Array object has been created
+
+   INTERFACE:
+   function ESMF_ArrayIsCreated(array, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_ArrayIsCreated
+
+   ARGUMENTS:
+     type(ESMF_Array), intent(in)            :: array
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the array has been created. Otherwise return .false..
+   If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return
+   value of the function will also be .false..
+
+   The arguments are:
+
+   array
+          ESMF_Array queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

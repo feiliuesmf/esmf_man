@@ -1,0 +1,27 @@
+  26.6.58 ESMF_FieldIsCreated - Check whether a Field object has been created
+
+   INTERFACE:
+   function ESMF_FieldIsCreated(field, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_FieldIsCreated
+
+   ARGUMENTS:
+     type(ESMF_Field), intent(in)            :: field
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the field has been created. Otherwise return .false..
+   If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return
+   value of the function will also be .false..
+
+   The arguments are:
+
+   field
+          ESMF_Field queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

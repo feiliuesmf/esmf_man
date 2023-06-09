@@ -1,0 +1,612 @@
+  44.4.22 ESMF_TimeIntervalSet - Initialize or set a TimeInterval
+
+   INTERFACE:
+       ! Private name; call using ESMF_TimeIntervalSet()
+       subroutine ESMF_TimeIntervalSetDur(timeinterval, &
+         yy, yy_i8, &
+         mm, mm_i8, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(inout)         :: timeinterval
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(in),  optional :: yy
+       integer(ESMF_KIND_I8),   intent(in),  optional :: yy_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: mm
+       integer(ESMF_KIND_I8),   intent(in),  optional :: mm_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: d
+       integer(ESMF_KIND_I8),   intent(in),  optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: h
+       integer(ESMF_KIND_I4),   intent(in),  optional :: m
+       integer(ESMF_KIND_I4),   intent(in),  optional :: s
+       integer(ESMF_KIND_I8),   intent(in),  optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ms
+       integer(ESMF_KIND_I4),   intent(in),  optional :: us
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ns
+       real(ESMF_KIND_R8),      intent(in),  optional :: d_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: h_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: m_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: s_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: us_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sN
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sD
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sD_i8
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets the value of the ESMF_TimeInterval in units specified by the user
+   via Fortran optional arguments.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally to integers.
+
+   Ranges are limited only by machine word size. Numeric defaults are 0,
+   except for sD, which is 1.
+
+   The arguments are:
+
+   timeinterval
+          The object instance to initialize.
+
+   [yy]
+          Integer year (32-bit). Default = 0.
+
+   [yy_i8]
+          Integer year (large, 64-bit). Default = 0.
+
+   [mm]
+          Integer month (32-bit). Default = 0.
+
+   [mm_i8]
+          Integer month (large, 64-bit). Default = 0.
+
+   [d]
+          Integer Julian day, or Modified Julian day (32-bit). Default =
+          0.
+
+   [d_i8]
+          Integer Julian day, or Modified Julian day (large, 64-bit).
+          Default = 0.
+
+   [h]
+          Integer hour. Default = 0.
+
+   [m]
+          Integer minute. Default = 0.
+
+   [s]
+          Integer second (32-bit). Default = 0.
+
+   [s_i8]
+          Integer second (large, 64-bit). Default = 0.
+
+   [ms]
+          Integer millisecond. Default = 0.
+
+   [us]
+          Integer microsecond. Default = 0.
+
+   [ns]
+          Integer nanosecond. Default = 0.
+
+   [d_r8]
+          Double precision day. Default = 0.0.
+
+   [h_r8]
+          Double precision hour. Default = 0.0.
+
+   [m_r8]
+          Double precision minute. Default = 0.0.
+
+   [s_r8]
+          Double precision second. Default = 0.0.
+
+   [ms_r8]
+          Double precision millisecond. Default = 0.0.
+
+   [us_r8]
+          Double precision microsecond. Default = 0.0.
+
+   [ns_r8]
+          Double precision nanosecond. Default = 0.0.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD). Default = 0.
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large,
+          64-bit). Default = 0.
+
+   [sD]
+          Integer denominator of fractional second (sN/sD). Default = 1.
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8) (large,
+          64-bit). Default = 1.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  44.4.23 ESMF_TimeIntervalSet - Initialize or set a TimeInterval
+
+   INTERFACE:
+       ! Private name; call using ESMF_TimeIntervalSet()
+       subroutine ESMF_TimeIntervalSetDurStart(timeinterval, startTime, &
+         &
+         yy, yy_i8, &
+         mm, mm_i8, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, &
+         rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(inout)         :: timeinterval
+       type(ESMF_Time),         intent(in)            :: startTime
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(in),  optional :: yy
+       integer(ESMF_KIND_I8),   intent(in),  optional :: yy_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: mm
+       integer(ESMF_KIND_I8),   intent(in),  optional :: mm_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: d
+       integer(ESMF_KIND_I8),   intent(in),  optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: h
+       integer(ESMF_KIND_I4),   intent(in),  optional :: m
+       integer(ESMF_KIND_I4),   intent(in),  optional :: s
+       integer(ESMF_KIND_I8),   intent(in),  optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ms
+       integer(ESMF_KIND_I4),   intent(in),  optional :: us
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ns
+       real(ESMF_KIND_R8),      intent(in),  optional :: d_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: h_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: m_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: s_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: us_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sN
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sD
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sD_i8
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets the value of the ESMF_TimeInterval in units specified by the user
+   via Fortran optional arguments.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally to integers.
+
+   Ranges are limited only by machine word size. Numeric defaults are 0,
+   except for sD, which is 1.
+
+   The arguments are:
+
+   timeinterval
+          The object instance to initialize.
+
+   startTime
+          Starting time of an absolute calendar interval (yy, mm, and/or
+          d); pins a calendar interval to a specific point in time. If not
+          set, and calendar also not set, calendar interval "floats"
+          across all calendars and times.
+
+   [yy]
+          Integer year (32-bit). Default = 0.
+
+   [yy_i8]
+          Integer year (large, 64-bit). Default = 0.
+
+   [mm]
+          Integer month (32-bit). Default = 0.
+
+   [mm_i8]
+          Integer month (large, 64-bit). Default = 0.
+
+   [d]
+          Integer Julian day, or Modified Julian day (32-bit). Default =
+          0.
+
+   [d_i8]
+          Integer Julian day, or Modified Julian day (large, 64-bit).
+          Default = 0.
+
+   [h]
+          Integer hour. Default = 0.
+
+   [m]
+          Integer minute. Default = 0.
+
+   [s]
+          Integer second (32-bit). Default = 0.
+
+   [s_i8]
+          Integer second (large, 64-bit). Default = 0.
+
+   [ms]
+          Integer millisecond. Default = 0.
+
+   [us]
+          Integer microsecond. Default = 0.
+
+   [ns]
+          Integer nanosecond. Default = 0.
+
+   [d_r8]
+          Double precision day. Default = 0.0.
+
+   [h_r8]
+          Double precision hour. Default = 0.0.
+
+   [m_r8]
+          Double precision minute. Default = 0.0.
+
+   [s_r8]
+          Double precision second. Default = 0.0.
+
+   [ms_r8]
+          Double precision millisecond. Default = 0.0.
+
+   [us_r8]
+          Double precision microsecond. Default = 0.0.
+
+   [ns_r8]
+          Double precision nanosecond. Default = 0.0.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD). Default = 0.
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large,
+          64-bit). Default = 0.
+
+   [sD]
+          Integer denominator of fractional second (sN/sD). Default = 1.
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8). (large,
+          64-bit). Default = 1.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  44.4.24 ESMF_TimeIntervalSet - Initialize or set a TimeInterval
+
+   INTERFACE:
+       ! Private name; call using ESMF_TimeIntervalSet()
+       subroutine ESMF_TimeIntervalSetDurCal(timeinterval, calendar, &
+         &
+         yy, yy_i8, &
+         mm, mm_i8, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(inout)         :: timeinterval
+       type(ESMF_Calendar),     intent(in)            :: calendar
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(in),  optional :: yy
+       integer(ESMF_KIND_I8),   intent(in),  optional :: yy_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: mm
+       integer(ESMF_KIND_I8),   intent(in),  optional :: mm_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: d
+       integer(ESMF_KIND_I8),   intent(in),  optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: h
+       integer(ESMF_KIND_I4),   intent(in),  optional :: m
+       integer(ESMF_KIND_I4),   intent(in),  optional :: s
+       integer(ESMF_KIND_I8),   intent(in),  optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ms
+       integer(ESMF_KIND_I4),   intent(in),  optional :: us
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ns
+       real(ESMF_KIND_R8),      intent(in),  optional :: d_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: h_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: m_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: s_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: us_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sN
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sD
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sD_i8
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets the value of the ESMF_TimeInterval in units specified by the user
+   via Fortran optional arguments.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally to integers.
+
+   Ranges are limited only by machine word size. Numeric defaults are 0,
+   except for sD, which is 1.
+
+   The arguments are:
+
+   timeinterval
+          The object instance to initialize.
+
+   calendar
+          Calendar used to give better definition to calendar interval
+          (yy, mm, and/or d) for arithmetic, comparison, and conversion
+          operations. Allows calendar interval to "float" across all times
+          on a specific calendar. Default = NULL; if startTime also not
+          specified, calendar interval "floats" across all calendars and
+          times. Mutually exclusive with startTime since it contains a
+          calendar. Alternate to, and mutually exclusive with, calkindflag
+          below. Primarily for specifying a custom calendar kind.
+
+   [yy]
+          Integer year (32-bit). Default = 0.
+
+   [yy_i8]
+          Integer year (large, 64-bit). Default = 0.
+
+   [mm]
+          Integer month (32-bit). Default = 0.
+
+   [mm_i8]
+          Integer month (large, 64-bit). Default = 0.
+
+   [d]
+          Integer Julian day, or Modified Julian day (32-bit). Default =
+          0.
+
+   [d_i8]
+          Integer Julian day, or Modified Julian day (large, 64-bit).
+          Default = 0.
+
+   [h]
+          Integer hour. Default = 0.
+
+   [m]
+          Integer minute. Default = 0.
+
+   [s]
+          Integer second (32-bit). Default = 0.
+
+   [s_i8]
+          Integer second (large, 64-bit). Default = 0.
+
+   [ms]
+          Integer millisecond. Default = 0.
+
+   [us]
+          Integer microsecond. Default = 0.
+
+   [ns]
+          Integer nanosecond. Default = 0.
+
+   [d_r8]
+          Double precision day. Default = 0.0.
+
+   [h_r8]
+          Double precision hour. Default = 0.0.
+
+   [m_r8]
+          Double precision minute. Default = 0.0.
+
+   [s_r8]
+          Double precision second. Default = 0.0.
+
+   [ms_r8]
+          Double precision millisecond. Default = 0.0.
+
+   [us_r8]
+          Double precision microsecond. Default = 0.0.
+
+   [ns_r8]
+          Double precision nanosecond. Default = 0.0.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD). Default = 0.
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8). (large,
+          64-bit). Default = 0.
+
+   [sD]
+          Integer denominator of fractional second (sN/sD). Default = 1.
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8). (large,
+          64-bit). Default = 1.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  44.4.25 ESMF_TimeIntervalSet - Initialize or set a TimeInterval
+
+   INTERFACE:
+       ! Private name; call using ESMF_TimeIntervalSet()
+       subroutine ESMF_TimeIntervalSetDurCalTyp(timeinterval, calkindflag, &
+         &
+         yy, yy_i8, &
+         mm, mm_i8, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, &
+         rc)
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(inout)         :: timeinterval
+       type(ESMF_CalKind_Flag), intent(in)            :: calkindflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(in),  optional :: yy
+       integer(ESMF_KIND_I8),   intent(in),  optional :: yy_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: mm
+       integer(ESMF_KIND_I8),   intent(in),  optional :: mm_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: d
+       integer(ESMF_KIND_I8),   intent(in),  optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: h
+       integer(ESMF_KIND_I4),   intent(in),  optional :: m
+       integer(ESMF_KIND_I4),   intent(in),  optional :: s
+       integer(ESMF_KIND_I8),   intent(in),  optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ms
+       integer(ESMF_KIND_I4),   intent(in),  optional :: us
+       integer(ESMF_KIND_I4),   intent(in),  optional :: ns
+       real(ESMF_KIND_R8),      intent(in),  optional :: d_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: h_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: m_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: s_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: us_r8
+       real(ESMF_KIND_R8),      intent(in),  optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sN
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(in),  optional :: sD
+       integer(ESMF_KIND_I8),   intent(in),  optional :: sD_i8
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets the value of the ESMF_TimeInterval in units specified by the user
+   via Fortran optional arguments.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally to integers.
+
+   Ranges are limited only by machine word size. Numeric defaults are 0,
+   except for sD, which is 1.
+
+   The arguments are:
+
+   timeinterval
+          The object instance to initialize.
+
+   calkindflag
+          Alternate to, and mutually exclusive with, calendar above. More
+          convenient way of specifying a built-in calendar kind.
+
+   [yy]
+          Integer year (32-bit). Default = 0.
+
+   [yy_i8]
+          Integer year (large, 64-bit). Default = 0.
+
+   [mm]
+          Integer month (32-bit). Default = 0.
+
+   [mm_i8]
+          Integer month (large, 64-bit). Default = 0.
+
+   [d]
+          Integer Julian day, or Modified Julian day (32-bit). Default =
+          0.
+
+   [d_i8]
+          Integer Julian day, or Modified Julian day (large, 64-bit).
+          Default = 0.
+
+   [h]
+          Integer hour. Default = 0.
+
+   [m]
+          Integer minute. Default = 0.
+
+   [s]
+          Integer second (32-bit). Default = 0.
+
+   [s_i8]
+          Integer second (large, 64-bit). Default = 0.
+
+   [ms]
+          Integer millisecond. Default = 0.
+
+   [us]
+          Integer microsecond. Default = 0.
+
+   [ns]
+          Integer nanosecond. Default = 0.
+
+   [d_r8]
+          Double precision day. Default = 0.0.
+
+   [h_r8]
+          Double precision hour. Default = 0.0.
+
+   [m_r8]
+          Double precision minute. Default = 0.0.
+
+   [s_r8]
+          Double precision second. Default = 0.0.
+
+   [ms_r8]
+          Double precision millisecond. Default = 0.0.
+
+   [us_r8]
+          Double precision microsecond. Default = 0.0.
+
+   [ns_r8]
+          Double precision nanoseconds. Default = 0.0.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD). Default = 0.
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large,
+          64-bit). Default = 0.
+
+   [sD]
+          Integer denominator of fractional second (sN/sD). Default = 1.
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8) (large,
+          64-bit). Default = 1.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

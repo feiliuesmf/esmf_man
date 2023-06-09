@@ -1,0 +1,70 @@
+  45.5.10 ESMF_ClockGetAlarmList - Get a list of Alarms from a Clock
+
+   INTERFACE:
+       subroutine ESMF_ClockGetAlarmList(clock, alarmlistflag, &
+         timeStep, alarmList, alarmCount, rc)
+
+   ARGUMENTS:
+       type(ESMF_Clock),          intent(in)            :: clock
+       type(ESMF_AlarmList_Flag), intent(in)            :: alarmlistflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_TimeInterval),   intent(in),  optional :: timeStep
+       type(ESMF_Alarm),          intent(out), optional :: alarmList(:)
+       integer,                   intent(out), optional :: alarmCount
+       integer,                   intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets the clock's list of alarms and/or number of alarms.
+
+   The arguments are:
+
+   clock
+          The object instance from which to get an ESMF_Alarm list and/or
+          count of ESMF_Alarms.
+
+   alarmlistflag
+          The kind of list to get:
+
+          ESMF_ALARMLIST_ALL : Returns the ESMF_Clock's entire list of
+          alarms.
+
+          ESMF_ALARMLIST_NEXTRINGING : Return only those alarms that will
+          ring upon the next clock time step. Can optionally specify
+          argument timeStep (see below) to use instead of the clock's. See
+          also method ESMF_AlarmWillRingNext() for checking a single
+          alarm.
+
+          ESMF_ALARMLIST_PREVRINGING : Return only those alarms that were
+          ringing on the previous ESMF_Clock time step. See also method
+          ESMF_AlarmWasPrevRinging() for checking a single alarm.
+
+          ESMF_ALARMLIST_RINGING : Returns only those clock alarms that
+          are currently ringing. See also method ESMF_ClockAdvance() for
+          getting the list of ringing alarms subsequent to a time step.
+          See also method ESMF_AlarmIsRinging() for checking a single
+          alarm.
+
+   [timeStep]
+          Optional time step to be used instead of the clock's. Only used
+          with ESMF_ALARMLIST_NEXTRINGING alarmlistflag (see above);
+          ignored if specified with other alarmlistflags.
+
+   [alarmList]
+          The array of returned alarms. If given, the array must be large
+          enough to hold the number of alarms of the specified
+          alarmlistflag in the specified clock.
+
+   [alarmCount]
+          If specified, returns the number of ESMF_Alarms of the specified
+          alarmlistflag in the specified clock.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,113 @@
+  42.5.12 ESMF_CalendarSet - Set a Calendar to a built-in type
+
+   INTERFACE:
+       ! Private name; call using ESMF_CalendarSet()
+       subroutine ESMF_CalendarSetBuiltIn(calendar, calkindflag, &
+         name, rc)
+
+   ARGUMENTS:
+       type(ESMF_Calendar),     intent(inout)         :: calendar
+       type(ESMF_CalKind_Flag), intent(in)            :: calkindflag
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character (len=*),       intent(in),  optional :: name
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets calendar to the given built-in ESMF_CalKind_Flag.
+
+   The arguments are:
+
+   calendar
+          The object instance to initialize.
+
+   calkindflag
+          The built-in CalKind_Flag. Valid values are:
+          ESMF_CALKIND_360DAY,
+          ESMF_CALKIND_GREGORIAN,
+          ESMF_CALKIND_JULIAN,
+          ESMF_CALKIND_JULIANDAY,
+          ESMF_CALKIND_MODJULIANDAY,
+          ESMF_CALKIND_NOCALENDAR,
+          and ESMF_CALKIND_NOLEAP.
+          See Section [523]42.2 for a description of each calendar kind.
+
+   [name]
+          The new name for this calendar.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  42.5.13 ESMF_CalendarSet - Set properties of a custom Calendar
+
+   INTERFACE:
+       ! Private name; call using ESMF_CalendarSet()
+       subroutine ESMF_CalendarSetCustom(calendar, &
+         daysPerMonth, secondsPerDay, &
+         daysPerYear, daysPerYearDn, daysPerYearDd, name, rc)
+
+   ARGUMENTS:
+       type(ESMF_Calendar),  intent(inout)         :: calendar
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,              intent(in),  optional :: daysPerMonth(:)
+       integer(ESMF_KIND_I4),intent(in),  optional :: secondsPerDay
+       integer(ESMF_KIND_I4),intent(in),  optional :: daysPerYear
+       integer(ESMF_KIND_I4),intent(in),  optional :: daysPerYearDn
+       integer(ESMF_KIND_I4),intent(in),  optional :: daysPerYearDd
+       character (len=*),    intent(in),  optional :: name
+       integer,              intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets properties in a custom ESMF_Calendar.
+
+   The arguments are:
+
+   calendar
+          The object instance to initialize.
+
+   [daysPerMonth]
+          Integer array of days per month, for each month of the year. The
+          number of months per year is variable and taken from the size of
+          the array. If unspecified, months per year = 0, with the days
+          array undefined.
+
+   [secondsPerDay]
+          Integer number of seconds per day. Defaults to 0 if not
+          specified.
+
+   [daysPerYear]
+          Integer number of days per year. Use with daysPerYearDn and
+          daysPerYearDd (see below) to specify a days-per-year calendar
+          for any planetary body. Default = 0.
+
+   [daysPerYearDn]
+          Integer numerator portion of fractional number of days per year
+          (daysPerYearDn/daysPerYearDd). Use with daysPerYear (see above)
+          and daysPerYearDd (see below) to specify a days-per-year
+          calendar for any planetary body. Default = 0.
+
+   [daysPerYearDd]
+          Integer denominator portion of fractional number of days per
+          year (daysPerYearDn/daysPerYearDd). Use with daysPerYear and
+          daysPerYearDn (see above) to specify a days-per-year calendar
+          for any planetary body. Default = 1.
+
+   [name]
+          The new name for this calendar.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

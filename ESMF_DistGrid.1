@@ -1,0 +1,1515 @@
+          + [592]36 DistGrid Class
+               o [593]36.1 Description
+               o [594]36.2 Constants
+                    # [595]36.2.1 ESMF_DISTGRIDMATCH
+               o [596]36.3 Use and Examples
+                    # [597]36.3.1 Single tile DistGrid with regular
+                      decomposition
+                    # [598]36.3.2 DistGrid and DELayout
+                    # [599]36.3.3 Single tile DistGrid with decomposition
+                      by DE blocks
+                    # [600]36.3.4 2D multi-tile DistGrid with regular
+                      decomposition
+                    # [601]36.3.5 Arbitrary DistGrids with user-supplied
+                      sequence indices
+                    # [602]36.3.6 DistGrid Connections - Definition
+                    # [603]36.3.7 DistGrid Connections - Single tile
+                      periodic and pole connections
+                    # [604]36.3.8 DistGrid Connections - Multi tile
+                      connections
+               o [605]36.4 Restrictions and Future Work
+               o [606]36.5 Design and Implementation Notes
+               o [607]36.6 Class API
+                    # [608]36.6.1 ESMF_DistGridAssignment(=)
+                    # [609]36.6.2 ESMF_DistGridOperator(==)
+                    # [610]36.6.3 ESMF_DistGridOperator(/=)
+                    # [611]36.6.4 ESMF_DistGridCreate
+                    # [612]36.6.5 ESMF_DistGridCreate
+                    # [613]36.6.6 ESMF_DistGridCreate
+                    # [614]36.6.7 ESMF_DistGridCreate
+                    # [615]36.6.8 ESMF_DistGridCreate
+                    # [616]36.6.9 ESMF_DistGridCreate
+                    # [617]36.6.10 ESMF_DistGridCreate
+                    # [618]36.6.11 ESMF_DistGridCreate
+                    # [619]36.6.12 ESMF_DistGridCreate
+                    # [620]36.6.13 ESMF_DistGridCreate
+                    # [621]36.6.14 ESMF_DistGridDestroy
+                    # [622]36.6.15 ESMF_DistGridGet
+                    # [623]36.6.16 ESMF_DistGridGet
+                    # [624]36.6.17 ESMF_DistGridGet
+                    # [625]36.6.18 ESMF_DistGridIsCreated
+                    # [626]36.6.19 ESMF_DistGridMatch
+                    # [627]36.6.20 ESMF_DistGridPrint
+                    # [628]36.6.21 ESMF_DistGridSet
+                    # [629]36.6.22 ESMF_DistGridValidate
+               o [630]36.7 Class API: DistGridConnection Methods
+                    # [631]36.7.1 ESMF_DistGridConnectionGet
+                    # [632]36.7.2 ESMF_DistGridConnectionSet
+               o [633]36.8 Class API: DistGridRegDecomp Methods
+                    # [634]36.8.1 ESMF_DistGridRegDecompSetCubic
+                               36 DistGrid Class
+
+36.1 Description
+
+   The ESMF DistGrid class sits on top of the DELayout class and holds
+   domain information in index space. A DistGrid object captures the index
+   space topology and describes its decomposition in terms of DEs.
+   Combined with DELayout and VM the DistGrid defines the data
+   distribution of a domain decomposition across the computational
+   resources of an ESMF Component.
+
+   The global domain is defined as the union of logically rectangular (LR)
+   sub-domains or tiles. The DistGrid create methods allow the
+   specification of such a multi-tile global domain and its decomposition
+   into exclusive, DE-local LR regions according to various degrees of
+   user specified constraints. Complex index space topologies can be
+   constructed by specifying connection relationships between tiles during
+   creation.
+
+   The DistGrid class holds domain information for all DEs. Each DE is
+   associated with a local LR region. No overlap of the regions is
+   allowed. The DistGrid offers query methods that allow DE-local topology
+   information to be extracted, e.g. for the construction of halos by
+   higher classes.
+
+   A DistGrid object only contains decomposable dimensions. The minimum
+   rank for a DistGrid object is 1. A maximum rank does not exist for
+   DistGrid objects, however, ranks greater than 7 may lead to
+   difficulties with respect to the Fortran API of higher classes based on
+   DistGrid. The rank of a DELayout object contained within a DistGrid
+   object must be equal to the DistGrid rank. Higher class objects that
+   use the DistGrid, such as an Array object, may be of different rank
+   than the associated DistGrid object. The higher class object will hold
+   the mapping information between its dimensions and the DistGrid
+   dimensions.
+
+36.2 Constants
+
+  36.2.1 ESMF_DISTGRIDMATCH
+
+   DESCRIPTION:
+   Indicates the level to which two DistGrid variables match.
+
+   The type of this flag is:
+
+   type(ESMF_DistGridMatch_Flag)
+
+   The valid values are:
+
+   ESMF_DISTGRIDMATCH_INVALID:
+          Indicates a non-valid matching level. One or both DistGrid
+          objects are invalid.
+
+   ESMF_DISTGRIDMATCH_NONE:
+          The lowest valid level of DistGrid matching. This indicates that
+          the DistGrid objects don't match at any of the higher levels.
+
+   ESMF_DISTGRIDMATCH_INDEXSPACE:
+          The index space covered by the two DistGrid objects is
+          identical. However, differences between the two objects prevents
+          a higher matching level.
+
+   ESMF_DISTGRIDMATCH_TOPOLOGY:
+          The topology (i.e. index space and connections) defined by the
+          two DistGrid objects is identical. However, differences between
+          the two objects prevents a higher matching level.
+
+   ESMF_DISTGRIDMATCH_DECOMP:
+          The index space decomposition defined by the two DistGrid
+          objects is identical. However, differences between the two
+          objects prevents a higher matching level.
+
+   ESMF_DISTGRIDMATCH_EXACT:
+          The two DistGrid objects match in all aspects, including
+          sequence indices. The only aspect that may differ between the
+          two objects is their name.
+
+   ESMF_DISTGRIDMATCH_ALIAS:
+          Both DistGrid variables are aliases to the exact same DistGrid
+          object in memory.
+
+36.3 Use and Examples
+
+   The following examples demonstrate how to create, use and destroy
+   DistGrid objects. In order to produce complete and valid DistGrid
+   objects all of the ESMF_DistGridCreate() calls require to be called in
+   unison i.e. on all PETs of a component with a complete set of valid
+   arguments.
+
+  36.3.1 Single tile DistGrid with regular decomposition
+
+   The minimum information required to create an ESMF_DistGrid object for
+   a single tile with default decomposition are the min and max of the
+   tile in index space. The following call creates a DistGrid for a 1D
+   index space tile with elements from 1 through 1000.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1/), maxIndex=(/1000/), rc=rc)
+
+   A default DELayout with 1 DE per PET will be created during the
+   ESMF_DistGridCreate() call. The 1000 elements of the specified 1D tile
+   are then block decomposed into the available DEs, and distributed
+   across the PETs (same number as DEs by default). Assuming execution on
+   4 PETs, the (min) $\sim$ (max) indices of the DE-local blocks will be:
+     DE 0 - (1) ~ (250)
+     DE 1 - (251) ~ (500)
+     DE 2 - (501) ~ (750)
+     DE 3 - (751) ~ (1000)
+
+   DistGrids with rank > 1 can also be created with default
+   decompositions, specifying only the min and max indices of the tile.
+   The following creates a 2D DistGrid for a 5x5 tile with default
+   decomposition.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), rc=rc)
+
+   The default decomposition for a DistGrid of rank $N$ will be $(nDEs
+   \times 1 \times ... \times 1) $ , where $nDEs$ is the number of DEs in
+   the DELayout and there are $N-1$ factors of $1$ . For the 2D example
+   above this means a $4 \times 1$ regular decomposition if executed on 4
+   PETs and will result in the following DE-local LR regions:
+     DE 0 - (1,1) ~ (2,5)
+     DE 1 - (3,1) ~ (3,5)
+     DE 2 - (4,1) ~ (4,5)
+     DE 3 - (5,1) ~ (5,5)
+
+   In many cases the default decomposition will not suffice for higher
+   rank DistGrids (rank > 1). For this reason a decomposition descriptor
+   regDecomp argument is available during ESMF_DistGridCreate(). The
+   following call creates a DistGrid on the same 2D tile as before, but
+   now with a user specified regular decomposition of $2 \times 3 = 6 $
+   DEs.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), rc=rc)
+
+   The default DE labeling sequence follows column major order for the
+   regDecomp argument:
+     -----------> 2nd dimension
+     |  0  2  4
+     |  1  3  5
+     v
+    1st dimension
+
+   By default grid points along all dimensions are homogeneously divided
+   between the DEs. The maximum element count difference between DEs along
+   any dimension is 1. The (min) $\sim$ (max) indices of the DE-local
+   blocks of the above example are as follows:
+     DE 0 - (1,1) ~ (3,2)
+     DE 1 - (4,1) ~ (5,2)
+     DE 2 - (1,3) ~ (3,4)
+     DE 3 - (4,3) ~ (5,4)
+     DE 4 - (1,5) ~ (3,5)
+     DE 5 - (4,5) ~ (5,5)
+
+   The specifics of the tile decomposition into DE-local LR domains can be
+   modified by the optional decompflag argument. The following line shows
+   how this argument is used to keep ESMF's default decomposition in the
+   first dimension but move extra grid points of the second dimension to
+   the last DEs in that direction. Extra elements occur if the number of
+   DEs for a certain dimension does not evenly divide its extent. In this
+   example there are 2 extra grid points for the second dimension because
+   its extent is 5 but there are 3 DEs along this index space axis.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), decompflag=(/ESMF_DECOMP_BALANCED, &
+    ESMF_DECOMP_RESTLAST/), rc=rc)
+
+   Now DE 4 and DE 5 will hold the extra elements along the 2nd dimension.
+     DE 0 - (1,1) ~ (3,1)
+     DE 1 - (4,1) ~ (5,1)
+     DE 2 - (1,2) ~ (3,2)
+     DE 3 - (4,2) ~ (5,2)
+     DE 4 - (1,3) ~ (3,5)
+     DE 5 - (4,3) ~ (5,5)
+
+   An alternative way of indicating the DE-local LR regions is to list the
+   index space coordinate as given by the associated DistGrid tile for
+   each dimension. For this 2D example there are two lists (dim 1) / (dim
+   2) for each DE:
+     DE 0 - (1,2,3) / (1)
+     DE 1 - (4,5)   / (1)
+     DE 2 - (1,2,3) / (2)
+     DE 3 - (4,5)   / (2)
+     DE 4 - (1,2,3) / (3,4,5)
+     DE 5 - (4,5)   / (3,4,5)
+
+   Information about DE-local LR regions in the latter format can be
+   obtained from the DistGrid object by use of ESMF_DistGridGet() methods:
+
+  allocate(dimExtent(2, 0:5)) ! (dimCount, deCount)
+  call ESMF_DistGridGet(distgrid, delayout=delayout, &
+    indexCountPDe=dimExtent, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+  call ESMF_DELayoutGet(delayout, localDeCount=localDeCount, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+  allocate(localDeToDeMap(0:localDeCount-1))
+  call ESMF_DELayoutGet(delayout, localDeToDeMap=localDeToDeMap, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+  do localDe=0, localDeCount-1
+    de = localDeToDeMap(localDe)
+    do dim=1, 2
+      allocate(localIndexList(dimExtent(dim, de))) ! allocate list
+                                                   ! to hold indices
+      call ESMF_DistGridGet(distgrid, localDe=localDe, dim=dim, &
+        indexList=localIndexList, rc=rc)
+      if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+      print *, "local DE ", localDe," - DE ",de, &
+        " localIndexList along dim=", dim," :: ", localIndexList
+      deallocate(localIndexList)
+    enddo
+  enddo
+  deallocate(localDeToDeMap)
+  deallocate(dimExtent)
+
+   The advantage of the localIndexList format over the minIndex/maxIndex
+   format is that it can be used directly for DE-local to tile index
+   dereferencing. Furthermore the localIndexList allows to express very
+   general decompositions such as the cyclic decompositions in the first
+   dimension generated by the following call:
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), &
+    decompflag=(/ESMF_DECOMP_CYCLIC,ESMF_DECOMP_RESTLAST/), rc=rc)
+
+   with decomposition:
+     DE 0 - (1,3,5) / (1)
+     DE 1 - (2,4)   / (1)
+     DE 2 - (1,3,5) / (2)
+     DE 3 - (2,4)   / (2)
+     DE 4 - (1,3,5) / (3,4,5)
+     DE 5 - (2,4)   / (3,4,5)
+
+   Finally, a DistGrid object is destroyed by calling
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+  36.3.2 DistGrid and DELayout
+
+   The examples of this section use the 2D DistGrid of the previous
+   section to show the interplay between DistGrid and DELayout. By
+   default, i.e. without specifying the delayout argument, a DELayout will
+   be created during DistGrid creation that provides as many DEs as the
+   DistGrid object requires. The implicit call to ESMF_DELayoutCreate() is
+   issued with a fixed number of DEs and default settings in all other
+   aspects. The resulting DE to PET mapping depends on the number of PETs
+   of the current VM context. Assuming 6 PETs in the VM
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), rc=rc)
+
+   will result in the following domain decomposition in terms of DEs
+     0  2  4
+     1  3  5
+
+   and their layout or distribution over the available PETs:
+     DE 0  -> PET 0
+     DE 1  -> PET 1
+     DE 2  -> PET 2
+     DE 3  -> PET 3
+     DE 4  -> PET 4
+     DE 5  -> PET 5
+
+   Running the same example on a 4 PET VM will not change the domain
+   decomposition into 6 DEs as specified by
+     0  2  4
+     1  3  5
+
+   but the layout across PETs will now contain multiple DE-to-PET mapping
+   with default cyclic distribution:
+     DE 0  -> PET 0
+     DE 1  -> PET 1
+     DE 2  -> PET 2
+     DE 3  -> PET 3
+     DE 4  -> PET 0
+     DE 5  -> PET 1
+
+   Sometimes it may be desirable for performance tuning to construct a
+   DELayout with specific characteristics. For instance, if the 6 PETs of
+   the above example are running on 3 nodes of a dual-SMP node cluster and
+   there is a higher communication load along the first dimension of the
+   model than along the second dimension it would be sensible to place DEs
+   according to this knowledge.
+
+   The following example first creates a DELayout with 6 DEs where groups
+   of 2 DEs are to be in fast connection. This DELayout is then used to
+   create a DistGrid.
+
+  delayout = ESMF_DELayoutCreate(deCount=6, deGrouping=(/(i/2,i=0,5)/), rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), delayout=delayout, rc=rc)
+
+   This will ensure a distribution of DEs across the cluster resource in
+   the following way:
+     0   2   4
+     1   3   5
+    SMP SMP SMP
+
+   The interplay between DistGrid and DELayout may at first seem
+   complicated. The simple but important rule to understand is that
+   DistGrid describes a domain decomposition and each domain is labeled
+   with a DE number. The DELayout describes how these DEs are laid out
+   over the compute resources of the VM, i.e. PETs. The DEs are purely
+   logical elements of decomposition and may be relabeled to fit the
+   algorithm or legacy code better. The following example demonstrates
+   this by describing the exact same distribution of the domain data
+   across the fictitious cluster of SMP-nodes with a different choice of
+   DE labeling:
+
+  delayout = ESMF_DELayoutCreate(deCount=6, deGrouping=(/(mod(i,3),i=0,5)/), &
+    rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), deLabelList=(/0,3,1,4,2,5/), delayout=delayout, rc=rc)
+
+   Here the deLabelList argument changes the default DE label sequence
+   from column major to row major. The DELayout compensates for this
+   change in DE labeling by changing the deGrouping argument to map the
+   first dimension to SMP nodes as before. The decomposition and layout
+   now looks as follows:
+     0   1   2
+     3   4   5
+    SMP SMP SMP
+
+   Finally, in order to achieve a completely user-defined distribution of
+   the domain data across the PETs of the VM a DELayout may be created
+   from a petMap before using it in the creation of a DistGrid. If for
+   instance the desired distribution of a 2 x 3 decomposition puts the DEs
+   of the first row onto 3 separate PETs (PET 0, 1, 2) and groups the DEs
+   of the second row onto PET 3 a petMap must first be setup that takes
+   the DE labeling of the DistGrid into account.The following lines of
+   code result in the desired distribution using column major DE labeling
+   by first create a DELayout and then using it in the DistGrid creation.
+
+  delayout = ESMF_DELayoutCreate(petMap=(/0,3,1,3,2,3/), rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), delayout=delayout, rc=rc)
+
+   This decomposes the global domain into
+     0   2   4
+     1   3   5
+
+   and associates the DEs to the following PETs:
+     DE 0  -> PET 0
+     DE 1  -> PET 3
+     DE 2  -> PET 1
+     DE 3  -> PET 3
+     DE 4  -> PET 2
+     DE 5  -> PET 3
+
+  36.3.3 Single tile DistGrid with decomposition by DE blocks
+
+   In the previous examples the DistGrid objects were created with regular
+   decompositions. In some cases a regular decomposition may not be the
+   most natural choice to decompose and distribute the index space. The DE
+   block version of ESMF_DistGridCreate() offers more control over the
+   precise decomposition. The following example shows how the deBlockList
+   argument is used to determine exactly what index space block ends up on
+   each DE.
+
+   A single 5x5 tile is decomposed into 6 DEs. To this end a list is
+   constructed that holds the min and max indices of all six DE blocks.
+   The DE blocks must be constructed to cover the index space without
+   overlapping each other. It is okay to leave holes in the index space,
+   i.e. the DE blocks do not completely cover the index space tile.
+
+  allocate(deBlockList(2, 2, 6))  ! (dimCount, 2, deCount)
+  deBlockList(:,1,1) = (/1,1/)  ! minIndex  1st deBlock
+  deBlockList(:,2,1) = (/3,2/)  ! maxIndex  1st deBlock
+  deBlockList(:,1,2) = (/4,1/)  ! minIndex  2nd deBlock
+  deBlockList(:,2,2) = (/5,2/)  ! maxIndex  2nd deBlock
+  deBlockList(:,1,3) = (/1,3/)
+  deBlockList(:,2,3) = (/2,4/)
+  deBlockList(:,1,4) = (/3,3/)
+  deBlockList(:,2,4) = (/5,4/)
+  deBlockList(:,1,5) = (/1,5/)
+  deBlockList(:,2,5) = (/3,5/)
+  deBlockList(:,1,6) = (/4,5/)  ! minIndex  6th deBlock
+  deBlockList(:,2,6) = (/5,5/)  ! maxInbex  6th deBlock
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    deBlockList=deBlockList, rc=rc)
+
+  36.3.4 2D multi-tile DistGrid with regular decomposition
+
+   Creating a DistGrid from a list of LR tiles is a straightforward
+   extension of the single tile case. The first four arguments of
+   ESMF_DistGridCreate() are promoted to rank 2 where the second dimension
+   is the tile index.
+
+   The following 2D multi-tile domain consisting of 3 LR tiles will be
+   used in the examples of this section:
+
+     ----------------------------------------> 2nd dim
+     |
+     |                   (1,11)-----(1,20)
+     |                   |               |
+     |                   |               |
+     |                   |               |
+     |                   |               |
+     |                   |               |
+     |                   (10,11)---(10,20)
+     |  (11,1)----(11,10)(11,11)---(11,20)
+     |  |               ||               |
+     |  |               ||               |
+     |  |               ||               |
+     |  |               ||               |
+     |  |               ||               |
+     |  (20,1)----(20,10)(20,11)---(20,20)
+     |
+     |
+     v
+    1st dim
+
+   The first step in creating a multi-tile global domain is to construct
+   the minIndex and maxIndex arrays.
+
+  allocate(minIndexPTile(2,3))    ! (dimCount, tileCount)
+  allocate(maxIndexPTile(2,3))    ! (dimCount, tileCount)
+  minIndexPTile(:,1) = (/11,1/)
+  maxIndexPTile(:,1) = (/20,10/)
+  minIndexPTile(:,2) = (/11,11/)
+  maxIndexPTile(:,2) = (/20,20/)
+  minIndexPTile(:,3) = (/1,11/)
+  maxIndexPTile(:,3) = (/10,20/)
+
+   Next the regular decomposition for each tile is set up in the regDecomp
+   array. In this example each tile is associated with a single DE.
+
+  allocate(regDecompPTile(2,3))    ! (dimCount, tileCount)
+  regDecompPTile(:,1) = (/1,1/)    ! one DE
+  regDecompPTile(:,2) = (/1,1/)    ! one DE
+  regDecompPTile(:,3) = (/1,1/)    ! one DE
+
+   Finally the DistGrid can be created by calling
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, regDecompPTile=regDecompPTile, rc=rc)
+
+   The default DE labeling sequence is identical to the tile labeling
+   sequence and follows the sequence in which the tiles are defined during
+   the create call. However, DE labels start at 0 whereas tile labels
+   start at 1. In this case the DE labels look as:
+           2
+       0   1
+
+   Each tile can be decomposed differently into DEs. The default DE
+   labeling follows the column major order for each tile. This is
+   demonstrated in the following case where the multi-tile global domain
+   is decomposed into 9 DEs,
+
+  regDecompPTile(:,1) = (/2,2/)    ! 4 DEs
+  regDecompPTile(:,2) = (/1,3/)    ! 3 DEs
+  regDecompPTile(:,3) = (/2,1/)    ! 2 DEs
+
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, regDecompPTile=regDecompPTile, rc=rc)
+
+   resulting in the following decomposition:
+             +-------+
+             |   7   |
+             |       |
+             |   8   |
+     +-------+-------+
+     | 0   2 |       |
+     |       | 4 5 6 |
+     | 1   3 |       |
+     +-------+-------+
+
+     DE 0 - (11,1)  ~ (15,5)
+     DE 1 - (16,1)  ~ (20,5)
+     DE 2 - (11,6)  ~ (15,10)
+     DE 3 - (16,6)  ~ (20,10)
+     DE 4 - (11,11) ~ (20,14)
+     DE 5 - (11,15) ~ (20,17)
+     DE 6 - (11,18) ~ (20,20)
+     DE 7 - (1,11)  ~ (5,20)
+     DE 8 - (6,11)  ~ (10,20)
+
+   The decompflag and deLabelList arguments can be used much like in the
+   single LR domain case to overwrite the default grid decomposition (per
+   tile) and to change the overall DE labeling sequence, respectively.
+
+  36.3.5 Arbitrary DistGrids with user-supplied sequence indices
+
+   The third, and most flexible way of creating an ESMF DistGrid object is
+   by specifying the arbitrary sequence indices of all the index space
+   elements associated with a particular DE. The concept of sequence index
+   comes into the DistGrid class through the support it implements for the
+   communication methods of higher classes: Arrays and Fields. This
+   support is based by associating a unique sequence index with each
+   DistGrid index tuple. The sequence index can be used to address every
+   Array or Field element. By default, the DistGrid does not actually
+   generate and store the sequence index of each element. Instead a
+   default sequence through the elements is implemented in the DistGrid
+   code. This default sequence is used internally when needed.
+
+   The DistGrid class provides two ESMF_DistGridCreate() calls that allow
+   the user to specify arbitrary sequence indices, overriding the use of
+   the default sequence index scheme. The user sequence indices are passed
+   to the DistGrid in form of 1d Fortran arrays, one array on each PET.
+   The local size of this array on each PET determines the number of
+   DistGrid elements on the PET. The supplied sequence indices must be
+   unique across all PETs.
+
+  allocate(arbSeqIndexList(10))   ! each PET will have 10 elements
+
+  do i=1, 10
+    arbSeqIndexList(i) = (i-1)*petCount + localPet ! initialize unique
+                                                   ! seq. indices
+  enddo
+
+   A default DELayout will be created automatically during
+   ESMF_DistGridCreate(), associating 1 DE per PET.
+
+  distgrid = ESMF_DistGridCreate(arbSeqIndexList=arbSeqIndexList, rc=rc)
+
+   The user provided sequence index array can be deallocated once it has
+   been used.
+
+  deallocate(arbSeqIndexList)
+
+   The distgrid object can be used just like any other DistGrid object.
+   The "arbitrary" nature of distgrid will only become visible during
+   Array or Field communication methods, where source and destination
+   objects map elements according to the sequence indices provided by the
+   associated DistGrid objects.
+
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+   The second ESMF_DistGridCreate() call, that accepts the arbSeqIndexList
+   argument, allows the user to specify additional, regular DistGrid
+   dimensions. These additional DistGrid dimensions are not decomposed
+   across DEs, but instead are simply "added" or "multiplied" to the 1D
+   arbitrary dimension.
+
+   The same arbSeqIndexList array as before is used to define the user
+   supplied sequence indices.
+
+  allocate(arbSeqIndexList(10))   ! each PET will have 10 elements
+
+  do i=1, 10
+    arbSeqIndexList(i) = (i-1)*petCount + localPet  ! initialize unique
+                                                    ! seq. indices
+  enddo
+
+   The additional DistGrid dimensions are specified in the usual manner
+   using minIndex and maxIndex arguments. The dimCount of the resulting
+   DistGrid is the size of the minIndex and maxIndex arguments plus 1 for
+   the arbitrary dimension. The arbDim argument is used to indicate which
+   or the resulting DistGrid dimensions is associated with the arbitrary
+   sequence indices provided by the user.
+
+  distgrid = ESMF_DistGridCreate(arbSeqIndexList=arbSeqIndexList, &
+    arbDim=1, minIndexPTile=(/1,1/), maxIndexPTile=(/5,7/), rc=rc)
+
+  deallocate(arbSeqIndexList)
+
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+  36.3.6 DistGrid Connections - Definition
+
+   By default all of the edges of the index space tiles making up a
+   DistGrid are open. There is no sense of connectedness between the
+   tiles. This situation is shown for a simple 2 tile DistGrid.
+
+  allocate(minIndexPTile(2,2))    ! (dimCount, tileCount)
+  allocate(maxIndexPTile(2,2))    ! (dimCount, tileCount)
+  minIndexPTile(:,1) = (/1,1/)
+  maxIndexPTile(:,1) = (/10,10/)
+  minIndexPTile(:,2) = (/11,1/)
+  maxIndexPTile(:,2) = (/20,10/)
+
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, rc=rc)
+
+   CAPTION: Figure 21: Two 10x10 index space tiles next to each other
+   without connections. Both tiles operate in the same global index space
+   chosen by ESMF_INDEX_GLOBAL when creating the DistGrid object. The
+   index tuples held by the DistGrid are represented by the vertices of
+   the shown grid structure. The index tuple (11,3), which is referenced
+   in the text, is marked by a black circle.
+
+            \includegraphics{dgconnect_2tiles_not_connected.eps}
+
+   Connections between index space tiles are specified during DistGrid
+   creation through the connectionList argument. This argument takes a
+   list of elements of type(ESMF_DistGridConnection). Each element refers
+   to one specific connection between any two tiles.
+
+   Each connection is defined by 4 parameters:
+     * tileIndexA - The tile index of the "A" side of the connection.
+     * tileIndexB - The tile index of the "B" side of the connection.
+     * positionVector - A vector containing information about the
+       translation of the index space of tile "B" relative to tile "A".
+       This vector has as many components as there are index space
+       dimensions.
+     * orientationVector - A vector containing information about the
+       rotation of the index space of tile "B" relative to tile "A". This
+       vector has as many components as there are index space dimensions.
+
+   The underlying principle of the DistGrid connections is that all
+   supported connections can be written as a forward transformation of the
+   form
+
+   \begin{displaymath} \vec a \rightarrow \vec b = \hat R \vec a + \vec P.
+                            \end{displaymath} (4)
+
+   This transform takes the index space tuple $\vec a$ of a point in the
+   reference frame of tile "A" and expresses it as tuple $\vec b$ in terms
+   of the index space defined by tile "B". Here $\hat R$ is a general
+   rotation operator, and $\vec P$ is a translation vector in index space.
+   $\hat R$ and $\vec P$ correspond to the orientationVector and
+   positionVector, respectively.
+
+   As an example consider the index space point marked by the black circle
+   in figure [1500]21. In the reference frame of tile 1 the point has an
+   index tuple of (11,3). Because of the global index space
+   (ESMF_INDEX_GLOBAL), the point has the same index tuple of (11,3) in
+   the reference frame of tile 2. Therefore, the connection that connects
+   the right edge of tile 1 with the left edge of tile 2 has $\hat R
+   ={1\!\!1}$ (default orientation) and $\vec P = (0,0)$ . Therefore the
+   connection can be set by the following code. The resulting situation is
+   shown in figure [1501]22.
+
+  allocate(connectionList(1))
+  call ESMF_DistGridConnectionSet(connection=connectionList(1), &
+    tileIndexA=1, tileIndexB=2, positionVector=(/0,0/), rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, connectionList=connectionList, &
+    rc=rc)  ! defaults to ESMF_INDEX_GLOBAL
+
+   The same topology can be defined for ESMF_INDEX_DELOCAL indexing.
+   However, the positionVector must be adjusted for the fact that now the
+   same point in index space has different index tuples depending on what
+   tile's reference frame is used.
+
+   With local indexing both tiles start at (1,1) and end at (10,10).
+
+  allocate(minIndexPTile(2,2))    ! (dimCount, tileCount)
+  allocate(maxIndexPTile(2,2))    ! (dimCount, tileCount)
+  minIndexPTile(:,1) = (/1,1/)
+  maxIndexPTile(:,1) = (/10,10/)
+  minIndexPTile(:,2) = (/1,1/)
+  maxIndexPTile(:,2) = (/10,10/)
+
+   To see the impact that the index scheme has on the positionVector,
+   again consider the same highlighted index space point. The index tuple
+   for this point is still (11,3) in the reference frame of tile 1 (tile
+   "A" of the connection). However, in the reference frame of of tile 2
+   (tile "B" of the connection)) it has changed to (1,3) due to local
+   indexing. Therefore, using form ([1502]4), we find that the position
+   vector must be $\vec P = \vec b - \vec a = (1,3) - (11,3) = (-10,0)$ .
+
+  allocate(connectionList(1))
+  call ESMF_DistGridConnectionSet(connection=connectionList(1), &
+    tileIndexA=1, tileIndexB=2, positionVector=(/-10,0/), rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, connectionList=connectionList, &
+    indexflag=ESMF_INDEX_DELOCAL, rc=rc)
+
+   CAPTION: Figure 22: Two 10x10 index space tiles next to each other with
+   a single connection between the right edge of tile 1 and the left edge
+   of tile 2. The index tuple (11,3), which is referenced in the text, is
+   marked by a black circle.
+
+              \includegraphics{dgconnect_2tiles_connected.eps}
+
+   Further note that every forward transformation has an associated
+   inverse, or backward transformation from tile "B" into the reference
+   frame of tile "A". Inverting the forward transform yields the backward
+   transform as
+
+    \begin{displaymath} \vec b \rightarrow \vec a = \hat R^{-1} \vec b -
+                  \hat R^{-1} \vec P. \end{displaymath} (5)
+
+   The DistGrid implicitly considers the corresponding backward connection
+   for every forward connection that is specified explicitly. In other
+   words, DistGrid connections are bidirectional.
+
+   Before going into the details of how the orientationVector and
+   positionVector arguments correspond to $\hat R$ and $\vec P$ for more
+   complex cases, it is useful to explore what class of connections are
+   covered by the above introduced form ([1503]4) of $\vec a \rightarrow
+   \vec b$ .
+
+   First consider the case where tile "A" is rotated by $\hat R$ relative
+   to tile "B" around a general pivot point $\vec p$ given in terms of the
+   index space of tile "A":
+
+   $\displaystyle \vec a \rightarrow \vec b$ $\textstyle =$ $\displaystyle
+                     \hat R (\vec a - \vec p) + \vec p$
+       $\textstyle =$ $\displaystyle \hat R \vec a + ({1\!\!1} - \hat R)
+                                 \vec p$ (6)
+
+   With substitution
+
+           \begin{displaymath} \vec P = ({1\!\!1} - \hat R) \vec p
+   \end{displaymath}                                                     (7)
+
+   form ([1504]4) is recovered.
+
+   Next consider transform ([1505]6) followed by a translation $\vec t$ of
+   tile "B" relative to tile "A":
+
+       \begin{displaymath} \vec a \rightarrow \vec b = \hat R \vec a +
+         ({1\!\!1} - \hat R) \vec p + \vec t. \end{displaymath} (8)
+
+   Again form ([1506]4) is recovered with the appropriate subsitution:
+
+      \begin{displaymath} \vec P = ({1\!\!1} - \hat R) \vec p + \vec t.
+                            \end{displaymath} (9)
+
+   Equation ([1507]9) is the general definition of the positionVector
+   argument for DistGrid connections. It allows two tiles to be connected
+   according to the relationship expressed by ([1508]8). Note that this
+   formualation of tile connections is more general than connecting an
+   edge of a tile to the edge of another tile. Instead a DistGrid
+   connection is specified as a general relationship between the two index
+   spaces, accounting for possible rotation and translation. This
+   formuation supports situations where some elements of the connected
+   tiles overlap with each other in index space. The ESMF DistGrid class
+   leverages this feature when representing topologies that lead to
+   redundancies of elements. Examples for this are the bipolar cut line in
+   a tripole grid, or the edges of a cubed sphere.
+
+   By definition, DistGrid connections associate an index tuple of one
+   tile with exactly one index tuple expressed in the reference frame of
+   another tile. This restricts the supported rotations $\hat R$ to
+   multiples of $90^{\circ}$ . Also allowing invesion of index space
+   dimensions leads to 8 unique operations in two dimension shown in table
+   [1509]3.
+
+   CAPTION: Table 3: The 8 unique rotational operations in 2 dimensional
+   index space. The associated orientationVector argument for each
+   operation is also shown.
+
+       $\hat R$ orientationVector
+     $0^{\circ}$ $\left( \begin{array}{rr} 1 & 0 \\ 0 & 1 \end{array}
+   \right)$ $\left( \begin{array}{r} 1 \\ 2 \end{array} \right)$
+     $90^{\circ}$ $\left( \begin{array}{rr} 0 & -1 \\ 1 & 0 \end{array}
+   \right)$ $\left( \begin{array}{r} -2 \\ 1 \end{array} \right)$
+     $180^{\circ}$ $\left( \begin{array}{rr} -1 & 0 \\ 0 & -1 \end{array}
+   \right)$ $\left( \begin{array}{r} -1 \\ -2 \end{array} \right)$
+     $270^{\circ}$ $\left( \begin{array}{rr} 0 & 1 \\ -1 & 0 \end{array}
+   \right)$ $\left( \begin{array}{r} 2 \\ -1 \end{array} \right)$
+     $0^{\circ}$ + inversion dim 1 $\left( \begin{array}{rr} -1 & 0 \\ 0 &
+   1 \end{array} \right)$ $\left( \begin{array}{r} -1 \\ 2 \end{array}
+   \right)$
+     $0^{\circ}$ + inversion dim 2 $\left( \begin{array}{rr} 1 & 0 \\ 0 &
+   -1 \end{array} \right)$ $\left( \begin{array}{r} 1 \\ -2 \end{array}
+   \right)$
+     $90^{\circ}$ + inversion dim 1 $\left( \begin{array}{rr} 0 & 1 \\ 1 &
+   0 \end{array} \right)$ $\left( \begin{array}{r} 2 \\ 1 \end{array}
+   \right)$
+     $90^{\circ}$ + inversion dim 2 $\left( \begin{array}{rr} 0 & -1 \\ -1
+   & 0 \end{array} \right)$ $\left( \begin{array}{r} -2 \\ -1 \end{array}
+   \right)$
+
+   The orientationVector is simply a more compact format holding the same
+   information provided by the 8 rotational matrices. The first (or top)
+   element of the orientation vector indicates which dimension of the tile
+   "A" index tuple is used for the first dimension of the tile "B" tuple.
+   The second (or bottom) element of the orientation vector indicates
+   which dimension of the tile "A" index tuple is used for the second
+   dimenson of the tile "B" tuple. If an orientation vector entry is
+   negative, the sign of the associated tuple element is inverted when
+   going from tile "A" to tile "B" reference frame. Table [1510]3 provides
+   the corresponding orientationVector argument for each of the 8 2D
+   rotational operations.
+
+  36.3.7 DistGrid Connections - Single tile periodic and pole connections
+
+   The concept of DistGrid connections is not limited to cases with
+   multiple tiles. Even a single tile DistGrid can have connections. In
+   this instance tileA and tileB simply reference the same tile. A very
+   common case is that of a single tile with periodic boundary conditions.
+
+   First consider a single tile DistGrid without connections.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/50,20/), rc=rc)
+
+   In order to better visualize the topology, the first index space
+   dimension is associated with the longitude ( $0^{\circ}..360^{\circ}$
+   ), and the second dimension with latitude ( $-80^{\circ}..+80^{\circ}$
+   ) of the unit sphere (using an ESMF_Grid object) as shown in figure
+   [1511]23.
+
+   CAPTION: Figure 23: A single 50x20 index space tile without
+   connections. For better visualization the index space points are
+   plotted on the unit circle. The gap between the right and left edge of
+   the tile is visible. Further the top and the bottom edges of the tile
+   are visibly without connection.
+
+             \includegraphics{dgconnect_1tile_not_connected.eps}
+
+   A single DistGrid connection is needed to connect the right edge of the
+   index space tile with its left edge. Connecting a tile with itself in
+   such manner leads to a periodic topology.
+
+   First the connectionList needs to be allocated for a single connection.
+   Then the connection is defined with both tileIndexA and tileIndexB set
+   to 1, referring to the first, and only tile in this case.
+
+  allocate(connectionList(1))
+  call ESMF_DistGridConnectionSet(connection=connectionList(1), &
+    tileIndexA=1, tileIndexB=1, positionVector=(/-50,0/), rc=rc)
+
+   The positionVector is determined by transformation ([1512]4), the fact
+   that there is no rotation involved, and that stepping over the right
+   edge needs to connect back to the left edge. Therefore $\vec P = \vec b
+   - \vec a = (1,j) - (51,j) = (-50,0)$ . Here $j$ stands for an arbitrary
+   value along the second index space dimension.
+
+   Creating a DistGrid on the same index space tile, but with this
+   connection, results in a periodic boundary condition along the first
+   dimension. This is shown in figure [1513]24.
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/50,20/), &
+    connectionList=connectionList, rc=rc)
+
+   CAPTION: Figure 24: A single 50x20 index space tile with periodic
+   connection along the first dimension.
+
+          \includegraphics{dgconnect_1tile_periodic1_connected.eps}
+
+   In general it is more useful to express the position vector of a
+   connection in terms of the tile minIndex and maxIndex components. For
+   this we define the same index space tile in a set of variables.
+
+  allocate(minIndex(2))    ! (dimCount)
+  allocate(maxIndex(2))    ! (dimCount)
+  minIndex(:) = (/1,1/)
+  maxIndex(:) = (/50,20/)
+
+   Now we can code any connection on this tile in terms of minIndex and
+   maxIndex. For purpose of demonstration we define periodic boundary
+   conditions along both index space dimensions. The resulting torus
+   topology is depicted in figure [1514]25.
+
+  allocate(connectionList(2))
+  call ESMF_DistGridConnectionSet(connection=connectionList(1), & ! 1st connecti
+on
+    tileIndexA=1, tileIndexB=1, &   ! periodic along i
+    positionVector=(/ -(maxIndex(1)-minIndex(1)+1) , 0/), &
+    rc=rc)
+
+  call ESMF_DistGridConnectionSet(connection=connectionList(2), & ! 2nd connecti
+on
+    tileIndexA=1, tileIndexB=1, &   ! periodic along j
+    positionVector=(/ 0 , -(maxIndex(2)-minIndex(2)+1) /), &
+    rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndex=minIndex, maxIndex=maxIndex, &
+    connectionList=connectionList, rc=rc)
+
+   CAPTION: Figure 25: A single 50x20 index space tile with periodic
+   connections along both directions. The topology is that of a torus,
+   however, because of the chosen spherical coordinates the connection
+   through the middle has the shape of a cylinder.
+
+          \includegraphics{dgconnect_1tile_periodic2_connected.eps}
+
+   While the topology shown in figure [1515]25 is that of a torus, the
+   coordinates chosen are actually those of a sphere. Next we replace the
+   periodic connection along $j$ (i.e. the second index space dimension)
+   with a more fitting pole connection at the top of the sphere (i.e. at
+   $j_{max}$ ).
+
+   For the orientation vector associated with a regular pole connection at
+   $j_{max}$ we first look at how the two index space directions are
+   affected. Looking at a point with $i$ along the first dimension, and a
+   second point $i+1$ that is just to the right of the first point, we see
+   that as the pole is being crossed, the second point maps just right of
+   the first point. Therefore, the orientation of the first index space
+   dimension is unaffected by the pole connection. However, for the second
+   dimension we find that increasing $j$ on one side corresponds to a
+   dereasing $j$ across the pole. We thus have found the general fact that
+   orientationVector=(1,-2) for a pole connection across the $j$
+   direction.
+
+   In order to find the position vector of the polar connection we
+   consider starting at a general point ( $i$ , $j_{max}$ ) at the top
+   edge of the tile. Crossing the pole this takes us to a point that is
+   again right on the top edge with $j=j_{max}$ , and is $180^\circ$
+   rotated along the first dimension. This means $i=mod(i+i_{size}/2,
+   i_{size})$ , with $i_{size}=i_{max} -i_{min}+1$ . In practice the
+   modulo operation is automatically taken care of by the periodic
+   connection along $i$ . We can therefore write:
+
+     \begin{displaymath} \vec a = \left( \begin{array}{l} i \\ j_{max}+1
+      \end{arr... ...in{array}{l} i + i_{size}/2\\ j_{max} \end{array}
+                       \right). \end{displaymath} (10)
+
+   Using this observation, together with table [1516]3 to translate the
+   polar orientationVector into a standard rotation operation $\hat R$ ,
+   we get the position vector from equation ([1517]4):
+
+    $\displaystyle \vec P$ $\textstyle =$ $\displaystyle \vec b - \hat R
+                                   \vec a$
+           $\textstyle =$ $\displaystyle \left( \begin{array}{l} i +
+    i_{size}/2\\ j_{max} \end{array} \ri... ...\end{array} \right) \left(
+            \begin{array}{l} i \\ j_{max}+1 \end{array} \right)$
+      $\textstyle =$ $\displaystyle \left( \begin{array}{l} i_{size}/2\\
+                   2j_{max} +1 \end{array} \right).$ (11)
+
+  allocate(connectionList(2))
+  call ESMF_DistGridConnectionSet(connection=connectionList(1), & ! 1st connecti
+on
+    tileIndexA=1, tileIndexB=1, &   ! periodic along i
+    positionVector=(/-(maxIndex(1)-minIndex(1)+1),0/), &
+    rc=rc)
+
+  call ESMF_DistGridConnectionSet(connection=connectionList(2), & ! 2nd connecti
+on
+    tileIndexA=1, tileIndexB=1, &   ! pole at j_max
+    orientationVector=(/1,-2/), &
+    positionVector=(/ (maxIndex(1)-minIndex(1)+1)/2 , 2*maxIndex(2)+1 /), &
+    rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndex=minIndex, maxIndex=maxIndex, &
+    connectionList=connectionList, rc=rc)
+
+   The pole connection at $j_{max}$ can clearly be seen in figure
+   [1518]26. Note that the chosen perspective hides the fact that the
+   lower edge of the index space tile remains open. In other words there
+   is still a hole at the bottom of the sphere that cannot be seen. Only
+   three of the four sides have been connected so far: The first
+   connection connects the left and the right tile edges. The second
+   connection connects the top edge to itself to form the pole. A third
+   connection would be needed, e.g. to form a pole at the bottom edge much
+   like the top edge. This would then complete a perfectly spherical
+   topology with a single tile.
+
+   CAPTION: Figure 26: A single 50x20 index space tile with periodic
+   connection along $i$ , and pole at $j_{max}$ . The hole at $j_{min}$ is
+   hidden from sight.
+
+          \includegraphics{dgconnect_1tile_peripole_connected.eps}
+
+   The final single tile topology discussed in this section is that of a
+   tripole. A tripolar sphere has the typical spherical periodic boundary
+   condition along one direction (e.g. connecting the left and the right
+   tile edge), and a regular monopole at one of the other edges of the
+   tile. However, instead of defining a second monopole at the opposite
+   edge, a bipole connection is chosen.
+
+   Topologically a bipole connection can be thought of folding the
+   respective edge at the middle point back onto itself. Assuming the
+   bipole at the top edge, i.e. at $j_{max}$ , we get mappings across the
+   bipole of $(i_{min}, j_{max}+1) \rightarrow (i_{max}, j_{max})$ ,
+   $(i_{min}+1, j_{max}+1) \rightarrow (i_{max}-1, j_{max})$ , and so
+   forth. This means that compared to the regular pole connection, the
+   bipolar orientation vector reverses the $i$ direction in addition to
+   the $j$ direction: orientationVector=(-1,-2).
+
+   Using the bipolar mapping just mentioned for a point at $i_{min}$ ,
+   together with table [1519]3 to translate the polar orientationVector
+   into a standard rotation operation $\hat R$ , we can solve for the
+   position vector according to equation ([1520]4):
+
+    $\displaystyle \vec P$ $\textstyle =$ $\displaystyle \vec b - \hat R
+                                   \vec a$
+        $\textstyle =$ $\displaystyle \left( \begin{array}{l} i_{max}\\
+          j_{max} \end{array} \right) - ... ...rray} \right) \left(
+         \begin{array}{l} i_{min} \\ j_{max}+1 \end{array} \right)$
+             $\textstyle =$ $\displaystyle \left( \begin{array}{l}
+          i_{max}+i_{min}\\ 2j_{max} +1 \end{array} \right).$ (12)
+
+   Figure [1521]27 visualizes the bipolar topology at the top edge of the
+   tile. Note, however, that the coordinates are perfectly spherical.
+   Consequently there is no "drawing shut" of the cut line as would be
+   expected for a true bipolar geometry. Still, the two poles are becoming
+   visible at the two opposing ends of the top circle, where the distance
+   between the connection lines is starting to go to zero.
+
+   CAPTION: Figure 27: A single 50x20 index space tile with periodic
+   connection along $i$ , and bi-pole at $j_{max}$ . The regular pole
+   connection at $j_{min}$ is hidden from sight.
+
+         \includegraphics{dgconnect_1tile_peribipole_connected.eps}
+
+  allocate(connectionList(3))
+  call ESMF_DistGridConnectionSet(connection=connectionList(1), & ! 1st connecti
+on
+    tileIndexA=1, tileIndexB=1, &   ! periodic along i
+    positionVector=(/-(maxIndex(1)-minIndex(1)+1),0/), &
+    rc=rc)
+
+  call ESMF_DistGridConnectionSet(connection=connectionList(2), & ! 2nd connecti
+on
+    tileIndexA=1, tileIndexB=1, &   ! pole at j_min
+    orientationVector=(/1,-2/), &
+    positionVector=(/ (maxIndex(1)-minIndex(1)+1)/2 , 2*minIndex(2)+1 /), &
+    rc=rc)
+
+  call ESMF_DistGridConnectionSet(connection=connectionList(3), & ! 3rd connecti
+on
+    tileIndexA=1, tileIndexB=1, &   ! bi-pole at j_max
+    orientationVector=(/-1,-2/), &
+    positionVector=(/ maxIndex(1)+minIndex(1) , 2*maxIndex(2)+1 /), &
+    rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndex=minIndex, maxIndex=maxIndex, &
+    connectionList=connectionList, rc=rc)
+
+  36.3.8 DistGrid Connections - Multi tile connections
+
+   Starting point of the multi-tile connection examples will be the six
+   tile case shown in figure [1522]28. All six tiles are identical squares
+   of size 10x10.
+
+   CAPTION: Figure 28: Six 10x10 square index space tiles without
+   connections. The tile number is indicated by color as indicated by the
+   legend.
+
+             \includegraphics{dgconnect_cusph_not_connected.eps}
+
+   One geometrical interpretation of the six tiles shown is that of an
+   unfolded cube. In fact, the way that the tiles are arranged in the 2D
+   plane does suggest the cubic interpretation. In order to turn the six
+   tiles into a cubic topology, each tile must be connected to its
+   neighbors on all four sides. In total there will be 12 connections that
+   need to be made.
+
+   Choosing global indexing, the depicted six tile case can be created in
+   the following way:
+
+  allocate(minIndexPTile(2,6))    ! (dimCount, tileCount)
+  allocate(maxIndexPTile(2,6))    ! (dimCount, tileCount)
+  size = 10                       ! number of index space points along tile side
+s
+  !- tile 1
+  tile=1
+  minIndexPTile(1,tile)=1
+  minIndexPTile(2,tile)=1
+  maxIndexPTile(1,tile)=minIndexPTile(1,tile)+size-1
+  maxIndexPTile(2,tile)=minIndexPTile(2,tile)+size-1
+  !- tile 2
+  tile=2
+  minIndexPTile(1,tile)=maxIndexPTile(1,tile-1)+1
+  minIndexPTile(2,tile)=minIndexPTile(2,tile-1)
+  maxIndexPTile(1,tile)=minIndexPTile(1,tile)+size-1
+  maxIndexPTile(2,tile)=minIndexPTile(2,tile)+size-1
+  !- tile 3
+  tile=3
+  minIndexPTile(1,tile)=minIndexPTile(1,tile-1)
+  minIndexPTile(2,tile)=maxIndexPTile(2,tile-1)+1
+  maxIndexPTile(1,tile)=minIndexPTile(1,tile)+size-1
+  maxIndexPTile(2,tile)=minIndexPTile(2,tile)+size-1
+  !- tile 4
+  tile=4
+  minIndexPTile(1,tile)=maxIndexPTile(1,tile-1)+1
+  minIndexPTile(2,tile)=minIndexPTile(2,tile-1)
+  maxIndexPTile(1,tile)=minIndexPTile(1,tile)+size-1
+  maxIndexPTile(2,tile)=minIndexPTile(2,tile)+size-1
+  !- tile 5
+  tile=5
+  minIndexPTile(1,tile)=minIndexPTile(1,tile-1)
+  minIndexPTile(2,tile)=maxIndexPTile(2,tile-1)+1
+  maxIndexPTile(1,tile)=minIndexPTile(1,tile)+size-1
+  maxIndexPTile(2,tile)=minIndexPTile(2,tile)+size-1
+  !- tile 6
+  tile=6
+  minIndexPTile(1,tile)=maxIndexPTile(1,tile-1)+1
+  minIndexPTile(2,tile)=minIndexPTile(2,tile-1)
+  maxIndexPTile(1,tile)=minIndexPTile(1,tile)+size-1
+  maxIndexPTile(2,tile)=minIndexPTile(2,tile)+size-1
+
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, rc=rc)
+
+   The five connections between tiles 1&2, 2&3, 3&4, 4&5, 5&6 are trivial.
+   There are no rotations, which means that the orientationVector argument
+   can be ommitted in these connections. Further, because of the global
+   index space, there are no translations either, which means that
+   positionVector=(0,0) for these five connections. The resulting topology
+   is shown in figure [1523]29.
+
+  allocate(connectionList(5))
+  !- connection 1
+  conn=1
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=1, tileIndexB=2, positionVector=(/0, 0/), rc=rc)
+  !- connection 2
+  conn=2
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=2, tileIndexB=3, positionVector=(/0, 0/), rc=rc)
+  !- connection 3
+  conn=3
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=3, tileIndexB=4, positionVector=(/0, 0/), rc=rc)
+  !- connection 4
+  conn=4
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=4, tileIndexB=5, positionVector=(/0, 0/), rc=rc)
+  !- connection 5
+  conn=5
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=5, tileIndexB=6, positionVector=(/0, 0/), rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, connectionList=connectionList, rc=rc)
+
+   CAPTION: Figure 29: The six tiles of an unfolded cube with five
+   connections defined.
+
+              \includegraphics{dgconnect_cusph_5connected.eps}
+
+   The sixth connection that does not involve a rotation is that between
+   tile 1&6. While there is no rotation involved, it does include a
+   translation because the bottom edge of tile 1 must reach all the way to
+   the top edge of tile 6. This involves a translation along both the $i$
+   and the $j$ dimension.
+
+   Using the same procedure introduced in the previous section, we chose
+   an arbitrary index space point close to the connection and write it in
+   terms of both tiles that we want to connect. E.g. the first point of
+   the top edge of tile 6 is
+
+   ( minIndexPTile(1,6) , maxIndexPTile(2,6) )
+
+   in terms of tile 6. However, in terms of tile 1, going through the
+   connection, it is
+
+   ( minIndexPTile(1,1) , minIndexPTile(2,1)-1 ).
+
+   According to the general transformation relationship ([1524]4) the
+   position vector $\vec P$ for the forward transform tile 1 $\rightarrow$
+   tile 6 is then given as the difference between these two
+   representations. Figure [1525]30 visualizes the situation.
+
+  !- connection 6
+  conn=6
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=1, tileIndexB=6, &
+    positionVector=(/minIndexPTile(1,6)-minIndexPTile(1,1),     &
+                     maxIndexPTile(2,6)-minIndexPTile(2,1)+1/), &
+    rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, connectionList=connectionList, rc=rc)
+
+   CAPTION: Figure 30: The six tiles of an unfolded cube with all six
+   connections that do not involve any rotation of tiles.
+
+              \includegraphics{dgconnect_cusph_6connected.eps}
+
+   The six remaining connections all involve rotations. The procedure for
+   finding the correct orientationVector and positionVector arguments
+   still remains the same: First determine the direction of the connection
+   to be formulated. This is important because for the forward connection
+   the rotation applies to tile "A". Once the correct rotation operation
+   $\hat R$ is pinned down, an arbitrary point close to the connection is
+   chosen. This point can either be on tile "A" or "B". It is written then
+   written in terms of tile "A" index space $\vec a$ , and in terms of
+   tile "B" index space $\vec b$ . Obviously one of those formulations
+   (either $\vec a$ or $\vec b$ ) will take advantage of the connection,
+   i.e. it will actually step outside the reference tile in order to reach
+   the chosen point. Finally the position vector $\vec P$ of the
+   connection is determined by expression ([1526]4) as the difference:
+
+   \begin{displaymath} \vec P = \vec b - \hat R \vec a. \end{displaymath}
+                                    (13)
+
+   Following the above outlined procedure for connection tile 1
+   $\rightarrow$ tile 3, we find first that tile 1 needs to be rotated
+   clockwise by $90^\circ$ . This rotation lines up the top edge of tile 1
+   with the left edge of tile 3. A clockwise rotation of $90^\circ$
+   corresponds to a counterclockwise rotation by $270^\circ$ given in
+   table [1527]3. We therefore know that orientationVector=(2,-1) for this
+   connection, and the associated operation is $\hat
+   R=\left(\begin{array}{rr} 0 & 1 \\ -1 & 0 \end{array} \right)$ .
+
+   Next we chose the first point on the top edge of tile 1 as a reference
+   point. In terms of tile 1 this point has coordinates
+
+   $\vec a$ = ( minIndexPTile(1,1) , maxIndexPTile(2,1) ).
+
+   The same point in terms of tile 3 (going through the connection) has
+   coordinates
+
+   $\vec b$ = ( minIndexPTile(1,3)-1 , maxIndexPTile(2,3) ).
+
+   Using equation ([1528]13) we find the position vector and can write
+   down the connection:
+
+  allocate(connectionList(2))
+  !- connection 1
+  conn=1
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=1, tileIndexB=3, &
+    orientationVector=(/2,-1/), & ! 270 degree rotation of tile A
+    positionVector=(/minIndexPTile(1,3)-1-maxIndexPTile(2,1),   &
+                     maxIndexPTile(2,3)+minIndexPTile(1,1)/), &
+    rc=rc)
+
+   For greater clarity figure [1529]31 only shows two connections. Besides
+   the connection just defined between tile 1 and 3, the other connection
+   shown is between tile 4 and 6. Defining the connection as forward going
+   from tile 4 to tile 6 means that tile 4 needs to be rotated in such a
+   way that its right edge meets up with the bottom edge of tile 6. This
+   requires a counterclockwise rotation of tile 4 by $90^\circ$ . From
+   table [1530]3 we then get orientationVector=(-2,1), and $\hat
+   R=\left(\begin{array}{rr} 0 & -1 \\ 1 & 0 \end{array} \right)$ .
+
+   Choosing the left most point on the bottom edge of tile 6 as the
+   reference point, we find the coordinates in terms of tile 4 (through
+   the connection)
+
+   $\vec a$ = ( maxIndexPTile(1,4)+1 , maxIndexPTile(2,4) ),
+
+   and in terms of tile 6
+
+   $\vec b$ = ( minIndexPTile(1,6) , minIndexPTile(2,6) ).
+
+   Again using equation ([1531]13) we find the position vector and can
+   implement the second connection:
+
+  !- connection 2
+  conn=2
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=4, tileIndexB=6, &
+    orientationVector=(/-2,1/), & ! 90 degree rotation of tile A
+    positionVector=(/minIndexPTile(1,6)+maxIndexPTile(2,4),   &
+                     minIndexPTile(2,6)-maxIndexPTile(1,4)-1/), &
+    rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, connectionList=connectionList, rc=rc)
+
+   CAPTION: Figure 31: The six tiles of an unfolded cube with two
+   connections that involve rotation of tiles.
+
+             \includegraphics{dgconnect_cusph_2rotconnected.eps}
+
+   The remaining four connections with rotations can be determined
+   following the exact same recipe. The following code finally defines all
+   12 connections needed to connect the six index space tiles into a cubic
+   topology.
+
+  allocate(connectionList(12))
+
+  !- connection 1: tile 1 -> tile 2
+  conn=1
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=1, tileIndexB=2, positionVector=(/0, 0/), rc=rc)
+
+  !- connection 2: tile 2 -> tile 3
+  conn=2
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=2, tileIndexB=3, positionVector=(/0, 0/), rc=rc)
+
+  !- connection 3: tile 3 -> tile 4
+  conn=3
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=3, tileIndexB=4, positionVector=(/0, 0/), rc=rc)
+
+  !- connection 4: tile 4 -> tile 5
+  conn=4
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=4, tileIndexB=5, positionVector=(/0, 0/), rc=rc)
+
+  !- connection 5: tile 5 -> tile 6
+  conn=5
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=5, tileIndexB=6, positionVector=(/0, 0/), rc=rc)
+
+  !- connection 6: tile 1 -> tile 6
+  conn=6
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=1, tileIndexB=6, &
+    positionVector=(/minIndexPTile(1,6)-minIndexPTile(1,1),     &
+                     maxIndexPTile(2,6)-minIndexPTile(2,1)+1/), &
+    rc=rc)
+
+  !- connection 7: tile 1 -> tile 3
+  conn=7
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=1, tileIndexB=3, &
+    orientationVector=(/2,-1/), & ! 270 degree rotation of tile A
+    positionVector=(/minIndexPTile(1,3)-1-maxIndexPTile(2,1), &
+                     maxIndexPTile(2,3)+minIndexPTile(1,1)/), &
+    rc=rc)
+
+  !- connection 8: tile 3 -> tile 5
+  conn=8
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=3, tileIndexB=5, &
+    orientationVector=(/2,-1/), & ! 270 degree rotation of tile A
+    positionVector=(/minIndexPTile(1,5)-1-maxIndexPTile(2,3), &
+                     maxIndexPTile(2,5)+minIndexPTile(1,3)/), &
+    rc=rc)
+
+  !- connection 9: tile 5 -> tile 1
+  conn=9
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=5, tileIndexB=1, &
+    orientationVector=(/2,-1/), & ! 270 degree rotation of tile A
+    positionVector=(/minIndexPTile(1,1)-1-maxIndexPTile(2,5), &
+                     maxIndexPTile(2,1)+minIndexPTile(1,5)/), &
+    rc=rc)
+
+  !- connection 10: tile 2 -> tile 4
+  conn=10
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=2, tileIndexB=4, &
+    orientationVector=(/-2,1/), & ! 90 degree rotation of tile A
+    positionVector=(/minIndexPTile(1,4)+maxIndexPTile(2,2),     &
+                     minIndexPTile(2,4)-maxIndexPTile(1,2)-1/), &
+    rc=rc)
+
+  !- connection 11: tile 4 -> tile 6
+  conn=11
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=4, tileIndexB=6, &
+    orientationVector=(/-2,1/), & ! 90 degree rotation of tile A
+    positionVector=(/minIndexPTile(1,6)+maxIndexPTile(2,4),     &
+                     minIndexPTile(2,6)-maxIndexPTile(1,4)-1/), &
+    rc=rc)
+
+  !- connection 12: tile 6 -> tile 2
+  conn=12
+  call ESMF_DistGridConnectionSet(connection=connectionList(conn), &
+    tileIndexA=6, tileIndexB=2, &
+    orientationVector=(/-2,1/), & ! 90 degree rotation of tile A
+    positionVector=(/minIndexPTile(1,2)+maxIndexPTile(2,6),     &
+                     minIndexPTile(2,2)-maxIndexPTile(1,6)-1/), &
+    rc=rc)
+
+  ! - create the DistGrid with 6 tiles and 12 connections
+  distgrid = ESMF_DistGridCreate(minIndexPTile=minIndexPTile, &
+    maxIndexPTile=maxIndexPTile, connectionList=connectionList, rc=rc)
+
+   For better visualization the resulting cubic topology is plotted in 3D.
+   Each index space point is associated with a longitude and latitude
+   value of the unit sphere. Combined with the cubic topology formed by
+   the six index space tiles, this results in a cubed sphere
+   representation shown in figure [1532]32.
+
+   CAPTION: Figure 32: Six index space tiles with all 12 connections to
+   form a cubic topology. The coordinates at every index space point are
+   chosen to form a spherical geometry, resulting in a cubed sphere.
+
+              \includegraphics{dgconnect_cusph_12connected.eps}
+
+36.4 Restrictions and Future Work
+
+     * Multi-tile DistGrids from deBlockList are not yet supported.
+     * The fastAxis feature has not been implemented yet.
+
+36.5 Design and Implementation Notes
+
+   This section will be updated as the implementation of the DistGrid
+   class nears completion.
+
+36.6 Class API
+
+  36.6.1 ESMF_DistGridAssignment(=) - DistGrid assignment
+
+   INTERFACE:
+     interface assignment(=)
+     distgrid1 = distgrid2
+
+   ARGUMENTS:
+     type(ESMF_DistGrid) :: distgrid1
+     type(ESMF_DistGrid) :: distgrid2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign distgrid1 as an alias to the same ESMF DistGrid object in memory
+   as distgrid2. If distgrid2 is invalid, then distgrid1 will be equally
+   invalid after the assignment.
+
+   The arguments are:
+
+   distgrid1
+          The ESMF_DistGrid object on the left hand side of the
+          assignment.
+
+   distgrid2
+          The ESMF_DistGrid object on the right hand side of the
+          assignment.
+
+  36.6.2 ESMF_DistGridOperator(==) - DistGrid equality operator
+
+   INTERFACE:
+   interface operator(==)
+     if (distgrid1 == distgrid2) then ... endif
+               OR
+     result = (distgrid1 == distgrid2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_DistGrid), intent(in) :: distgrid1
+     type(ESMF_DistGrid), intent(in) :: distgrid2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether distgrid1 and distgrid2 are valid aliases to the same ESMF
+   DistGrid object in memory. For a more general comparison of two ESMF
+   DistGrids, going beyond the simple alias test, the ESMF_DistGridMatch()
+   function (not yet fully implemented) must be used.
+
+   The arguments are:
+
+   distgrid1
+          The ESMF_DistGrid object on the left hand side of the equality
+          operation.
+
+   distgrid2
+          The ESMF_DistGrid object on the right hand side of the equality
+          operation.
+
+  36.6.3 ESMF_DistGridOperator(/=) - DistGrid not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (distgrid1 /= distgrid2) then ... endif
+               OR
+     result = (distgrid1 /= distgrid2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_DistGrid), intent(in) :: distgrid1
+     type(ESMF_DistGrid), intent(in) :: distgrid2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether distgrid1 and distgrid2 are not valid aliases to the same
+   ESMF DistGrid object in memory. For a more general comparison of two
+   ESMF DistGrids, going beyond the simple alias test, the
+   ESMF_DistGridMatch() function (not yet fully implemented) must be used.
+
+   The arguments are:
+
+   distgrid1
+          The ESMF_DistGrid object on the left hand side of the
+          non-equality operation.
+
+   distgrid2
+          The ESMF_DistGrid object on the right hand side of the
+          non-equality operation.
+

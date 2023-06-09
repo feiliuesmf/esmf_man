@@ -1,0 +1,50 @@
+  36.6.21 ESMF_DistGridSet - Set arbitrary sequence for a specific local DE
+
+   INTERFACE:
+   ! Private name; call using ESMF_DistGridSet()
+   subroutine ESMF_DistGridSetPLocalDe(distgrid, localDe, collocation, &
+     seqIndexList, seqIndexListI8, rc)
+
+   ARGUMENTS:
+     type(ESMF_DistGrid),      intent(inout)         :: distgrid
+     integer,                  intent(in)            :: localDe
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                  intent(in),  optional :: collocation
+     integer,          target, intent(in),  optional :: seqIndexList(:)
+ integer(ESMF_KIND_I8),target, intent(in),  optional :: seqIndexListI8(:)
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set DistGrid information for a specific local DE.
+
+   The arguments are:
+
+   distgrid
+          Queried ESMF_DistGrid object.
+
+   localDe
+          Local DE for which information is set. [0,..,localDeCount-1]
+
+   [collocation]
+          Collocation for which information is set. Default to first
+          collocation in collocation list.
+
+   [seqIndexList]
+          Sequence indices for the elements on localDe. The seqIndexList
+          must provide exactly elementCountPDe(localDeToDeMap(localDe)
+          many entries. When this argument is present, the indexTK of
+          distgrid will be set to ESMF_TYPEKIND_I4. This argument is
+          mutually exclusive with seqIndexListI8. Only one or the other
+          must be provided. An error will be returned otherwise.
+
+   [seqIndexListI8]
+          Same as seqIndexList, but of 64-bit integer kind. When this
+          argument is present, the indexTK of distgrid will be set to
+          ESMF_TYPEKIND_I8. This argument is mutually exclusive with
+          seqIndexList. Only one or the other must be provided. An error
+          will be returned otherwise.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

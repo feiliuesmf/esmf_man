@@ -1,0 +1,28 @@
+  33.4.16 ESMF_MeshFreeMemory - Remove a Mesh and its memory
+
+   INTERFACE:
+       subroutine ESMF_MeshFreeMemory(mesh, rc)
+
+   RETURN VALUE:
+
+   ARGUMENTS:
+     type(ESMF_Mesh), intent(inout)        :: mesh
+     integer,        intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call removes the portions of mesh which contain connection and
+   coordinate information. After this call, Fields build on mesh will no
+   longer be usable as part of an ESMF_FieldRegridStore() operation.
+   However, after this call Fields built on mesh can still be used in an
+   ESMF_FieldRegrid() operation if the routehandle was generated
+   beforehand. New Fields may also be built on mesh after this call.
+
+   The arguments are:
+
+   mesh
+          Mesh object whose memory is to be freed.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

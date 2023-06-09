@@ -1,0 +1,28 @@
+  17.4.10 ESMF_GridCompIsCreated - Check whether a GridComp object has been
+  created
+
+   INTERFACE:
+   function ESMF_GridCompIsCreated(gridcomp, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_GridCompIsCreated
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(in)            :: gridcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the gridcomp has been created. Otherwise return
+   .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the
+   return value of the function will also be .false..
+
+   The arguments are:
+
+   gridcomp
+          ESMF_GridComp queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,26 @@
+  26.6.71 ESMF_FieldSet - Set object-wide Field information
+
+   INTERFACE:
+   subroutine ESMF_FieldSet(field, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_Field),   intent(inout)         :: field
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len = *), intent(in),  optional :: name
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Sets adjustable settings in an ESMF_Field object.
+
+   The arguments are:
+
+   field
+          ESMF_Field object for which to set properties.
+
+   [name]
+          The Field name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

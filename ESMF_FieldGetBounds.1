@@ -1,0 +1,106 @@
+  26.6.54 ESMF_FieldGetBounds - Get DE-local Field data bounds
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldGetBounds()
+   subroutine ESMF_FieldGetBounds(field, localDe, &
+     exclusiveLBound, exclusiveUBound, exclusiveCount, computationalLBound, &
+     computationalUBound, computationalCount, totalLBound, &
+     totalUBound, totalCount, rc)
+
+   ARGUMENTS:
+     type(ESMF_Field), intent(in) :: field
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(in), optional :: localDe
+     integer, intent(out), optional :: exclusiveLBound(:)
+     integer, intent(out), optional :: exclusiveUBound(:)
+     integer, intent(out), optional :: exclusiveCount(:)
+     integer, intent(out), optional :: computationalLBound(:)
+     integer, intent(out), optional :: computationalUBound(:)
+     integer, intent(out), optional :: computationalCount(:)
+     integer, intent(out), optional :: totalLBound(:)
+     integer, intent(out), optional :: totalUBound(:)
+     integer, intent(out), optional :: totalCount(:)
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method returns the bounds information of a field that consists of
+   a internal grid and a internal array. The exclusive and computational
+   bounds are shared between the grid and the array but the total bounds
+   are the array bounds plus the halo width. The count is the number of
+   elements between each bound pair.
+
+   The arguments are:
+
+   field
+          Field to get the information from.
+
+   [localDe]
+          Local DE for which information is requested.
+          [0,..,localDeCount-1]. For localDeCount==1 the localDe argument
+          may be omitted, in which case it will default to localDe=0.
+
+   [exclusiveLBound]
+          Upon return this holds the lower bounds of the exclusive region.
+          exclusiveLBound must be allocated to be of size equal to the
+          field rank. Please see section [951]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [exclusiveUBound]
+          Upon return this holds the upper bounds of the exclusive region.
+          exclusiveUBound must be allocated to be of size equal to the
+          field rank. Please see section [952]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [exclusiveCount]
+          Upon return this holds the number of items,
+          exclusiveUBound-exclusiveLBound+1, in the exclusive region per
+          dimension. exclusiveCount must be allocated to be of size equal
+          to the field rank. Please see section [953]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalLBound]
+          Upon return this holds the lower bounds of the stagger region.
+          computationalLBound must be allocated to be of size equal to the
+          field rank. Please see section [954]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [computationalUBound]
+          Upon return this holds the upper bounds of the stagger region.
+          computationalUBound must be allocated to be of size equal to the
+          field rank. Please see section [955]31.3.19 for a description of
+          the regions and their associated bounds and counts.
+
+   [computationalCount]
+          Upon return this holds the number of items in the computational
+          region per dimension (i.e.
+          computationalUBound-computationalLBound+1). computationalCount
+          must be allocated to be of size equal to the field rank. Please
+          see section [956]31.3.19 for a description of the regions and
+          their associated bounds and counts.
+
+   [totalLBound]
+          Upon return this holds the lower bounds of the total region.
+          totalLBound must be allocated to be of size equal to the field
+          rank.
+
+   [totalUBound]
+          Upon return this holds the upper bounds of the total region.
+          totalUBound must be allocated to be of size equal to the field
+          rank.
+
+   [totalCount]
+          Upon return this holds the number of items in the total region
+          per dimension (i.e. totalUBound-totalLBound+1). totalCount must
+          be allocated to be of size equal to the field rank.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

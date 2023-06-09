@@ -1,0 +1,100 @@
+  18.4.7 ESMF_CplCompGet - Get CplComp information
+
+   INTERFACE:
+   subroutine ESMF_CplCompGet(cplcomp, configIsPresent, config, &
+     configFileIsPresent, configFile, clockIsPresent, clock, localPet, &
+     petCount, contextflag, currentMethod, currentPhase, vmIsPresent, &
+     vm, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp),      intent(in)            :: cplcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                 intent(out), optional :: configIsPresent
+     type(ESMF_Config),       intent(out), optional :: config
+     logical,                 intent(out), optional :: configFileIsPresent
+     character(len=*),        intent(out), optional :: configFile
+     logical,                 intent(out), optional :: clockIsPresent
+     type(ESMF_Clock),        intent(out), optional :: clock
+     integer,                 intent(out), optional :: localPet
+     integer,                 intent(out), optional :: petCount
+     type(ESMF_Context_Flag), intent(out), optional :: contextflag
+     type(ESMF_Method_Flag),  intent(out), optional :: currentMethod
+     integer,                 intent(out), optional :: currentPhase
+     logical,                 intent(out), optional :: vmIsPresent
+     type(ESMF_VM),           intent(out), optional :: vm
+     character(len=*),        intent(out), optional :: name
+     integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Get information about an ESMF_CplComp object.
+
+   The arguments are:
+
+   cplcomp
+          The ESMF_CplComp object being queried.
+
+   [configIsPresent]
+          .true. if config was set in CplComp object, .false. otherwise.
+
+   [config]
+          Return the associated Config. It is an error to query for the
+          Config if none is associated with the CplComp. If unsure, get
+          configIsPresent first to determine the status.
+
+   [configFileIsPresent]
+          .true. if configFile was set in CplComp object, .false.
+          otherwise.
+
+   [configFile]
+          Return the associated configuration filename. It is an error to
+          query for the configuration filename if none is associated with
+          the CplComp. If unsure, get configFileIsPresent first to
+          determine the status.
+
+   [clockIsPresent]
+          .true. if clock was set in CplComp object, .false. otherwise.
+
+   [clock]
+          Return the associated Clock. It is an error to query for the
+          Clock if none is associated with the CplComp. If unsure, get
+          clockIsPresent first to determine the status.
+
+   [localPet]
+          Return the local PET id within the ESMF_CplComp object.
+
+   [petCount]
+          Return the number of PETs in the the ESMF_CplComp object.
+
+   [contextflag]
+          Return the ESMF_Context_Flag for this ESMF_CplComp. See section
+          [284]54.10 for a complete list of valid flags.
+
+   [currentMethod]
+          Return the current ESMF_Method_Flag of the ESMF_CplComp
+          execution. See section [285]54.42 for a complete list of valid
+          options.
+
+   [currentPhase]
+          Return the current phase of the ESMF_CplComp execution.
+
+   [vmIsPresent]
+          .true. if vm was set in CplComp object, .false. otherwise.
+
+   [vm]
+          Return the associated VM. It is an error to query for the VM if
+          none is associated with the CplComp. If unsure, get vmIsPresent
+          first to determine the status.
+
+   [name]
+          Return the name of the ESMF_CplComp.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

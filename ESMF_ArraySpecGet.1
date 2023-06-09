@@ -1,0 +1,37 @@
+  30.5.4 ESMF_ArraySpecGet - Get values from an ArraySpec
+
+   INTERFACE:
+   subroutine ESMF_ArraySpecGet(arrayspec, rank, typekind, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArraySpec),     intent(in)            :: arrayspec
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                  intent(out), optional :: rank
+     type(ESMF_TypeKind_Flag), intent(out), optional :: typekind
+     integer,                  intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Returns information about the contents of an ESMF_ArraySpec.
+
+   The arguments are:
+
+   arrayspec
+          The ESMF_ArraySpec to query.
+
+   [rank]
+          Array rank (dimensionality - 1D, 2D, etc). Maximum possible is
+          7D.
+
+   [typekind]
+          Array typekind. See section [1184]54.59 for valid values.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,54 @@
+  18.4.18 ESMF_CplCompSetInternalState - Set private data block pointer
+
+   INTERFACE:
+   subroutine ESMF_CplCompSetInternalState(cplcomp, wrappedDataPointer, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp)              :: cplcomp
+     type(wrapper)                   :: wrappedDataPointer
+     integer,            intent(out) :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Available to be called by an ESMF_CplComp at any time, but expected to
+   be most useful when called during the registration process, or
+   initialization. Since init, run, and finalize must be separate
+   subroutines data that they need to share in common can either be module
+   global data, or can be allocated in a private data block and the
+   address of that block can be registered with the framework and
+   retrieved by subsequent calls. When running multiple instantiations of
+   an ESMF_CplComp, for example during ensemble runs, it may be simpler to
+   maintain private data specific to each run with private data blocks. A
+   corresponding ESMF_CplCompGetInternalState call retrieves the data
+   pointer.
+
+   Only the last data block set via ESMF_CplCompSetInternalState will be
+   accessible.
+
+   CAUTION: If you are working with a compiler that does not support
+   Fortran 2018 assumed-type dummy arguments, then this method does not
+   have an explicit Fortran interface. In this case do not specify
+   argument keywords when calling this method!
+
+   The arguments are:
+
+   cplcomp
+          An ESMF_CplComp object.
+
+   wrappedDataPointer
+          A pointer to the private data block, wrapped in a derived type
+          which contains only a pointer to the block. This level of
+          indirection is needed to reliably set and retrieve the data
+          block no matter which architecture or compiler is used.
+
+   rc
+          Return code; equals ESMF_SUCCESS if there are no errors. Note:
+          unlike most other ESMF routines, this argument is not optional
+          because of implementation considerations.
+

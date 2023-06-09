@@ -1,0 +1,25 @@
+  53.4.12 ESMF_UtilStringUpperCase - convert string to uppercase
+
+   INTERFACE:
+       function ESMF_UtilStringUpperCase(string, rc)
+
+   ARGUMENTS:
+       character(len=*), intent(in) :: string
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, intent(out), optional  :: rc
+
+   RETURN VALUE:
+       character(len (string)) :: ESMF_UtilStringUpperCase
+
+   DESCRIPTION:
+
+   Converts given string to uppercase.
+
+   The arguments are:
+
+   string
+          A character string.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

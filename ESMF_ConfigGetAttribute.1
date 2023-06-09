@@ -1,0 +1,116 @@
+  47.3.10 ESMF_ConfigGetAttribute - Get an attribute value from Config object
+
+   INTERFACE:
+        subroutine ESMF_ConfigGetAttribute(config, <value>, &
+          label, default, rc)
+
+   ARGUMENTS:
+        type(ESMF_Config), intent(inout)         :: config
+        <value argument>, see below for supported values
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        character(len=*),  intent(in),  optional :: label
+        character(len=*),  intent(in),  optional :: default
+        integer,           intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets a value from the config object. When the value is a sequence of
+   characters it will be terminated by the first white space.
+
+   Supported values for <value argument> are:
+
+          character(len=*), intent(out) :: value
+
+          real(ESMF_KIND_R4), intent(out) :: value
+
+          real(ESMF_KIND_R8), intent(out) :: value
+
+          integer(ESMF_KIND_I4), intent(out) :: value
+
+          integer(ESMF_KIND_I8), intent(out) :: value
+
+          logical, intent(out) :: value
+
+   The arguments are:
+
+   config
+          Already created ESMF_Config object.
+
+   <value argument>
+          Returned value.
+
+   [label]
+          Identifing label.
+
+   [default]
+          Default value if label is not found in config object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  47.3.11 ESMF_ConfigGetAttribute - Get a list of attribute values from Config
+  object
+
+   INTERFACE:
+        subroutine ESMF_ConfigGetAttribute(config, <value list argument>, &
+          count, label, default, rc)
+
+   ARGUMENTS:
+        type(ESMF_Config), intent(inout)         :: config
+        <value list argument>, see below for values
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        integer,           intent(in)   optional :: count
+        character(len=*),  intent(in),  optional :: label
+        character(len=*),  intent(in),  optional :: default
+        integer,           intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets a list of values from the config object.
+
+   Supported values for <value list argument> are:
+
+          character(len=*), intent(out) :: valueList(:)
+
+          real(ESMF_KIND_R4), intent(inout) :: valueList(:)
+
+          real(ESMF_KIND_R8), intent(inout) :: valueList(:)
+
+          integer(ESMF_KIND_I4), intent(inout) :: valueList(:)
+
+          integer(ESMF_KIND_I8), intent(inout) :: valueList(:)
+
+          logical, intent(inout) :: valueList(:)
+
+   The arguments are:
+
+   config
+          Already created ESMF_Config object.
+
+   <value list argument>
+          Returned value.
+
+   count
+          Number of returned values expected.
+
+   [label]
+          Identifing label.
+
+   [default]
+          Default value if label is not found in config object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

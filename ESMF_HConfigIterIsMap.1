@@ -1,0 +1,27 @@
+  48.5.38 ESMF_HConfigIterIsMap - Check whether HConfig iterator is Map
+
+   INTERFACE:
+   function ESMF_HConfigIterIsMap(hconfig, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_HConfigIterIsMap
+
+   ARGUMENTS:
+     type(ESMF_HConfigIter), intent(in)        :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the hconfig node is Null. Otherwise return .false.. If
+   an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return value
+   of the function will also be .false..
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfigIter object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

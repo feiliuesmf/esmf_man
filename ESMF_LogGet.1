@@ -1,0 +1,69 @@
+  49.7.10 ESMF_LogGet - Return information about a log object
+
+   INTERFACE:
+       subroutine ESMF_LogGet(log,  &
+                              flush,    &
+                              logmsgAbort, logkindflag, &
+                              maxElements, trace, fileName,  &
+                              highResTimestampFlag, indentCount,  &
+                              noPrefix, rc)
+
+   ARGUMENTS:
+       type(ESMF_Log),          intent(in),  optional :: log
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       logical,                 intent(out), optional :: flush
+       type(ESMF_LogMsg_Flag),  pointer,     optional :: logmsgAbort(:)
+       type(ESMF_LogKind_Flag), intent(out), optional :: logkindflag
+       integer,                 intent(out), optional :: maxElements
+       logical,                 intent(out), optional :: trace
+       character(*),            intent(out), optional :: fileName
+       logical,                 intent(out), optional :: highResTimestampFlag
+       integer,                 intent(out), optional :: indentCount
+       logical,                 intent(out), optional :: noPrefix
+       integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This subroutine returns properties about a Log object.
+
+   The arguments are:
+
+   [log]
+          An optional ESMF_Log object that can be used instead of the
+          default Log.
+
+   [flush]
+          Flush flag.
+
+   [logmsgAbort]
+          Returns an array containing current message halt settings. If
+          the array is not pre-allocated, ESMF_LogGet will allocate an
+          array of the correct size. If no message types are defined, an
+          array of length zero is returned. It is the callers
+          responsibility to deallocate the array.
+
+   [logkindflag]
+          Defines either single or multilog.
+
+   [maxElements]
+          Maximum number of elements in the Log.
+
+   [trace]
+          Current setting of the Log call tracing flag.
+
+   [fileName]
+          Current file name. When the log has been opened with
+          ESMF_LOGKIND_MULTI, the filename has a PET number prefix.
+
+   [highResTimestampFlag]
+          Current setting of the extended elapsed timestamp flag.
+
+   [indentCount]
+          Current setting of the leading white space padding.
+
+   [noPrefix]
+          Current setting of the message prefix enable/disable flag.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

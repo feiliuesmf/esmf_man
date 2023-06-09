@@ -1,0 +1,154 @@
+          + [346]29 LocalArray Class
+               o [347]29.1 Description
+               o [348]29.2 Restrictions and Future Work
+               o [349]29.3 Class API
+                    # [350]29.3.1 ESMF_LocalArrayAssignment(=)
+                    # [351]29.3.2 ESMF_LocalArrayOperator(==)
+                    # [352]29.3.3 ESMF_LocalArrayOperator(/=)
+                    # [353]29.3.4 ESMF_LocalArrayCreate
+                    # [354]29.3.5 ESMF_LocalArrayCreate
+                    # [355]29.3.6 ESMF_LocalArrayCreate
+                    # [356]29.3.7 ESMF_LocalArrayCreate
+                    # [357]29.3.8 ESMF_LocalArrayDestroy
+                    # [358]29.3.9 ESMF_LocalArrayGet
+                    # [359]29.3.10 ESMF_LocalArrayGet
+                    # [360]29.3.11 ESMF_LocalArrayIsCreated
+                              29 LocalArray Class
+
+29.1 Description
+
+   The ESMF_LocalArray class provides a language independent
+   representation of data in array format. One of the major functions of
+   the LocalArray class is to bridge the Fortran/C/C++ language difference
+   that exists with respect to array representation. All ESMF Field and
+   Array data is internally stored in ESMF LocalArray objects allowing
+   transparent access from Fortran and C/C++.
+
+   In the ESMF Fortran API the LocalArray becomes visible in those cases
+   where a local PET may be associated with multiple pieces of an Array,
+   e.g. if there are multiple DEs associated with a single PET. The
+   Fortran language standard does not provide an array of arrays
+   construct, however arrays of derived types holding arrays are possible.
+   ESMF calls use arguments that are of type ESMF_LocalArray with
+   dimension attributes where necessary.
+
+29.2 Restrictions and Future Work
+
+     * The TKR (type/kind/rank) overloaded LocalArray interfaces declare
+       the dummy Fortran array arguments with the pointer attribute. The
+       advantage of doing this is that it allows ESMF to inquire
+       information about the provided Fortran array. The disadvantage of
+       this choice is that actual Fortran arrays passed into these
+       interfaces must also be defined with pointer attribute in the user
+       code.
+
+29.3 Class API
+
+  29.3.1 ESMF_LocalArrayAssignment(=) - LocalArray assignment
+
+   INTERFACE:
+   interface assignment(=)
+   localarray1 = localarray2
+
+   ARGUMENTS:
+   type(ESMF_LocalArray) :: localarray1
+   type(ESMF_LocalArray) :: localarray2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign localarray1 as an alias to the same ESMF LocalArray object in
+   memory as localarray2. If localarray2 is invalid, then localarray1 will
+   be equally invalid after the assignment.
+
+   The arguments are:
+
+   localarray1
+          The ESMF_LocalArray object on the left hand side of the
+          assignment.
+
+   localarray2
+          The ESMF_LocalArray object on the right hand side of the
+          assignment.
+
+  29.3.2 ESMF_LocalArrayOperator(==) - LocalArray equality operator
+
+   INTERFACE:
+   interface operator(==)
+   if (localarray1 == localarray2) then ... endif
+   OR
+   result = (localarray1 == localarray2)
+
+   RETURN VALUE:
+   logical :: result
+
+   ARGUMENTS:
+   type(ESMF_LocalArray), intent(in) :: localarray1
+   type(ESMF_LocalArray), intent(in) :: localarray2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether localarray1 and localarray2 are valid aliases to the same
+   ESMF LocalArray object in memory. For a more general comparison of two
+   ESMF LocalArrays, going beyond the simple alias test, the
+   ESMF_LocalArrayMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   localarray1
+          The ESMF_LocalArray object on the left hand side of the equality
+          operation.
+
+   localarray2
+          The ESMF_LocalArray object on the right hand side of the
+          equality operation.
+
+  29.3.3 ESMF_LocalArrayOperator(/=) - LocalArray not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+   if (localarray1 /= localarray2) then ... endif
+   OR
+   result = (localarray1 /= localarray2)
+
+   RETURN VALUE:
+   logical :: result
+
+   ARGUMENTS:
+   type(ESMF_LocalArray), intent(in) :: localarray1
+   type(ESMF_LocalArray), intent(in) :: localarray2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether localarray1 and localarray2 are not valid aliases to the
+   same ESMF LocalArray object in memory. For a more general comparison of
+   two ESMF LocalArrays, going beyond the simple alias test, the
+   ESMF_LocalArrayMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   localarray1
+          The ESMF_LocalArray object on the left hand side of the
+          non-equality operation.
+
+   localarray2
+          The ESMF_LocalArray object on the right hand side of the
+          non-equality operation.
+

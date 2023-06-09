@@ -1,0 +1,113 @@
+  17.4.25 ESMF_GridCompSetVMMaxPEs - Associate PEs with PETs in GridComp VM
+
+   INTERFACE:
+   subroutine ESMF_GridCompSetVMMaxPEs(gridcomp, &
+     maxPeCountPerPet, prefIntraProcess, prefIntraSsi, prefInterSsi, &
+     pthreadMinStackSize, openMpHandling, openMpNumThreads, &
+     forceChildPthreads, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(inout)         :: gridcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(in),  optional :: maxPeCountPerPet
+     integer,             intent(in),  optional :: prefIntraProcess
+     integer,             intent(in),  optional :: prefIntraSsi
+     integer,             intent(in),  optional :: prefInterSsi
+     integer,             intent(in),  optional :: pthreadMinStackSize
+     character(*),        intent(in),  optional :: openMpHandling
+     integer,             intent(in),  optional :: openMpNumThreads
+     logical,             intent(in),  optional :: forceChildPthreads
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set characteristics of the ESMF_VM for this ESMF_GridComp. Attempts to
+   associate up to maxPeCountPerPet PEs with each PET. Only PEs that are
+   located on the same single system image (SSI) can be associated with
+   the same PET. Within this constraint the call tries to get as close as
+   possible to the number specified by maxPeCountPerPet.
+
+   The other constraint to this call is that the number of PEs is
+   preserved. This means that the child Component in the end is associated
+   with as many PEs as the parent Component provided to the child. The
+   number of child PETs however is adjusted according to the above rule.
+
+   The typical use of ESMF_GridCompSetVMMaxPEs() is to allocate multiple
+   PEs per PET in a Component for user-level threading, e.g. OpenMP.
+
+   The arguments are:
+
+   gridcomp
+          ESMF_GridComp to set the ESMF_VM for.
+
+   [maxPeCountPerPet]
+          Maximum number of PEs on each PET. Default for each SSI is the
+          local number of PEs.
+
+   [prefIntraProcess]
+          Communication preference within a single process. Currently
+          options not documented. Use default.
+
+   [prefIntraSsi]
+          Communication preference within a single system image (SSI).
+          Currently options not documented. Use default.
+
+   [prefInterSsi]
+          Communication preference between different single system images
+          (SSIs). Currently options not documented. Use default.
+
+   [pthreadMinStackSize]
+          Minimum stack size in byte of any child PET executing as
+          Pthread. By default single threaded child PETs do not execute as
+          Pthread, and their stack size is unaffected by this argument.
+          However, for multi-threaded child PETs, or if forceChildPthreads
+          is .true., child PETs execute as Pthreads with their own private
+          stack.
+
+          For cases where OpenMP threads are used by the user code, each
+          thread allocates its own private stack. For all threads other
+          than the master, the stack size is set via the typical
+          OMP_STACKSIZE environment variable mechanism. The PET itself,
+          however, becomes the master of the OpenMP thread team, and is
+          not affected by OMP_STACKSIZE. It is the master's stack that can
+          be sized via the pthreadMinStackSize argument, and a large
+          enough size is often critical.
+
+          When pthreadMinStackSize is absent, the default is to use the
+          system default set by the limit or ulimit command. However, the
+          stack of a Pthread cannot be unlimited, and a shell stacksize
+          setting of unlimited, or any setting below the ESMF implemented
+          minimum, will result in setting the stack size to 20MiB (the
+          ESMF minimum). Depending on how much private data is used by the
+          user code under the master thread, the default might be too
+          small, and pthreadMinStackSize must be used to allocate
+          sufficient stack space.
+
+   [openMpHandling]
+          Handling of OpenMP threads. Supported options are:
+
+          + "none" - OpenMP handling is completely left to the user.
+          + "set" - ESMF uses the omp_set_num_threads() API to set the
+            number of OpenMP threads in each team.
+          + "init" - ESMF sets the number of OpenMP threads in each team,
+            and triggers the instantiation of the team.
+          + "pin" (default) - ESMF sets the number of OpenMP threads in
+            each team, triggers the instantiation of the team, and pins
+            each OpenMP thread to the corresponding PE.
+
+   [openMpNumThreads]
+          Number of OpenMP threads in each OpenMP thread team. This can be
+          any positive number. By default, or if openMpNumThreads is
+          negative, each PET sets the number of OpenMP threads to its
+          local peCount.
+
+   [forceChildPthreads]
+          For .true., force each child PET to execute in its own Pthread.
+          By default, .false., single PETs spawned from a parent PET
+          execute in the same thread (or MPI process) as the parent PET.
+          Multiple child PETs spawned by the same parent PET always
+          execute as their own Pthreads.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

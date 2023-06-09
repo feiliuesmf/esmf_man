@@ -1,0 +1,57 @@
+  26.6.60 ESMF_FieldRead - Read Field data from a file
+
+   INTERFACE:
+   subroutine ESMF_FieldRead(field, fileName,        &
+       variableName, timeslice, iofmt, rc)
+
+   ARGUMENTS:
+     type(ESMF_Field),      intent(inout)          :: field
+     character(*),          intent(in)             :: fileName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(*),          intent(in),  optional  :: variableName
+     integer,               intent(in),  optional  :: timeslice
+     type(ESMF_IOFmt_Flag), intent(in),  optional  :: iofmt
+     integer,               intent(out), optional  :: rc
+
+   DESCRIPTION:
+
+   Read Field data from a file and put it into an ESMF_Field object. For
+   this API to be functional, the environment variable ESMF_PIO should be
+   set to either "internal" or "external" when the ESMF library is built.
+   Please see the section on Data I/O, [961]38.2.
+
+   Limitations:
+     * Not supported in ESMF_COMM=mpiuni mode.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object in which the read data is returned.
+
+   fileName
+          The name of the file from which Field data is read. If the Field
+          is a multi-tile Array, then fileName must contain exactly one
+          instance of "*"; this is a placeholder that will be replaced by
+          the tile number, with each tile being read from a separate file.
+          (For example, for a fileName of "myfile*.nc", tile 1 will be
+          read from "myfile1.nc", tile 2 from "myfile2.nc", etc.) (This
+          handling of the fileName for multi-tile I/O is subject to
+          change.)
+
+   [variableName]
+          Variable name in the file; default is the "name" of Field. Use
+          this argument only in the I/O format (such as NetCDF) that
+          supports variable name. If the I/O format does not support this
+          (such as binary format), ESMF will return an error code.
+
+   [timeslice]
+          Number of slices to be read from file, starting from the 1st
+          slice
+
+   [iofmt]
+          The I/O format. Please see Section [962]54.28 for the list of
+          options. If not present, defaults to ESMF_IOFMT_NETCDF.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

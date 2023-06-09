@@ -1,0 +1,34 @@
+  48.5.42 ESMF_HConfigRemove - Remove element from HConfig object
+
+   INTERFACE:
+    subroutine ESMF_HConfigRemove(hconfig, index, keyString, rc)
+
+   ARGUMENTS:
+      type(ESMF_HConfig[Iter]), intent(in)      :: hconfigIter
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,            intent(in),  optional :: index
+      character(*),       intent(in),  optional :: keyString
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Remove an element from a squence or map HConfig object. Either index
+   (for sequence) or keyString (for map) must be provided. An error is
+   flagged if neither optional argument is specified.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig object.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          keyString.
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

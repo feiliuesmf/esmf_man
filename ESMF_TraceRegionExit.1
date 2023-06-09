@@ -1,0 +1,181 @@
+  52.4.2 ESMF_TraceRegionExit - Trace user-defined region exit event
+
+   INTERFACE:
+   subroutine ESMF_TraceRegionExit(name, rc)
+
+   ARGUMENTS:
+     character(len=*), intent(in) :: name
+     integer, intent(out), optional  :: rc
+
+   DESCRIPTION:
+
+   Record an event in the trace for this PET indicating exit from a
+   user-defined region with the given name. This call must appear after a
+   call to ESMF_TraceRegionEnter() with a matching name parameter. If
+   tracing is disabled on the calling PET or for the application as a
+   whole, no event will be recorded and the call will return immediately.
+
+   The arguments are:
+
+   name
+          A user-defined name for the region of code being exited
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+                      53 Fortran I/O and System Utilities
+
+53.1 Description
+
+   The ESMF Fortran I/O and System utilities provide portable methods to
+   access capabilities which are often implemented in different ways
+   amongst different environments. These utility methods are divided into
+   three groups: command line access, Fortran I/O, and sorting.
+
+   Command line arguments may be accessed using three methods:
+   ESMF_UtilGetArg() returns a given command line argument,
+   ESMF_UtilGetArgC() returns a count of the number of command line
+   arguments available. Finally, the ESMF_UtilGetArgIndex() method returns
+   the index of a desired argument value, given its keyword name.
+
+   Two I/O methods are implemented: ESMF_IOUnitGet(), to obtain an
+   unopened Fortran unit number within the range of unit numbers that ESMF
+   is allowed to use, and ESMF_IOUnitFlush() to flush the I/O buffer
+   associated with a specific Fortran unit.
+
+   Finally, the ESMF_UtilSort() method sorts integer, floating point, and
+   character string data types in either ascending or descending order.
+
+53.2 Use and Examples
+
+  53.2.1 Fortran unit number management
+
+   The ESMF_UtilIOUnitGet() method is provided so that applications using
+   ESMF can remain free of unit number conflicts -- both when combined
+   with other third party code, or with ESMF itself. This call is
+   typically used just prior to an OPEN statement:
+
+  call ESMF_UtilIOUnitGet (unit=grid_unit, rc=rc)
+  open (unit=grid_unit, file='grid_data.dat', status='old', action='read')
+
+   By default, unit numbers between 50 and 99 are scanned to find an
+   unopened unit number.
+
+   Internally, ESMF also uses ESMF_UtilIOUnitGet() when it needs to open
+   Fortran unit numbers for file I/O. By using the same API for both user
+   and ESMF code, unit number collisions can be avoided.
+
+   When integrating ESMF into an application where there are conflicts
+   with other uses of the same unit number range, such as when hard-coded
+   unit number values are used, an alternative unit number range can be
+   specified. The ESMF_Initialize() optional arguments IOUnitLower and
+   IOUnitUpper may be set as needed. Note that IOUnitUpper must be set to
+   a value higher than IOUnitLower, and that both must be non-negative.
+   Otherwise ESMF_Initialize will return a return code of ESMF_FAILURE.
+   ESMF itself does not typically need more than about five units for
+   internal use.
+
+  call ESMF_Initialize (..., IOUnitLower=120, IOUnitUpper=140)
+
+   All current Fortran environments have preconnected unit numbers, such
+   as units 5 and 6 for standard input and output, in the single digit
+   range. So it is recommended that the unit number range is chosen to
+   begin at unit 10 or higher to avoid these preconnected units.
+
+  53.2.2 Flushing output
+
+   Fortran run-time libraries generally use buffering techniques to
+   improve I/O performance. However output buffering can be problematic
+   when output is needed, but is “trapped” in the buffer because it is not
+   full. This is a common occurrance when debugging a program, and
+   inserting WRITE statements to track down the bad area of code. If the
+   program crashes before the output buffer has been flushed, the desired
+   debugging output may never be seen -- giving a misleading indication of
+   where the problem occurred. It would be desirable to ensure that the
+   output buffer is flushed at predictable points in the program in order
+   to get the needed results. Likewise, in parallel code, predictable
+   flushing of output buffers is a common requirement, often in
+   conjunction with ESMF_VMBarrier() calls.
+
+   The ESMF_UtilIOUnitFlush() API is provided to flush a unit as desired.
+   Here is an example of code which prints debug values, and serializes
+   the output to a terminal in PET order:
+
+  type(ESMF_VM) :: vm
+
+  integer :: tty_unit
+  integer :: me, npets
+
+  call ESMF_Initialize (vm=vm, rc=rc)
+  call ESMF_VMGet (vm, localPet=me, petCount=npes)
+
+  call ESMF_UtilIOUnitGet (unit=tty_unit)
+  open (unit=tty_unit, file='/dev/tty', status='old', action='write')
+  ...
+  call ESMF_VMBarrier (vm=vm)
+  do, i=0, npets-1
+    if (i == me) then
+      write (tty_unit, *) 'PET: ', i, ', values are: ', a, b, c
+      call ESMF_UtilIOUnitFlush (unit=tty_unit)
+    end if
+    call ESMF_VMBarrier (vm=vm)
+  end do
+
+53.3 Design and Implementation Notes
+
+  53.3.1 Fortran unit number management
+
+   When ESMF needs to open a Fortran I/O unit, it calls ESMF_IOUnitGet()
+   to find an unopened unit number. As delivered, the range of unit
+   numbers that are searched are between ESMF_LOG_FORTRAN_UNIT_NUMBER
+   (normally set to 50), and ESMF_LOG_UPPER (normally set to 99.) Unopened
+   unit numbers are found by using the Fortran INQUIRE statement.
+
+   When integrating ESMF into an application where there are conflicts
+   with other uses of the same unit number range, an alternative range can
+   be specified in the ESMF_Initialize() call by setting the IOUnitLower
+   and IOUnitUpper arguments as needed. ESMF_IOUnitGet() will then search
+   the alternate range of unit numbers. Note that IOUnitUpper must be set
+   to a value higher than IOUnitLower, and that both must be non-negative.
+   Otherwise ESMF_Initialize will return a return code of ESMF_FAILURE.
+
+   Fortran unit numbers are not standardized in the Fortran 90 Standard.
+   The standard only requires that they be non-negative integers. But
+   other than that, it is up to the compiler writers and application
+   developers to provide and use units which work with the particular
+   implementation. For example, units 5 and 6 are a defacto standard for
+   “standard input” and “standard output” -- even though this is not
+   specified in the actual Fortran standard. The Fortran standard also
+   does not specify which unit numbers can be used, nor does it specify
+   how many can be open simultaneously.
+
+   Since all current compilers have preconnected unit numbers, and these
+   are typically found on units lower than 10, it is recommended that
+   applications use unit numbers 10 and higher.
+
+  53.3.2 Flushing output
+
+   When ESMF needs to flush a Fortran unit, the ESMF_IOUnitFlush() API is
+   used to centralize the file flushing capability, because Fortran has
+   not historically had a standard mechanism for flushing output buffers.
+   Most compilers run-time libraries support various library extensions to
+   provide this functionality -- though, being non-standard, the spelling
+   and number of arguments vary between implementations. Fortran 2003 also
+   provides for a FLUSH statement which is built into the language. When
+   possible, ESMF_IOUnitFlush() uses the F2003 FLUSH statement. With older
+   compilers, the appropriate library call is made.
+
+  53.3.3 Sorting algorithms
+
+   The ESMF_UtilSort() algorithms are the same as those in the LAPACK
+   sorting procedures SLASRT() and DLASRT(). Two algorithms are used. For
+   small sorts, arrays with 20 or fewer elements, a simple Insertion sort
+   is used. For larger sorts, a Quicksort algorithm is used.
+
+   Compared to the original LAPACK code, a full Fortran 90 style interface
+   is supported for ease of use and enhanced compile time checking.
+   Additional support is also provided for integer and character string
+   data types.
+
+53.4 Utility API
+

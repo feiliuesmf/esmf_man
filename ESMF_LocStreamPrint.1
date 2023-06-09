@@ -1,0 +1,27 @@
+  32.4.22 ESMF_LocStreamPrint - Print the contents of a LocStream
+
+   INTERFACE:
+       subroutine ESMF_LocStreamPrint(locstream, options, rc)
+
+   ARGUMENTS:
+       type(ESMF_LocStream), intent(in)             :: locstream
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character (len = *),  intent(in),   optional :: options
+       integer,              intent(out),  optional :: rc
+
+   DESCRIPTION:
+
+   Prints information about the locstream to stdout. This subroutine goes
+   through the internal data members of a locstream ! data type and prints
+   information of each data member.
+
+   The arguments are:
+
+   locstream
+
+   [options]
+          Print options are not yet supported.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

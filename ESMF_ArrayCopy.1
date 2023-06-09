@@ -1,0 +1,27 @@
+  28.5.4 ESMF_ArrayCopy - Copy data from one Array object to another
+
+   INTERFACE:
+   subroutine ESMF_ArrayCopy(arrayOut, arrayIn, rc)
+
+   ARGUMENTS:
+        type(ESMF_Array), intent(inout) :: arrayOut
+        type(ESMF_Array), intent(in) :: arrayIn
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Copy data from one ESMF_Array object to another.
+
+   The arguments are:
+
+   arrayOut
+          ESMF_Array object into which to copy the data. The incoming
+          arrayOut must already references a matching memory allocation.
+
+   arrayIn
+          ESMF_Array object that holds the data to be copied.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

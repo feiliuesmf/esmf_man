@@ -1,0 +1,40 @@
+  21.7.13 ESMF_StateRead - Read data items from a file into a State
+
+   INTERFACE:
+       subroutine ESMF_StateRead(state, fileName, rc)
+
+   ARGUMENTS:
+       type(ESMF_State), intent(inout) :: state
+       character (len=*), intent(in) :: fileName
+       integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Currently limited to read in all Arrays from a NetCDF file and add them
+   to a State object. Future releases will enable more items of a State to
+   be read from a file of various formats.
+
+   Only PET 0 reads the file; the States in other PETs remain empty.
+   Currently, the data is not decomposed or distributed; each PET has only
+   1 DE and only PET 0 contains data after reading the file. Future
+   versions of ESMF will support data decomposition and distribution upon
+   reading a file. See Section [303]21.3.7 for an example.
+
+   Note that the third party NetCDF library must be installed. For more
+   details, see the "ESMF Users Guide", "Building and Installing the ESMF,
+   Third Party Libraries, NetCDF" and the website
+   http://www.unidata.ucar.edu/software/netcdf.
+
+   The arguments are:
+
+   state
+          The ESMF_State to add items read from file. Currently only
+          Arrays are supported.
+
+   fileName
+          File to be read.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors. Equals
+          ESMF_RC_LIB_NOT_PRESENT if the NetCDF library is not present.
+

@@ -1,0 +1,122 @@
+  33.4.4 ESMF_MeshAddElements - Add elements to a Mesh
+
+   INTERFACE:
+     subroutine ESMF_MeshAddElements(mesh, elementIds, elementTypes, &
+                  elementConn, elementMask, elementArea, elementCoords, &
+                  elementDistgrid, rc)
+
+   ARGUMENTS:
+     type(ESMF_Mesh),    intent(inout)         :: mesh
+     integer,            intent(in)            :: elementIds(:)
+     integer,            intent(in)            :: elementTypes(:)
+     integer,            intent(in)            :: elementConn(:)
+     integer,            intent(in),  optional :: elementMask(:)
+     real(ESMF_KIND_R8), intent(in),  optional :: elementArea(:)
+     real(ESMF_KIND_R8), intent(in),  optional :: elementCoords(:)
+     type(ESMF_DistGrid), intent(in), optional :: elementDistgrid
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call is the third and last part of the three part mesh create
+   sequence and should be called after the mesh is created with
+   ESMF_MeshCreate() ([1464]33.4.6) and after the nodes are added with
+   ESMF_MeshAddNodes() ([1465]33.4.5). This call adds the elements to the
+   mesh and finalizes the create. After this call the Mesh is usable, for
+   example a Field may be built on the created Mesh object and this Field
+   may be used in a ESMF_FieldRegridStore() call.
+
+   The parameters to this call elementIds, elementTypes, and elementConn
+   describe the elements to be created. The description for a particular
+   element lies at the same index location in elementIds and elementTypes.
+   Each entry in elementConn consists of the list of nodes used to create
+   that element, so the connections for element $e$ in the elementIds
+   array will start at $number\_of\_nodes\_in\_element(1) +
+   number\_of\_nodes\_in\_element(2) + \cdots +
+   number\_of\_nodes\_in\_element(e-1) + 1$ in elementConn.
+
+   This call is collective across the current VM.
+
+   elementIds
+          An array containing the global ids of the elements to be created
+          on this PET. This input consists of a 1D array the size of the
+          number of elements on this PET. Each element id must be a number
+          equal to or greater than 1. An id should be unique in the sense
+          that different elements must have different ids (the same
+          element that appears on different processors must have the same
+          id). There may be gaps in the sequence of ids, but if these gaps
+          are the same scale as the length of the sequence it can lead to
+          inefficiencies when the Mesh is used (e.g. in
+          ESMF_FieldRegridStore()).
+
+   elementTypes
+          An array containing the types of the elements to be created on
+          this PET. The types used must be appropriate for the parametric
+          dimension of the Mesh. Please see Section [1466]33.2.1 for the
+          list of options. This input consists of a 1D array the size of
+          the number of elements on this PET.
+
+   elementConn
+          An array containing the indexes of the sets of nodes to be
+          connected together to form the elements to be created on this
+          PET. The entries in this list are NOT node global ids, but
+          rather each entry is a local index (1 based) into the list of
+          nodes which were created on this PET by the previous
+          ESMF_MeshAddNodes() call. In other words, an entry of 1
+          indicates that this element contains the node described by
+          nodeIds(1), nodeCoords(1), etc. passed into the
+          ESMF_MeshAddNodes() call on this PET. It is also important to
+          note that the order of the nodes in an element connectivity list
+          matters. Please see Section [1467]33.2.1 for diagrams
+          illustrating the correct order of nodes in a element. This input
+          consists of a 1D array with a total size equal to the sum of the
+          number of nodes in each element on this PET. The number of nodes
+          in each element is implied by its element type in elementTypes.
+          The nodes for each element are in sequence in this array (e.g.
+          the nodes for element 1 are elementConn(1), elementConn(2),
+          etc.).
+
+   [elementMask]
+          An array containing values which can be used for element
+          masking. Which values indicate masking are chosen via the
+          srcMaskValues or dstMaskValues arguments to
+          ESMF_FieldRegridStore() call. This input consists of a 1D array
+          the size of the number of elements on this PET.
+
+   [elementArea]
+          An array containing element areas. If not specified, the element
+          areas are internally calculated. This input consists of a 1D
+          array the size of the number of elements on this PET. NOTE: ESMF
+          doesn't currently do unit conversion on areas. If these areas
+          are going to be used in a process that also involves the areas
+          of another Grid or Mesh (e.g. conservative regridding), then it
+          is the user's responsibility to make sure that the area units
+          are consistent between the two sides. If ESMF calculates an area
+          on the surface of a sphere, then it is in units of square
+          radians. If it calculates the area for a Cartesian grid, then it
+          is in the same units as the coordinates, but squared.
+
+   [elementCoords]
+          An array containing the physical coordinates of the elements to
+          be created on this PET. This input consists of a 1D array the
+          size of the number of elements on this PET times the Mesh's
+          spatial dimension. The coordinates in this array are ordered so
+          that the coordinates for an element lie in sequence in memory.
+          (e.g. for a Mesh with spatial dimension 2, the coordinates for
+          element 1 are in elementCoords(1) and elementCoords(2), the
+          coordinates for element 2 are in elementCoords(3) and
+          elementCoords(4), etc.).
+
+   [elementDistgrid]
+          If present, use this as the element Distgrid for the Mesh. The
+          passed in Distgrid needs to contain a local set of sequence
+          indices matching the set of local element ids (i.e. those in
+          elementIds). However, specifying an externally created Distgrid
+          gives the user more control over aspects of the Distgrid
+          containing those sequence indices (e.g. how they are broken into
+          DEs). If not present, a 1D Distgrid will be created internally
+          consisting of one DE per PET.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,84 @@
+  31.7.2 ESMF_StaggerLocSet - Set a StaggerLoc to a particular position in the
+  cell
+
+   INTERFACE:
+   ! Private name; call using ESMF_StaggerLocSet()
+      subroutine ESMF_StaggerLocSetAllDim(staggerloc, loc, rc)
+
+   ARGUMENTS:
+       type (ESMF_StaggerLoc), intent(inout) :: staggerloc
+       integer,                intent(in)    :: loc(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, optional                     :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets a custom staggerloc to a position in a cell by using the array
+   loc. The values in the array should only be 0,1. If loc(i) is 0 it !
+   means the position should be in the center in that dimension. If loc(i)
+   is 1 then for dimension i, the position should be on the side of the
+   cell. Please see Section [1430]31.3.25 for diagrams and further
+   discussion of custom stagger locations.
+
+   The arguments are:
+
+   staggerloc
+          Grid location to be initialized
+
+   loc
+          Array holding position data. Each entry in loc should only be 0
+          or 1. note that dimensions beyond those specified are set to 0.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.7.3 ESMF_StaggerLocSet - Set one dimension of a StaggerLoc to a particular
+  position
+
+   INTERFACE:
+   ! Private name; call using ESMF_StaggerLocSet()
+        subroutine ESMF_StaggerLocSetDim(staggerloc, dim, loc, &
+             rc)
+
+   ARGUMENTS:
+       type (ESMF_StaggerLoc), intent(inout) :: staggerloc
+       integer,                intent(in)    :: dim
+       integer,                intent(in)    :: loc
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, optional                     :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets a particular dimension of a custom staggerloc to a position in a
+   cell by using the variable loc. The variable loc should only be 0,1. If
+   loc is 0 it means the position should be in the center in that
+   dimension. If loc is +1 then for the dimension, the position should be
+   on the positive side of the cell. Please see Section [1431]31.3.25 for
+   diagrams and further discussion of custom stagger locations.
+
+   The arguments are:
+
+   staggerloc
+          Stagger location to be initialized
+
+   dim
+          Dimension to be changed (1-7).
+
+   loc
+          Position data should be either 0,1.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,423 @@
+  26.6.52 ESMF_FieldGet - Get object-wide Field information
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldGet()
+   subroutine ESMF_FieldGetDefault(field, arrayspec, &
+     status, geomtype, grid, mesh, locstream, xgrid, array, localarrayList, &
+     typekind, dimCount, rank, staggerloc, meshloc, xgridside, &
+     gridindex, gridToFieldMap, ungriddedLBound, ungriddedUBound, &
+     totalLWidth, totalUWidth, localDeCount, ssiLocalDeCount, &
+     localDeToDeMap, minIndex, maxIndex, elementCount, &
+     localMinIndex, localMaxIndex, localElementCount, isESMFAllocated, &
+     name, vm, rc)
+
+   ARGUMENTS:
+     type(ESMF_Field), intent(in) :: field
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_ArraySpec), intent(out), optional :: arrayspec
+     type(ESMF_FieldStatus_Flag),intent(out), optional :: status
+     type(ESMF_GeomType_Flag), intent(out), optional :: geomtype
+     type(ESMF_Grid), intent(out), optional :: grid
+     type(ESMF_Mesh), intent(out), optional :: mesh
+     type(ESMF_LocStream), intent(out), optional :: locstream
+     type(ESMF_XGrid), intent(out), optional :: xgrid
+     type(ESMF_Array), intent(out), optional :: array
+     type(ESMF_LocalArray), target, intent(out), optional :: localarrayList(:)
+     type(ESMF_TypeKind_Flag), intent(out), optional :: typekind
+     integer, intent(out), optional :: dimCount
+     integer, intent(out), optional :: rank
+     type(ESMF_StaggerLoc), intent(out), optional :: staggerloc
+     type(ESMF_MeshLoc), intent(out), optional :: meshloc
+     type(ESMF_XGridSide_Flag), intent(out), optional :: xgridside
+     integer, intent(out), optional :: gridindex
+     integer, intent(out), optional :: gridToFieldMap(:)
+     integer, intent(out), optional :: ungriddedLBound(:)
+     integer, intent(out), optional :: ungriddedUBound(:)
+     integer, intent(out), optional :: totalLWidth(:,:)
+     integer, intent(out), optional :: totalUWidth(:,:)
+     integer, intent(out), optional :: localDeCount
+     integer, intent(out), optional :: ssiLocalDeCount
+     integer, intent(out), optional :: localDeToDeMap(:)
+     integer, intent(out), optional :: minIndex(:)
+     integer, intent(out), optional :: maxIndex(:)
+     integer, intent(out), optional :: elementCount(:)
+     integer, intent(out), optional :: localMinIndex(:)
+     integer, intent(out), optional :: localMaxIndex(:)
+     integer, intent(out), optional :: localElementCount(:)
+     logical, intent(out), optional :: isESMFAllocated
+     character(len=*), intent(out), optional :: name
+     type(ESMF_VM), intent(out), optional :: vm
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r - except those arguments indicated below.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.3.0r
+                Added argument vm in order to offer information about the
+                VM on which the Field was created.
+
+        8.1.0
+                Added argument minIndex. The new argument allows the user
+                to query the global lower bounds of the field data across
+                all PETs.
+                Added argument maxIndex. The new argument allows the user
+                to query the global upper bounds of the field data across
+                all PETs.
+                Added argument elementCount. The new argument allows the
+                user to query the global number of items of the field data
+                across all PETs.
+                Added argument localMinIndex. The new argument allows the
+                user to query the PET local lower bounds globally indexed
+                of the field data.
+                Added argument localMaxIndex. The new argument allows the
+                user to query the PET local upper bounds globally indexed
+                of the field data.
+                Added argument localElementCount. The new argument allows
+                the user to query the PET local number of items of the
+                field data.
+                Added argument ssiLocalDeCount and localarrayList to
+                support DE sharing between PETs on the same single system
+                image (SSI).
+                Added argument localDeToDeMap to support DE handling from
+                the Field level rather than require user to go to Array
+                level.
+
+        8.5.0
+                Added argument isESMFAllocated to support user query of
+                whether ESMF or user is responsible for the data
+                allocation referenced by this object.
+
+   DESCRIPTION:
+
+   Query an ESMF_Field object for various pieces of information. All
+   arguments after the field argument are optional. To select individual
+   items use the named_argument=value syntax. For an example and
+   associated documentation using this method see section [928]26.3.3.
+
+   The arguments are:
+
+   field
+          ESMF_Field object to query.
+
+   [arrayspec]
+          ESMF_ArraySpec object containing the type/kind/rank information
+          of the Field object.
+
+   [status]
+          The status of the Field. See section [929]26.2.1 for a complete
+          list of values.
+
+   [geomtype]
+          The type of geometry on which the Field is built. See
+          section [930]54.22 for the range of values.
+
+   [grid]
+          ESMF_Grid.
+
+   [mesh]
+          STATUS:This argument is excluded from the backward compatibility
+          statement.
+          ESMF_Mesh.
+
+   [locstream]
+          STATUS:This argument is excluded from the backward compatibility
+          statement.
+          ESMF_LocStream.
+
+   [xgrid]
+          STATUS:This argument is excluded from the backward compatibility
+          statement.
+          ESMF_XGrid.
+
+   [array]
+          ESMF_Array.
+
+   [localarrayList]
+          Upon return this holds a list of the associated ESMC_LocalArray
+          objects. localarrayList must be allocated to be of size
+          localDeCount or ssiLocalDeCount.
+
+   [typekind]
+          TypeKind specifier for Field. See section [931]54.59 for a
+          complete list of values.
+
+   [dimCount]
+          Number of geometrical dimensions in field. For an detailed
+          discussion of this parameter, please see section [932]26.3.23
+          and section [933]26.3.24.
+
+   [rank]
+          Number of dimensions in the physical memory of the field data.
+          It is identical to dimCount when the corresponding grid is a
+          non-arbitrary grid. It is less than dimCount when the grid is
+          arbitrarily distributed. For an detailed discussion of this
+          parameter, please see section [934]26.3.23 and section
+          [935]26.3.24.
+
+   [staggerloc]
+          Stagger location of data in grid cells. For valid predefined
+          values and interpretation of results see section [936]31.2.6.
+
+   [meshloc]
+          STATUS:This argument is excluded from the backward compatibility
+          statement.
+          The part of the mesh to build the Field on. Can be either
+          ESMF_MESHLOC_NODE or ESMF_MESHLOC_ELEMENT. If not set, defaults
+          to ESMF_MESHLOC_NODE.
+
+   [xgridside]
+          STATUS:This argument is excluded from the backward compatibility
+          statement.
+          The side of the XGrid that the Field was created on. See section
+          [937]34.2.1 for a complete list of values.
+
+   [gridIndex]
+          STATUS:This argument is excluded from the backward compatibility
+          statement.
+          If xgridside is ESMF_XGRIDSIDE_A or ESMF_XGRIDSIDE_B then this
+          index tells which Grid/Mesh on that side the Field was created
+          on.
+
+   [gridToFieldMap]
+          List with number of elements equal to the grid's dimCount. The
+          list elements map each dimension of the grid to a dimension in
+          the field by specifying the appropriate field dimension index.
+          The default is to map all of the grid's dimensions against the
+          lowest dimensions of the field in sequence, i.e. gridToFieldMap
+          = (/1,2,3,.../). The total ungridded dimensions in the field are
+          the total field dimensions less the dimensions in the grid.
+          Ungridded dimensions must be in the same order they are stored
+          in the field.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than grid dimension count, both ungriddedLBound and
+          ungriddedUBound must be specified. When both are specified the
+          values are checked for consistency. Note that the the ordering
+          of these ungridded dimensions is the same as their order in the
+          field.
+
+   [totalLWidth]
+          Lower bound of halo region. The size of the first dimension of
+          this array is the number of gridded dimensions in the field.
+          However, ordering of the elements needs to be the same as they
+          appear in the field. Values default to 0. If values for
+          totalLWidth are specified they must be reflected in the size of
+          the field. That is, for each gridded dimension the field size
+          should be max( totalLWidth + totalUWidth + computationalCount,
+          exclusiveCount ). The size of the 2nd dimension of this array is
+          localDeCount.
+
+   [totalUWidth]
+          Upper bound of halo region. The size of the first dimension of
+          this array is the number of gridded dimensions in the field.
+          However, ordering of the elements needs to be the same as they
+          appear in the field. Values default to 0. If values for
+          totalUWidth are specified they must be reflected in the size of
+          the field. That is, for each gridded dimension the field size
+          should max( totalLWidth + totalUWidth + computationalCount,
+          exclusiveCount ). The size of the 2nd dimension of this array is
+          localDeCount.
+
+   [localDeCount]
+          Upon return this holds the number of PET-local DEs defined in
+          the DELayout associated with the Field object.
+
+   [ssiLocalDeCount]
+          The number of DEs in the Field available to the local PET. This
+          includes DEs that are local to other PETs on the same SSI, that
+          are accessible via shared memory.
+
+   [localDeToDeMap]
+          Mapping between localDe indices and the (global) DEs associated
+          with the local PET. The localDe index variables are discussed in
+          sections [938]50.3.7 and [939]28.2.5. The provided actual
+          argument must be of size localDeCount, or ssiLocalDeCount, and
+          will be filled accordingly.
+
+   [minIndex]
+          Upon return this holds the global lower bounds of the field data
+          across all PETs. This information will be identical across all
+          PETs. minIndex must be allocated to be of size equal to the
+          field rank.
+
+   [maxIndex]
+          Upon return this holds the global upper bounds of the field data
+          across all PETs. This information will be identical across all
+          PETs. maxIndex must be allocated to be of size equal to the
+          field rank.
+
+   [elementCount]
+          Upon return this holds the global number of items of the field
+          data across all PETs. This information will be identical across
+          all PETs. elementCount must be allocated to be of size equal to
+          the field rank.
+
+   [localMinIndex]
+          Upon return this holds the PET local lower bounds globally
+          indexed of the field data. localMinIndex must be allocated to be
+          of size equal to the field rank.
+
+   [localMaxIndex]
+          Upon return this holds the PET local upper bounds globally
+          indexed of the field data. localMaxIndex must be allocated to be
+          of size equal to the field rank.
+
+   [localElementCount]
+          Upon return this holds the PET local number of items of the
+          field data. localElementCount must be allocated to be of size
+          equal to the field rank.
+
+   [isESMFAllocated]
+          Set to .true. for data allocations held by ESMF. Set to .false.
+          otherwise.
+
+   [name]
+          Name of the Field object.
+
+   [vm]
+          The VM on which the Field object was created.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.53 ESMF_FieldGet - Get a DE-local Fortran array pointer from a Field
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldGet()
+   subroutine ESMF_FieldGetDataPtr<rank><type><kind>(field, localDe, &
+   farrayPtr, exclusiveLBound, exclusiveUBound, exclusiveCount, &
+   computationalLBound, computationalUBound, computationalCount, &
+   totalLBound, totalUBound, totalCount, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(in) :: field
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(in), optional :: localDe
+   <type> (ESMF_KIND_<kind>), pointer :: farrayPtr(<rank>)
+   integer, intent(out), optional :: exclusiveLBound(:)
+   integer, intent(out), optional :: exclusiveUBound(:)
+   integer, intent(out), optional :: exclusiveCount(:)
+   integer, intent(out), optional :: computationalLBound(:)
+   integer, intent(out), optional :: computationalUBound(:)
+   integer, intent(out), optional :: computationalCount(:)
+   integer, intent(out), optional :: totalLBound(:)
+   integer, intent(out), optional :: totalUBound(:)
+   integer, intent(out), optional :: totalCount(:)
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Get a Fortran pointer to DE-local memory allocation within field. For
+   convenience DE-local bounds can be queried at the same time. For an
+   example and associated documentation using this method see section
+   [940]26.3.2.
+
+   The arguments are:
+
+   field
+          ESMF_Field object.
+
+   [localDe]
+          Local DE for which information is requested.
+          [0,..,localDeCount-1]. For localDeCount==1 the localDe argument
+          may be omitted, in which case it will default to localDe=0.
+
+   farrayPtr
+          Fortran array pointer which will be pointed at DE-local memory
+          allocation. It depends on the specific entry point of
+          ESMF_FieldCreate() used during field creation, which Fortran
+          operations are supported on the returned farrayPtr. See
+          [941]26.4 for more details.
+
+   [exclusiveLBound]
+          Upon return this holds the lower bounds of the exclusive region.
+          exclusiveLBound must be allocated to be of size equal to field's
+          dimCount. See section [942]28.2.6 for a description of the
+          regions and their associated bounds and counts.
+
+   [exclusiveUBound]
+          Upon return this holds the upper bounds of the exclusive region.
+          exclusiveUBound must be allocated to be of size equal to field's
+          dimCount. See section [943]28.2.6 for a description of the
+          regions and their associated bounds and counts.
+
+   [exclusiveCount]
+          Upon return this holds the number of items,
+          exclusiveUBound-exclusiveLBound+1, in the exclusive region per
+          dimension. exclusiveCount must be allocated to be of size equal
+          to field's dimCount. See section [944]28.2.6 for a description
+          of the regions and their associated bounds and counts.
+
+   [computationalLBound]
+          Upon return this holds the lower bounds of the computational
+          region. computationalLBound must be allocated to be of size
+          equal to field's dimCount. See section [945]28.2.6 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalUBound]
+          Upon return this holds the lower bounds of the computational
+          region. computationalUBound must be allocated to be of size
+          equal to field's dimCount. See section [946]28.2.6 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [computationalCount]
+          Upon return this holds the number of items in the computational
+          region per dimension (i.e.
+          computationalUBound-computationalLBound+1). computationalCount
+          must be allocated to be of size equal to field's dimCount. See
+          section [947]28.2.6 for a description of the regions and their
+          associated bounds and counts.
+
+   [totalLBound]
+          Upon return this holds the lower bounds of the total region.
+          totalLBound must be allocated to be of size equal to field's
+          dimCount. See section [948]28.2.6 for a description of the
+          regions and their associated bounds and counts.
+
+   [totalUBound]
+          Upon return this holds the lower bounds of the total region.
+          totalUBound must be allocated to be of size equal to field's
+          dimCount. See section [949]28.2.6 for a description of the
+          regions and their associated bounds and counts.
+
+   [totalCount]
+          Upon return this holds the number of items in the total region
+          per dimension (i.e. totalUBound-totalLBound+1).
+          computationalCount must be allocated to be of size equal to
+          field's dimCount. See section [950]28.2.6 for a description of
+          the regions and their associated bounds and counts.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

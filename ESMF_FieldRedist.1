@@ -1,0 +1,66 @@
+  26.6.61 ESMF_FieldRedist - Execute a Field redistribution
+
+   INTERFACE:
+   subroutine ESMF_FieldRedist(srcField, dstField, routehandle,  &
+     checkflag, rc)
+
+   ARGUMENTS:
+         type(ESMF_Field),       intent(in),optional     :: srcField
+         type(ESMF_Field),       intent(inout),optional  :: dstField
+         type(ESMF_RouteHandle), intent(inout)           :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+         logical,                intent(in),   optional  :: checkflag
+         integer,                intent(out),  optional  :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Execute a precomputed Field redistribution from srcField to dstField.
+   Both srcField and dstField must match the respective Fields used during
+   ESMF_FieldRedistStore() in type, kind, and memory layout of the gridded
+   dimensions. However, the size, number, and index order of ungridded
+   dimensions may be different. See section [963]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   The srcField and dstField arguments are optional in support of the
+   situation where srcField and/or dstField are not defined on all PETs.
+   The srcField and dstField must be specified on those PETs that hold
+   source or destination DEs, respectively, but may be omitted on all
+   other PETs. PETs that hold neither source nor destination DEs may omit
+   both arguments.
+
+   It is erroneous to specify the identical Field object for srcField and
+   dstField arguments.
+
+   See ESMF_FieldRedistStore() on how to precompute routehandle.
+
+   This call is collective across the current VM.
+
+   For examples and associated documentation regarding this method see
+   Section [964]26.3.30.
+
+   [srcField]
+          ESMF_Field with source data.
+
+   [dstField]
+          ESMF_Field with destination data.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [checkflag]
+          If set to .TRUE. the input Field pair will be checked for
+          consistency with the precomputed operation provided by
+          routehandle. If set to .FALSE. (default) only a very basic input
+          check will be performed, leaving many inconsistencies
+          undetected. Set checkflag to .FALSE. to achieve highest
+          performance.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

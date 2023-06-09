@@ -1,0 +1,52 @@
+  40.4.29 ESMF_InfoSync - Synchronize Info contents across a VM
+
+   INTERFACE:
+  subroutine ESMF_InfoSync(host, rootPet, vm, markClean, &
+     rc)
+
+   ARGUMENTS:
+    type(ESMF_*), intent(inout) :: host
+    integer, intent(in) :: rootPet
+    type(ESMF_VM), intent(in) :: vm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+    logical, intent(in), optional :: markClean
+    integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Synchronize ESMF_Info contents collectively across the current VM.
+   Contents on the rootPet are set as the contents on matching objects
+   sharing the VM. An attempt is made to optimize by only communicating
+   updated contents (i.e. something set or modified). This subroutine will
+   traverse the ESMF object hierarchy associated with host (i.e. Arrays in
+   an ArrayBundle, Fields in a FieldBundle, etc.).
+
+   Users interested in broadcasting only the ESMF_Info object should
+   consult the ESMF_InfoBroadcast documentation [510]40.4.4.
+
+   The arguments are:
+
+   host
+          Target ESMF object. Overloaded for:
+
+          + ESMF_State
+          + ESMF_CplComp
+          + ESMF_GridComp
+          + ESMF_SciComp
+          + ESMF_Field
+          + ESMF_FieldBundle
+
+   rootPet
+          The root PET to use for the synchronization.
+
+   vm
+          The VM to synchronize across.
+
+   [markClean]
+          Default is false. If true, mark changed ESMF_Info contents as
+          clean once synchronized. These contents will no longer be
+          broadcast in consecutive calls to ESMF_InfoSync.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

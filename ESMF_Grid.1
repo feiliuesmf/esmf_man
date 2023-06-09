@@ -1,0 +1,2503 @@
+          + [376]31 Grid Class
+               o [377]31.1 Description
+                    # [378]31.1.1 Grid Representation in ESMF
+                    # [379]31.1.2 Supported Grids
+                    # [380]31.1.3 Grid Topologies and Periodicity
+                    # [381]31.1.4 Grid Distribution
+                    # [382]31.1.5 Grid Coordinates
+                    # [383]31.1.6 Coordinate Specification and Generation
+                    # [384]31.1.7 Staggering
+                    # [385]31.1.8 Masking
+               o [386]31.2 Constants
+                    # [387]31.2.1 ESMF_GRIDCONN
+                    # [388]31.2.2 ESMF_GRIDITEM
+                    # [389]31.2.3 ESMF_GRIDMATCH
+                    # [390]31.2.4 ESMF_GRIDSTATUS
+                    # [391]31.2.5 ESMF_POLEKIND
+                    # [392]31.2.6 ESMF_STAGGERLOC
+               o [393]31.3 Use and Examples
+                    # [394]31.3.1 Create single-tile Grid shortcut method
+                    # [395]31.3.2 Create a 2D regularly distributed
+                      rectilinear Grid with uniformly spaced coordinates
+                    # [396]31.3.3 Create a periodic 2D regularly
+                      distributed rectilinear Grid
+                    # [397]31.3.4 Create a 2D irregularly distributed
+                      rectilinear Grid with uniformly spaced coordinates
+                    # [398]31.3.5 Create a 2D irregularly distributed Grid
+                      with curvilinear coordinates
+                    # [399]31.3.6 Create an irregularly distributed
+                      rectilinear Grid with a non-distributed vertical
+                      dimension
+                    # [400]31.3.7 Create an arbitrarily distributed
+                      rectilinear Grid with a non-distributed vertical
+                      dimension
+                    # [401]31.3.8 Create a curvilinear Grid using the
+                      coordinates defined in a SCRIP file
+                    # [402]31.3.9 Create an empty Grid in a parent
+                      Component for completion in a child Component
+                    # [403]31.3.10 Create a six-tile cubed sphere Grid
+                    # [404]31.3.11 Create a six-tile cubed sphere Grid and
+                      apply Schmidt transform
+                    # [405]31.3.12 Create a six-tile cubed sphere Grid
+                      from a GRIDSPEC Mosaic file
+                    # [406]31.3.13 Grid stagger locations
+                    # [407]31.3.14 Associate coordinates with stagger
+                      locations
+                    # [408]31.3.15 Specify the relationship of coordinate
+                      Arrays to index space dimensions
+                    # [409]31.3.16 Access coordinates
+                    # [410]31.3.17 Associate items with stagger locations
+                    # [411]31.3.18 Access items
+                    # [412]31.3.19 Grid regions and bounds
+                    # [413]31.3.20 Get Grid coordinate bounds
+                    # [414]31.3.21 Get Grid stagger location bounds
+                    # [415]31.3.22 Get Grid stagger location information
+                    # [416]31.3.23 Create an Array at a stagger location
+                    # [417]31.3.24 Create more complex Grids using
+                      DistGrid
+                    # [418]31.3.25 Specify custom stagger locations
+                    # [419]31.3.26 Specify custom stagger padding
+               o [420]31.4 Restrictions and Future Work
+               o [421]31.5 Design and Implementation Notes
+                    # [422]31.5.1 Grid Topology
+               o [423]31.6 Class API: General Grid Methods
+                    # [424]31.6.1 ESMF_GridAssignment(=)
+                    # [425]31.6.2 ESMF_GridOperator(==)
+                    # [426]31.6.3 ESMF_GridOperator(/=)
+                    # [427]31.6.4 ESMF_GridAddCoord
+                    # [428]31.6.5 ESMF_GridAddItem
+                    # [429]31.6.6 ESMF_GridCreate
+                    # [430]31.6.7 ESMF_GridCreate
+                    # [431]31.6.8 ESMF_GridCreate
+                    # [432]31.6.9 ESMF_GridCreate
+                    # [433]31.6.10 ESMF_GridCreate
+                    # [434]31.6.11 ESMF_GridCreate
+                    # [435]31.6.12 ESMF_GridCreate
+                    # [436]31.6.13 ESMF_GridCreate
+                    # [437]31.6.14 ESMF_GridCreate
+                    # [438]31.6.15 ESMF_GridCreate1PeriDim
+                    # [439]31.6.16 ESMF_GridCreate1PeriDim
+                    # [440]31.6.17 ESMF_GridCreate1PeriDim
+                    # [441]31.6.18 ESMF_GridCreate2PeriDim
+                    # [442]31.6.19 ESMF_GridCreate2PeriDim
+                    # [443]31.6.20 ESMF_GridCreate2PeriDim
+                    # [444]31.6.21 ESMF_GridCreateNoPeriDim
+                    # [445]31.6.22 ESMF_GridCreateNoPeriDim
+                    # [446]31.6.23 ESMF_GridCreateNoPeriDim
+                    # [447]31.6.24 ESMF_GridCreate1PeriDimUfrm
+                    # [448]31.6.25 ESMF_GridCreate1PeriDimUfrm
+                    # [449]31.6.26 ESMF_GridCreateNoPeriDimUfrm
+                    # [450]31.6.27 ESMF_GridCreateCubedSphere
+                    # [451]31.6.28 ESMF_GridCreateCubedSphere
+                    # [452]31.6.29 ESMF_GridCreateMosaic
+                    # [453]31.6.30 ESMF_GridCreateMosaic
+                    # [454]31.6.31 ESMF_GridDestroy
+                    # [455]31.6.32 ESMF_GridEmptyComplete
+                    # [456]31.6.33 ESMF_GridEmptyComplete
+                    # [457]31.6.34 ESMF_GridEmptyComplete
+                    # [458]31.6.35 ESMF_GridEmptyCreate
+                    # [459]31.6.36 ESMF_GridGet
+                    # [460]31.6.37 ESMF_GridGet
+                    # [461]31.6.38 ESMF_GridGet
+                    # [462]31.6.39 ESMF_GridGet
+                    # [463]31.6.40 ESMF_GridGet
+                    # [464]31.6.41 ESMF_GridGetCoord
+                    # [465]31.6.42 ESMF_GridGetCoord
+                    # [466]31.6.43 ESMF_GridGetCoord
+                    # [467]31.6.44 ESMF_GridGetCoord
+                    # [468]31.6.45 ESMF_GridGetCoord
+                    # [469]31.6.46 ESMF_GridGetCoordBounds
+                    # [470]31.6.47 ESMF_GridGetItem
+                    # [471]31.6.48 ESMF_GridGetItem
+                    # [472]31.6.49 ESMF_GridGetItem
+                    # [473]31.6.50 ESMF_GridGetItemBounds
+                    # [474]31.6.51 ESMF_GridIsCreated
+                    # [475]31.6.52 ESMF_GridMatch
+                    # [476]31.6.53 ESMF_GridRedist
+                    # [477]31.6.54 ESMF_GridSetCoord
+                    # [478]31.6.55 ESMF_GridSetItem
+                    # [479]31.6.56 ESMF_GridValidate
+               o [480]31.7 Class API: StaggerLoc Methods
+                    # [481]31.7.1 ESMF_StaggerLocGet
+                    # [482]31.7.2 ESMF_StaggerLocSet
+                    # [483]31.7.3 ESMF_StaggerLocSet
+                    # [484]31.7.4 ESMF_StaggerLocString
+                    # [485]31.7.5 ESMF_StaggerLocPrint
+                                 31 Grid Class
+
+31.1 Description
+
+   The ESMF Grid class is used to describe the geometry and discretization
+   of logically rectangular physical grids. It also contains the
+   description of the grid's underlying topology and the decomposition of
+   the physical grid across the available computational resources. The
+   most frequent use of the Grid class is to describe physical grids in
+   user code so that sufficient information is available to perform ESMF
+   methods such as regridding.
+
+             Key Features
+   Representation of grids formed by logically rectangular regions,
+   including uniform and rectilinear grids (e.g. lat-lon grids),
+   curvilinear grids (e.g. displaced pole grids), and grids formed by
+   connected logically rectangular regions (e.g. cubed sphere grids).
+             Support for 1D, 2D, 3D, and higher dimension grids.
+   Distribution of grids across computational resources for parallel
+   operations - users set which grid dimensions are distributed.
+   Grids can be created already distributed, so that no single resource
+   needs global information during the creation process.
+   Options to define periodicity and other edge connectivities either
+   explicitly or implicitly via shape shortcuts.
+   Options for users to define grid coordinates themselves or to call
+   prefabricated coordinate generation routines for standard grids.
+             Options for incremental construction of grids.
+   Options for using a set of pre-defined stagger locations or for setting
+   custom stagger locations.
+
+  31.1.1 Grid Representation in ESMF
+
+   ESMF Grids are based on the concepts described in A Standard
+   Description of Grids Used in Earth System Models [Balaji 2006]. In this
+   document Balaji introduces the mosaic concept as a means of describing
+   a wide variety of Earth system model grids. A mosaic is composed of
+   grid tiles connected at their edges. Mosaic grids includes simple,
+   single tile grids as a special case.
+
+   The ESMF Grid class is a representation of a mosaic grid. Each ESMF
+   Grid is constructed of one or more logically rectangular Tiles. A Tile
+   will usually have some physical significance (e.g. the region of the
+   world covered by one face of a cubed sphere grid).
+
+   The piece of a Tile that resides on one DE (for simple cases, a DE can
+   be thought of as a processor - see section on the DELayout) is called a
+   LocalTile. For example, the six faces of a cubed sphere grid are each
+   Tiles, and each Tile can be divided into many LocalTiles.
+
+   Every ESMF Grid contains a DistGrid object, which defines the Grid's
+   index space, topology, distribution, and connectivities. It enables the
+   user to define the complex edge relationships of tripole and other
+   grids. The DistGrid can be created explicitly and passed into a Grid
+   creation routine, or it can be created implicitly if the user takes a
+   Grid creation shortcut. The DistGrid used in Grid creation describes
+   the properties of the Grid cells. In addition to this one, the Grid
+   internally creates DistGrids for each stagger location. These stagger
+   DistGrids are related to the original DistGrid, but may contain extra
+   padding to represent the extent of the index space of the stagger.
+   These DistGrids are what are used when a Field is created on a Grid.
+
+  31.1.2 Supported Grids
+
+   The range of supported grids in ESMF can be defined by:
+     * Types of topologies and shapes supported. ESMF supports one or more
+       logically rectangular grid Tiles with connectivities specified
+       between cells. For more details see section [1186]31.1.3.
+     * Types of distributions supported. ESMF supports regular, irregular,
+       or arbitrary distributions of data. For more details see section
+       [1187]31.1.4.
+     * Types of coordinates supported. ESMF supports uniform, rectilinear,
+       and curvilinear coordinates. For more details see section
+       [1188]31.1.5.
+
+  31.1.3 Grid Topologies and Periodicity
+
+   ESMF has shortcuts for the creation of standard Grid topologies or
+   shapes up to 3D. In many cases, these enable the user to bypass the
+   step of creating a DistGrid before creating the Grid. There are two
+   sets of methods which allow the user to do this. These two sets of
+   methods cover the same set of topologies, but allow the user to specify
+   them in different ways.
+
+   The first set of these are a group of overloaded calls broken up by the
+   number of periodic dimensions they specify. With these the user can
+   pick the method which creates a Grid with the number of periodic
+   dimensions they need, and then specify other connectivity options via
+   arguments to the method. The following is a description of these
+   methods:
+
+   ESMF_GridCreateNoPeriDim()
+          Allows the user to create a Grid with no edge connections, for
+          example, a regional Grid with closed boundaries.
+
+   ESMF_GridCreate1PeriDim()
+          Allows the user to create a Grid with 1 periodic dimension and
+          supports a range of options for what to do at the pole
+          (see Section [1189]31.2.5). Some examples of Grids which can be
+          created here are tripole spheres, bipole spheres, cylinders with
+          open poles.
+
+   ESMF_GridCreate2PeriDim()
+          Allows the user to create a Grid with 2 periodic dimensions, for
+          example a torus, or a regional Grid with doubly periodic
+          boundaries.
+
+   More detailed information can be found in the API description of each.
+
+   The second set of shortcut methods is a set of methods overloaded under
+   the name ESMF_GridCreate(). These methods allow the user to specify the
+   connectivites at the end of each dimension, by using the
+   ESMF_GridConn_Flag flag. The table below shows the ESMF_GridConn_Flag
+   settings used to create standard shapes in 2D using the
+   ESMF_GridCreate() call. Two values are specified for each dimension,
+   one for the low end and one for the high end of the dimension's index
+   values.
+
+   2D Shape       connflagDim1(1) connflagDim1(2) connflagDim2(1)
+   connflagDim2(2)
+   Rectangle           NONE            NONE            NONE         NONE
+   Bipole Sphere       POLE            POLE          PERIODIC     PERIODIC
+   Tripole Sphere      POLE           BIPOLE         PERIODIC     PERIODIC
+   Cylinder            NONE            NONE          PERIODIC     PERIODIC
+   Torus             PERIODIC        PERIODIC        PERIODIC     PERIODIC
+
+   If the user's grid shape is too complex for an ESMF shortcut routine,
+   or involves more than three dimensions, a DistGrid can be created to
+   specify the shape in detail. This DistGrid is then passed into a Grid
+   create call.
+
+  31.1.4 Grid Distribution
+
+   ESMF Grids have several options for data distribution (also referred to
+   as decomposition). As ESMF Grids are cell based, these options are all
+   specified in terms of how the cells in the Grid are broken up between
+   DEs.
+
+   The main distribution options are regular, irregular, and arbitrary. A
+   regular distribution is one in which the same number of contiguous grid
+   cells are assigned to each DE in the distributed dimension. An
+   irregular distribution is one in which unequal numbers of contiguous
+   grid cells are assigned to each DE in the distributed dimension. An
+   arbitrary distribution is one in which any grid cell can be assigned to
+   any DE. Any of these distribution options can be applied to any of the
+   grid shapes (i.e., rectangle) or types (i.e., rectilinear). Support for
+   arbitrary distribution is limited in the current version of ESMF, see
+   Section [1190]31.3.7 for an example of creating a Grid with an
+   arbitrary distribution.
+
+   Figure [1191]13 illustrates options for distribution.
+
+   CAPTION: Figure 13: Examples of regular and irregular decomposition of
+   a grid a that is 6x6, and an arbitrary decomposition of a grid b that
+   is 6x3.
+
+                \scalebox{0.9}{\includegraphics{GridDecomps}}
+
+   A distribution can also be specified using the DistGrid, by passing
+   object into a Grid create call.
+
+  31.1.5 Grid Coordinates
+
+   Grid Tiles can have uniform, rectilinear, or curvilinear coordinates.
+   The coordinates of uniform grids are equally spaced along their axes,
+   and can be fully specified by the coordinates of the two opposing
+   points that define the grid's physical span. The coordinates of
+   rectilinear grids are unequally spaced along their axes, and can be
+   fully specified by giving the spacing of grid points along each axis.
+   The coordinates of curvilinear grids must be specified by giving the
+   explicit set of coordinates for each grid point. Curvilinear grids are
+   often uniform or rectilinear grids that have been warped; for example,
+   to place a pole over a land mass so that it does not affect the
+   computations performed on an ocean model grid. Figure [1192]14 shows
+   examples of each type of grid.
+
+   CAPTION: Figure 14: Types of logically rectangular grid tiles. Red
+   circles show the values needed to specify grid coordinates for each
+   type.
+
+               \scalebox{0.9}{\includegraphics{LogRectGrids}}
+
+   Each of these coordinate types can be set for each of the standard grid
+   shapes described in section [1193]31.1.3.
+
+   The table below shows how examples of common single Tile grids fall
+   into this shape and coordinate taxonomy. Note that any of the grids in
+   the table can have a regular or arbitrary distribution.
+
+     Uniform Rectilinear Curvilinear
+   Sphere Global uniform lat-lon grid Gaussian grid Displaced pole grid
+   Rectangle Regional uniform lat-lon grid Gaussian grid section Polar
+   stereographic grid section
+
+  31.1.6 Coordinate Specification and Generation
+
+   There are two ways of specifying coordinates in ESMF. The first way is
+   for the user to set the coordinates. The second way is to take a
+   shortcut and have the framework generate the coordinates.
+
+   See Section [1194]31.3.13 for more description and examples of setting
+   coordinates.
+
+  31.1.7 Staggering
+
+   Staggering is a finite difference technique in which the values of
+   different physical quantities are placed at different locations within
+   a grid cell.
+
+   The ESMF Grid class supports a variety of stagger locations, including
+   cell centers, corners, and edge centers. The default stagger location
+   in ESMF is the cell center, and cell counts in Grid are based on this
+   assumption. Combinations of the 2D ESMF stagger locations are
+   sufficient to specify any of the Arakawa staggers. ESMF also supports
+   staggering in 3D and higher dimensions. There are shortcuts for
+   standard staggers, and interfaces through which users can create custom
+   staggers.
+
+   As a default the ESMF Grid class provides symmetric staggering, so that
+   cell centers are enclosed by cell perimeter (e.g. corner) stagger
+   locations. This means the coordinate arrays for stagger locations other
+   than the center will have an additional element of padding in order to
+   enclose the cell center locations. However, to achieve other types of
+   staggering, the user may alter or eliminate this padding by using the
+   appropriate options when adding coordinates to a Grid.
+
+   In the current release, only the cell center stagger location is
+   supported for an arbitrarily distributed grid. For examples and a full
+   description of the stagger interface see Section [1195]31.3.13.
+
+  31.1.8 Masking
+
+   Masking is the process whereby parts of a Grid can be marked to be
+   ignored during an operation. For a description of how to set mask
+   information in the Grid, see here [1196]31.3.17. For a description of
+   how masking works in regridding, see here [1197]24.2.10.
+
+31.2 Constants
+
+  31.2.1 ESMF_GRIDCONN
+
+   DESCRIPTION:
+   The ESMF_GridCreateShapeTile command has three specific arguments
+   connflagDim1, connflagDim2, and connflagDim3. These can be used to
+   setup different types of connections at the ends of each dimension of a
+   Tile. Each of these parameters is a two element array. The first
+   element is the connection type at the minimum end of the dimension and
+   the second is the connection type at the maximum end. The default value
+   for all the connections is ESMF_GRIDCONN_NONE, specifying no
+   connection.
+
+   The type of this flag is:
+
+   type(ESMF_GridConn_Flag)
+
+   The valid values are:
+
+   ESMF_GRIDCONN_NONE
+          No connection.
+
+   ESMF_GRIDCONN_PERIODIC
+          Periodic connection.
+
+   ESMF_GRIDCONN_POLE
+          This edge is connected to itself. Given that the edge is n
+          elements long, then element i is connected to element ((i+n/2)
+          mod n).
+
+   ESMF_GRIDCONN_BIPOLE
+          This edge is connected to itself. Given that the edge is n
+          elements long, element i is connected to element n-i+1.
+
+  31.2.2 ESMF_GRIDITEM
+
+   DESCRIPTION:
+   The ESMF Grid can contain other kinds of data besides coordinates. This
+   data is referred to as Grid “items”. Some items may be used by ESMF for
+   calculations involving the Grid. The following are the valid values of
+   ESMF_GridItem_Flag.
+
+   The type of this flag is:
+
+   type(ESMF_GridItem_Flag)
+
+   The valid values are:
+
+   Item Label Type Restriction Type Default ESMF Uses Controls
+   ESMF_GRIDITEM_MASK ESMF_TYPEKIND_I4 ESMF_TYPEKIND_I4 YES Masking in
+   Regrid
+   ESMF_GRIDITEM_AREA NONE ESMF_TYPEKIND_R8 YES Conservation in Regrid
+
+   NOTE: One important thing to consider when setting areas in the Grid
+   using ESMF_GRIDITEM_AREA, ESMF doesn't currently do unit conversion on
+   areas. If these areas are going to be used in a process that also
+   involves the areas of another Grid or Mesh (e.g. conservative
+   regridding), then it is the user's responsibility to make sure that the
+   area units are consistent between the two sides. If ESMF calculates an
+   area on the surface of a sphere, then it is in units of square radians.
+   If it calculates the area for a Cartesian grid, then it is in the same
+   units as the coordinates, but squared.
+
+  31.2.3 ESMF_GRIDMATCH
+
+   DESCRIPTION:
+   This type is used to indicate the level to which two grids match.
+
+   The type of this flag is:
+
+   type(ESMF_GridMatch_Flag)
+
+   The valid values are:
+
+   ESMF_GRIDMATCH_INVALID:
+          Indicates a non-valid matching level. Returned if an error
+          occurs in the matching function. If a higher matching level is
+          returned then no error occurred.
+
+   ESMF_GRIDMATCH_NONE:
+          The lowest level of grid matching. This indicates that the
+          Grid's don't match at any of the higher levels.
+
+   ESMF_GRIDMATCH_EXACT:
+          All the pieces of the Grid (e.g. distgrids, coordinates, etc.)
+          except the name, match between the two Grids.
+
+   ESMF_GRIDMATCH_ALIAS:
+          Both Grid variables are aliases to the exact same Grid object in
+          memory.
+
+  31.2.4 ESMF_GRIDSTATUS
+
+   DESCRIPTION:
+   The ESMF Grid class can exist in two states. These states are present
+   so that the library code can detect if a Grid has been appropriately
+   setup for the task at hand. The following are the valid values of
+   ESMF_GRIDSTATUS.
+
+   The type of this flag is:
+
+   type(ESMF_GridStatus_Flag)
+
+   The valid values are:
+
+   ESMF_GRIDSTATUS_EMPTY:
+          Status after a Grid has been created with ESMF_GridEmptyCreate.
+          A Grid object container is allocated but space for internal
+          objects is not. Topology information and coordinate information
+          is incomplete. This object can be used in
+          ESMF_GridEmptyComplete() methods in which additional information
+          is added to the Grid.
+
+   ESMF_GRIDSTATUS_COMPLETE:
+          The Grid has a specific topology and distribution, but
+          incomplete coordinate arrays. The Grid can be used as the basis
+          for allocating a Field, and coordinates can be added via
+          ESMF_GridCoordAdd() to allow other functionality.
+
+  31.2.5 ESMF_POLEKIND
+
+   DESCRIPTION:
+   This type describes the type of connection that occurs at the pole when
+   a Grid is created with ESMF_GridCreate1PeriodicDim().
+
+   The type of this flag is:
+
+   type(ESMF_PoleKind_Flag)
+
+   The valid values are:
+
+   ESMF_POLEKIND_NONE
+          No connection at pole.
+
+   ESMF_POLEKIND_MONOPOLE
+          This edge is connected to itself. Given that the edge is n
+          elements long, then element i is connected to element i+n/2.
+
+   ESMF_POLEKIND_BIPOLE
+          This edge is connected to itself. Given that the edge is n
+          elements long, element i is connected to element n-i+1.
+
+  31.2.6 ESMF_STAGGERLOC
+
+   DESCRIPTION:
+   In the ESMF Grid class, data can be located at different positions in a
+   Grid cell. When setting or retrieving coordinate data the stagger
+   location is specified to tell the Grid method from where in the cell to
+   get the data. Although the user may define their own custom stagger
+   locations, ESMF provides a set of predefined locations for ease of use.
+   The following are the valid predefined stagger locations.
+
+   CAPTION: Figure 15: 2D Predefined Stagger Locations
+
+             \scalebox{0.75}{\includegraphics{GridStaggerLoc2D}}
+
+   The 2D predefined stagger locations (illustrated in figure [1198]15)
+   are:
+
+   ESMF_STAGGERLOC_CENTER:
+          The center of the cell.
+
+   ESMF_STAGGERLOC_CORNER:
+          The corners of the cell.
+
+   ESMF_STAGGERLOC_EDGE1:
+          The edges offset from the center in the 1st dimension.
+
+   ESMF_STAGGERLOC_EDGE2:
+          The edges offset from the center in the 2nd dimension.
+
+   CAPTION: Figure 16: 3D Predefined Stagger Locations
+
+             \scalebox{1.0}{\includegraphics{GridStaggerLoc3D}}
+
+   The 3D predefined stagger locations (illustrated in figure [1199]16)
+   are:
+
+   ESMF_STAGGERLOC_CENTER_VCENTER:
+          The center of the 3D cell.
+
+   ESMF_STAGGERLOC_CORNER_VCENTER:
+          Half way up the vertical edges of the cell.
+
+   ESMF_STAGGERLOC_EDGE1_VCENTER:
+          The center of the face bounded by edge 1 and the vertical
+          dimension.
+
+   ESMF_STAGGERLOC_EDGE2_VCENTER:
+          The center of the face bounded by edge 2 and the vertical
+          dimension.
+
+   ESMF_STAGGERLOC_CORNER_VFACE:
+          The corners of the 3D cell.
+
+   ESMF_STAGGERLOC_EDGE1_VFACE:
+          The center of the edges of the 3D cell parallel offset from the
+          center in the 1st dimension.
+
+   ESMF_STAGGERLOC_EDGE2_VFACE:
+          The center of the edges of the 3D cell parallel offset from the
+          center in the 2nd dimension.
+
+   ESMF_STAGGERLOC_CENTER_VFACE:
+          The center of the top and bottom face. The face bounded by the
+          1st and 2nd dimensions.
+
+31.3 Use and Examples
+
+   This section describes the use of the ESMF Grid class. It first
+   discusses the more user friendly shape specific interface to the Grid.
+   During this discussion it covers creation and options, adding stagger
+   locations, coordinate data access, and other grid functionality. After
+   this initial phase the document discusses the more advanced options
+   which the user can employ should they need more customized interaction
+   with the Grid class.
+
+  31.3.1 Create single-tile Grid shortcut method
+
+   The set of methods ESMF_GridCreateNoPeriDim(),
+   ESMF_GridCreate1PeriDim(), ESMF_GridCreate2PeriDim(), and
+   ESMF_GridCreate() are shortcuts for building 2D or 3D single tile
+   logically rectangular Grids. These methods support all three types of
+   distributions described in Section [1200]31.1.4: regular, irregular and
+   arbitrary.
+
+   The ESMF Grid is cell based and so for all distribution options the
+   methods take as input the number of cells to describe the total index
+   space and the number of cells to specify distribution.
+
+   To create a Grid with a regular distribution the user specifies the
+   global maximum and minimum ranges of the Grid cell index space
+   (maxIndex and minIndex), and the number of pieces in which to partition
+   each dimension (via a regDecomp argument). ESMF then divides the index
+   space as evenly as possible into the specified number of pieces. If
+   there are cells left over then they are distributed one per DE starting
+   from the first DE until they are gone.
+
+   If minIndex is not specified, then the bottom of the Grid cell index
+   range is assumed to be (1,1,...,1). If regDecomp is not specified, then
+   by default ESMF creates a distribution that partitions the grid cells
+   in the first dimension (e.g. NPx1x1...1) as evenly as possible by the
+   number of PETs NP. The remaining dimensions are not partitioned. The
+   dimension of the Grid is the size of maxIndex. The following is an
+   example of creating a 10x20x30 3D grid where the first dimensions is
+   broken into 2 pieces, the second is broken into 4 pieces, and the third
+   is not divided (i.e. every DE will have length 30 in the 3rd
+   dimension).
+
+  grid3D=ESMF_GridCreateNoPeriDim(regDecomp=(/2,4,1/), maxIndex=(/10,20,30/), &
+           rc=rc)
+
+   Irregular distribution requires the user to specify the exact number of
+   Grid cells per DE in each dimension. In the ESMF_GridCreateNoPeriDim()
+   call the countsPerDEDim1, countsPerDim2, and countsPerDim3 arguments
+   are used to specify a rectangular distribution containing
+   size(countsPerDEDim1) by size(countsPerDEDim2) by size(countsPerDEDim3)
+   DEs. The entries in each of these arrays specify the number of grid
+   cells per DE in that dimension. The dimension of the grid is determined
+   by the presence of countsPerDEDim3. If it's present the Grid will be
+   3D. If just countsPerDEDim1 and countsPerDEDim2 are specified the Grid
+   will be 2D.
+
+   The following call illustrates the creation of a 10x20 two dimensional
+   rectangular Grid distributed across six DEs that are arranged 2x3. In
+   the first dimension there are 3 grid cells on the first DE and 7 cells
+   on the second DE. The second dimension has 3 DEs with 11,2, and 7
+   cells, respectively.
+
+   grid2D=ESMF_GridCreateNoPeriDim(countsPerDEDim1=(/3,7/), &
+          countsPerDEDim2=(/11,2,7/), rc=rc)
+
+   To add a distributed third dimension of size 30, broken up into two
+   groups of 15, the above call would be altered as follows.
+
+   grid3d=ESMF_GridCreateNoPeriDim(countsPerDEDim1=(/3,7/), &
+          countsPerDEDim2=(/11,2,7/), countsPerDEDim3=(/15,15/), rc=rc)
+
+   To make a third dimension distributed across only 1 DE, then
+   countsPerDEDim3 in the call should only have a single term.
+
+   grid3D=ESMF_GridCreateNoPeriDim(countsPerDEDim1=(/3,7/),  &
+          countsPerDEDim2=(/11,2,7/), countsPerDEDim3=(/30/), rc=rc)
+
+   The petMap parameter may be used to specify on to which specific PETs
+   the DEs in the Grid are assigned. Each entry in petMap specifies to
+   which PET the corresponding DE should be assigned. For example,
+   petMap(3,2)=4 tells the Grid create call to put the DE located at
+   column 3 row 2 on PET 4. Note that this parameter is only available for
+   the regular and irregular distribution types. The petMap array is a 3D
+   array, for a 3D Grid each of its dimensions correspond to a Grid
+   dimension. If the Grid is 2D, then the first two dimensions correspond
+   to Grid dimensions and the last dimension should be of size 1. The size
+   of each petMap dimension is the number of DE's along that dimension in
+   the Grid. For a regular Grid, the size is equal to the number in
+   regDecomp (i.e. size(petMap,d)=regDecomp(d) for all dimensions d in the
+   Grid). For an irregular Grid the size is equal to the number of items
+   in the corresponding countsPerDEDim variable (i.e.
+   size(petMap,d)=size(countsPerDEDimd) for all dimensions d in the Grid).
+   The following example demonstrates how to specify the PET to DE
+   association for an ESMF_GridCreateNoPeriDim() call.
+
+   ! allocate memory for petMap
+   allocate( petMap(2,2,1) )
+
+   ! Set petMap
+   petMap(:,1,1) = (/3,2/) ! DE (1,1,1) on PET 3 and DE (2,1,1) on PET 2
+   petMap(:,2,1) = (/1,0/) ! DE (1,2,1) on PET 1 and DE (2,2,1) on PET 0
+
+
+   ! Let the 3D grid be be distributed only in the first two dimensions.
+   grid2D=ESMF_GridCreateNoPeriDim(countsPerDEDim1=(/3,7/), &
+           countsPerDEDim2=(/7,6/), petMap=petMap, rc=rc)
+
+   To create an grid with arbitrary distribution, the user specifies the
+   global minimum and maximum ranges of the index space with the arguments
+   minIndex and maxIndex, the total number of cells and their index space
+   locations residing on the local PET through a localArbIndexCount and a
+   localArbIndex argument. localArbIndex is a 2D array with size
+   (localArbIndexCount, n) where n is the total number dimensions
+   distributed arbitrarily. Again, if minIndex is not specified, then the
+   bottom of the index range is assumed to be (1,1,...). The dimension of
+   the Grid is equal to the size of maxIndex. If n (number of arbitrarily
+   distributed dimension) is less than the grid dimension, an optional
+   argument distDim is used to specify which of the grid dimension is
+   arbitrarily distributed. If not given, the first n dimensions are
+   assumed to be distributed.
+
+   The following example creates a 2D Grid of dimensions 5x5, and places
+   the diagonal elements (i.e. indices (i,i) where i goes from 1 to 5) on
+   the local PET. The remaining PETs would individually declare the
+   remainder of the Grid locations.
+
+   ! allocate memory for localArbIndex
+   allocate( localArbIndex(5,2) )
+   ! Set local indices
+   localArbIndex(1,:)=(/1,1/)
+   localArbIndex(2,:)=(/2,2/)
+   localArbIndex(3,:)=(/3,3/)
+   localArbIndex(4,:)=(/4,4/)
+   localArbIndex(5,:)=(/5,5/)
+
+   ! Create a 2D Arbitrarily distributed Grid
+   grid2D=ESMF_GridCreateNoPeriDim(maxIndex=(/5,5/), &
+         arbIndexList=localArbIndex, arbIndexCount=5, rc=rc)
+
+   To create a 3D Grid of dimensions 5x6x5 with the first and the third
+   dimensions distributed arbitrarily, distDim is used.
+
+   ! Create a 3D Grid with the 1st and 3rd dimension arbitrarily distributed
+   grid3D=ESMF_GridCreateNoPeriDim(maxIndex=(/5,6,5/), &
+         arbIndexList=localArbIndex, arbIndexCount=5, &
+         distDim=(/1,3/), rc=rc)
+
+  31.3.2 Create a 2D regularly distributed rectilinear Grid with uniformly
+  spaced coordinates
+
+   The following is an example of creating a simple rectilinear grid and
+   loading in a set of coordinates. It illustrates a straightforward use
+   of the ESMF_GridCreateNoPeriDim() call described in the previous
+   section. This code creates a 10x20 2D grid with uniformly spaced
+   coordinates varying from (10,10) to (100,200). The grid is partitioned
+   using a regular distribution. The first dimension is divided into two
+   pieces, and the second dimension is divided into 3. This example
+   assumes that the code is being run with a 1-1 mapping between PETs and
+   DEs because we are only accessing the first DE on each PET (localDE=0).
+   Because we have 6 DEs (2x3), this example would only work when run on 6
+   PETs. The Grid is created with global indices. After Grid creation the
+   local bounds and native Fortran arrays are retrieved and the
+   coordinates are set by the user.
+
+   !-------------------------------------------------------------------
+   ! Create the Grid:  Allocate space for the Grid object, define the
+   ! topology and distribution of the Grid, and specify that it
+   ! will have global indices.  Note that here aperiodic bounds are
+   ! specified by the argument name. In this call the minIndex hasn't
+   ! been set, so it defaults to (1,1,...). The default is to
+   ! divide the index range as equally as possible among the DEs
+   ! specified in regDecomp. This behavior can be changed by
+   ! specifying decompFlag.
+   !-------------------------------------------------------------------
+   grid2D=ESMF_GridCreateNoPeriDim(          &
+         ! Define a regular distribution
+         maxIndex=(/10,20/), & ! define index space
+         regDecomp=(/2,3/),  & ! define how to divide among DEs
+         coordSys=ESMF_COORDSYS_CART, &
+         ! Specify mapping of coords dim to Grid dim
+         coordDep1=(/1/), & ! 1st coord is 1D and depends on 1st Grid dim
+         coordDep2=(/2/), & ! 2nd coord is 1D and depends on 2nd Grid dim
+         indexflag=ESMF_INDEX_GLOBAL, &
+         rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Allocate coordinate storage and associate it with the center
+   ! stagger location.  Since no coordinate values are specified in
+   ! this call no coordinate values are set yet.
+   !-------------------------------------------------------------------
+   call ESMF_GridAddCoord(grid2D,  &
+          staggerloc=ESMF_STAGGERLOC_CENTER, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Get the pointer to the first coordinate array and the bounds
+   ! of its global indices on the local DE.
+   !-------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid2D, coordDim=1, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CENTER, &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=coordX, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Calculate and set coordinates in the first dimension [10-100].
+   !-------------------------------------------------------------------
+   do i=lbnd(1),ubnd(1)
+        coordX(i) = i*10.0
+   enddo
+
+   !-------------------------------------------------------------------
+   ! Get the pointer to the second coordinate array and the bounds of
+   ! its global indices on the local DE.
+   !-------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid2D, coordDim=2, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CENTER, &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=coordY, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Calculate and set coordinates in the second dimension [10-200]
+   !-------------------------------------------------------------------
+   do j=lbnd(1),ubnd(1)
+        coordY(j) = j*10.0
+   enddo
+
+  31.3.3 Create a periodic 2D regularly distributed rectilinear Grid
+
+   The following is an example of creating a simple rectilinear grid with
+   a periodic dimension and loading in a set of coordinates. It
+   illustrates a straightforward use of the ESMF_GridCreate1PeriDim() call
+   described in the previous section. This code creates a 360x180 2D grid
+   with uniformly spaced coordinates varying from (1,1) to (360,180). The
+   grid is partitioned using a regular distribution. The first dimension
+   is divided into two pieces, and the second dimension is divided into 3.
+   This example assumes that the code is being run with a 1-1 mapping
+   between PETs and DEs because we are only accessing the first DE on each
+   PET (localDE=0). Because we have 6 DEs (2x3), this example would only
+   work when run on 6 PETs. The Grid is created with global indices. After
+   Grid creation the local bounds and native Fortran arrays are retrieved
+   and the coordinates are set by the user.
+
+   !-------------------------------------------------------------------
+   ! Create the Grid:  Allocate space for the Grid object, define the
+   ! topology and distribution of the Grid, and specify that it
+   ! will have global indices.  Note that here a single periodic connection
+   ! is specified by the argument name. In this call the minIndex hasn't
+   ! been set, so it defaults to (1,1,...). The default is to
+   ! divide the index range as equally as possible among the DEs
+   ! specified in regDecomp. This behavior can be changed by
+   ! specifying decompFlag. Since the coordinate system is
+   ! not specified, it defaults to ESMF_COORDSYS_SPH_DEG.
+   !-------------------------------------------------------------------
+   grid2D=ESMF_GridCreate1PeriDim(          &
+         ! Define a regular distribution
+         maxIndex=(/360,180/), & ! define index space
+         regDecomp=(/2,3/),  & ! define how to divide among DEs
+         ! Specify mapping of coords dim to Grid dim
+         coordDep1=(/1/), & ! 1st coord is 1D and depends on 1st Grid dim
+         coordDep2=(/2/), & ! 2nd coord is 1D and depends on 2nd Grid dim
+         indexflag=ESMF_INDEX_GLOBAL, &
+         rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Allocate coordinate storage and associate it with the center
+   ! stagger location.  Since no coordinate values are specified in
+   ! this call no coordinate values are set yet.
+   !-------------------------------------------------------------------
+   call ESMF_GridAddCoord(grid2D,  &
+          staggerloc=ESMF_STAGGERLOC_CENTER, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Get the pointer to the first coordinate array and the bounds
+   ! of its global indices on the local DE.
+   !-------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid2D, coordDim=1, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CENTER, &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=coordX, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Calculate and set coordinates in the first dimension [10-100].
+   !-------------------------------------------------------------------
+   do i=lbnd(1),ubnd(1)
+        coordX(i) = i*1.0
+   enddo
+
+   !-------------------------------------------------------------------
+   ! Get the pointer to the second coordinate array and the bounds of
+   ! its global indices on the local DE.
+   !-------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid2D, coordDim=2, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CENTER, &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=coordY, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Calculate and set coordinates in the second dimension [10-200]
+   !-------------------------------------------------------------------
+   do j=lbnd(1),ubnd(1)
+        coordY(j) = j*1.0
+   enddo
+
+   The remaining examples in this section will use the irregular
+   distribution because of its greater generality. To create code similar
+   to these, but using a regular distribution, replace the countsPerDEDim
+   arguments in the Grid create with the appropriate maxIndex and
+   regDecomp arguments.
+
+  31.3.4 Create a 2D irregularly distributed rectilinear Grid with uniformly
+  spaced coordinates
+
+   This example serves as an illustration of the difference between using
+   a regular and irregular distribution. It repeats the previous example
+   except using an irregular distribution to give the user more control
+   over how the cells are divided between the DEs. As before, this code
+   creates a 10x20 2D Grid with uniformly spaced coordinates varying from
+   (10,10) to (100,200). In this example, the Grid is partitioned using an
+   irregular distribution. The first dimension is divided into two pieces,
+   the first with 3 Grid cells per DE and the second with 7 Grid cells per
+   DE. In the second dimension, the Grid is divided into 3 pieces, with
+   11, 2, and 7 cells per DE respectively. This example assumes that the
+   code is being run with a 1-1 mapping between PETs and DEs because we
+   are only accessing the first DE on each PET (localDE=0). Because we
+   have 6 DEs (2x3), this example would only work when run on 6 PETs. The
+   Grid is created with global indices. After Grid creation the local
+   bounds and native Fortran arrays are retrieved and the coordinates are
+   set by the user.
+
+   !-------------------------------------------------------------------
+   ! Create the Grid:  Allocate space for the Grid object, define the
+   ! topology and distribution of the Grid, and specify that it
+   ! will have global coordinates.  Note that aperiodic bounds are
+   ! indicated by the method name. In this call the minIndex hasn't
+   ! been set, so it defaults to (1,1,...).
+   !-------------------------------------------------------------------
+   grid2D=ESMF_GridCreateNoPeriDim(          &
+            ! Define an irregular distribution
+            countsPerDEDim1=(/3,7/),    &
+            countsPerDEDim2=(/11,2,7/), &
+            ! Specify mapping of coords dim to Grid dim
+            coordDep1=(/1/), & ! 1st coord is 1D and depends on 1st Grid dim
+            coordDep2=(/2/), & ! 2nd coord is 1D and depends on 2nd Grid dim
+            indexflag=ESMF_INDEX_GLOBAL, &
+            rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Allocate coordinate storage and associate it with the center
+   ! stagger location.  Since no coordinate values are specified in
+   ! this call no coordinate values are set yet.
+   !-------------------------------------------------------------------
+   call ESMF_GridAddCoord(grid2D,  &
+          staggerloc=ESMF_STAGGERLOC_CENTER, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Get the pointer to the first coordinate array and the bounds
+   ! of its global indices on the local DE.
+   !-------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid2D, coordDim=1, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CENTER, &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=coordX, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Calculate and set coordinates in the first dimension [10-100].
+   !-------------------------------------------------------------------
+   do i=lbnd(1),ubnd(1)
+        coordX(i) = i*10.0
+   enddo
+
+   !-------------------------------------------------------------------
+   ! Get the pointer to the second coordinate array and the bounds of
+   ! its global indices on the local DE.
+   !-------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid2D, coordDim=2, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CENTER, &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=coordY, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Calculate and set coordinates in the second dimension [10-200]
+   !-------------------------------------------------------------------
+   do j=lbnd(1),ubnd(1)
+        coordY(j) = j*10.0
+   enddo
+
+  31.3.5 Create a 2D irregularly distributed Grid with curvilinear coordinates
+
+   The following is an example of creating a simple curvilinear Grid and
+   loading in a set of coordinates. It creates a 10x20 2D Grid where the
+   coordinates vary along every dimension. The Grid is partitioned using
+   an irregular distribution. The first dimension is divided into two
+   pieces, the first with 3 Grid cells per DE and the second with 7 Grid
+   cells per DE. In the second dimension, the Grid is divided into 3
+   pieces, with 11, 2, and 7 cells per DE respectively. This example
+   assumes that the code is being run with a 1-1 mapping between PETs and
+   DEs because we are only accessing the first DE on each PET (localDE=0).
+   Because we have 6 DEs (2x3), this example would only work when run on 6
+   PETs. The Grid is created with global indices. After Grid creation the
+   local bounds and native Fortran arrays are retrieved and the
+   coordinates are set by the user.
+
+   !-------------------------------------------------------------------
+   ! Create the Grid:  Allocate space for the Grid object, define the
+   ! distribution of the Grid, and specify that it
+   ! will have global indices.  Note that aperiodic bounds are
+   ! indicated by the method name. If periodic bounds were desired they
+   ! could be specified by using the ESMF_GridCreate1PeriDim() call.
+   ! In this call the minIndex hasn't been set, so it defaults to (1,1,...).
+   !-------------------------------------------------------------------
+   grid2D=ESMF_GridCreateNoPeriDim(      &
+        ! Define an irregular distribution
+        countsPerDEDim1=(/3,7/),     &
+        countsPerDEDim2=(/11,2,7/),   &
+        ! Specify mapping of coords dim to Grid dim
+        coordDep1=(/1,2/), & ! 1st coord is 2D and depends on both Grid dim
+        coordDep2=(/1,2/), & ! 2nd coord is 2D and depends on both Grid dim
+        indexflag=ESMF_INDEX_GLOBAL, &
+        rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Allocate coordinate storage and associate it with the center
+   ! stagger location.  Since no coordinate values are specified in
+   ! this call no coordinate values are set yet.
+   !-------------------------------------------------------------------
+   call ESMF_GridAddCoord(grid2D,  &
+          staggerloc=ESMF_STAGGERLOC_CENTER, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Get the pointer to the first coordinate array and the bounds
+   ! of its global indices on the local DE.
+   !-------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid2D, coordDim=1, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CENTER, &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=coordX2D, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Calculate and set coordinates in the first dimension [10-100].
+   !-------------------------------------------------------------------
+   do j=lbnd(2),ubnd(2)
+   do i=lbnd(1),ubnd(1)
+        coordX2D(i,j) = i+j
+   enddo
+   enddo
+
+   !-------------------------------------------------------------------
+   ! Get the pointer to the second coordinate array and the bounds of
+   ! its global indices on the local DE.
+   !-------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid2D, coordDim=2, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CENTER, &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=coordY2D, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Calculate and set coordinates in the second dimension [10-200]
+   !-------------------------------------------------------------------
+   do j=lbnd(2),ubnd(2)
+   do i=lbnd(1),ubnd(1)
+        coordY2D(i,j) = j-i/100.0
+   enddo
+   enddo
+
+  31.3.6 Create an irregularly distributed rectilinear Grid with a
+  non-distributed vertical dimension
+
+   This example demonstrates how a user can build a rectilinear horizontal
+   Grid with a non-distributed vertical dimension. The Grid contains both
+   the center and corner stagger locations (i.e. Arakawa B-Grid). In
+   contrast to the previous examples, this example doesn't assume that the
+   code is being run with a 1-1 mapping between PETs and DEs. It should
+   work when run on any number of PETs.
+
+   !-------------------------------------------------------------------
+   ! Create the Grid:  Allocate space for the Grid object.  The
+   ! Grid is defined to be 180 Grid cells in the first dimension
+   ! (e.g. longitude), 90 Grid cells in the second dimension
+   ! (e.g. latitude), and 40 Grid cells in the third dimension
+   ! (e.g. height).  The first dimension is decomposed over 4 DEs,
+   ! the second over 3 DEs, and the third is not distributed.
+   ! The connectivities in each dimension are set to aperiodic
+   ! by this method. In this call the minIndex hasn't been set,
+   ! so it defaults to (1,1,...).
+   !-------------------------------------------------------------------
+   grid3D=ESMF_GridCreateNoPeriDim( &
+            ! Define an irregular distribution
+            countsPerDEDim1=(/45,75,40,20/), &
+            countsPerDEDim2=(/30,40,20/),    &
+            countsPerDEDim3=(/40/),          &
+            ! Specify mapping of coords dim to Grid dim
+            coordDep1=(/1/), & ! 1st coord is 1D and depends on 1st Grid dim
+            coordDep2=(/2/), & ! 2nd coord is 1D and depends on 2nd Grid dim
+            coordDep3=(/3/), & ! 3rd coord is 1D and depends on 3rd Grid dim
+            indexflag=ESMF_INDEX_GLOBAL,     & ! Use global indices
+            rc=rc)
+
+
+
+   !-------------------------------------------------------------------
+   ! Allocate coordinate storage for both center and corner stagger
+   ! locations.  Since no coordinate values are specified in this
+   ! call no coordinate values are set yet.
+   !-------------------------------------------------------------------
+   call ESMF_GridAddCoord(grid3D, &
+          staggerloc=ESMF_STAGGERLOC_CENTER_VCENTER, rc=rc)
+
+   call ESMF_GridAddCoord(grid3D, &
+          staggerloc=ESMF_STAGGERLOC_CORNER_VCENTER, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Get the number of DEs on this PET, so that the program
+   ! can loop over them when accessing data.
+   !-------------------------------------------------------------------
+   call ESMF_GridGet(grid3D, localDECount=localDECount, rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Loop over each localDE when accessing data
+   !-------------------------------------------------------------------
+   do lDE=0,localDECount-1
+
+    !------------------------------------------------------------------
+    ! Fill in the coordinates for the corner stagger location first.
+    !------------------------------------------------------------------
+      !----------------------------------------------------------------
+      ! Get the local bounds of the global indexing for the first
+      ! coordinate array on the local DE. If the number of PETs
+      ! is less than the total number of DEs then the rest of this
+      ! example would be in a loop over the local DEs.  Also get the
+      ! pointer to the first coordinate array.
+      !----------------------------------------------------------------
+      call ESMF_GridGetCoord(grid3D, coordDim=1, localDE=lDE, &
+             staggerLoc=ESMF_STAGGERLOC_CORNER_VCENTER,       &
+             computationalLBound=lbnd_corner,                 &
+             computationalUBound=ubnd_corner,                 &
+             farrayPtr=cornerX, rc=rc)
+
+      !----------------------------------------------------------------
+      ! Calculate and set coordinates in the first dimension.
+      !----------------------------------------------------------------
+      do i=lbnd_corner(1),ubnd_corner(1)
+         cornerX(i) = (i-1)*(360.0/180.0)
+      enddo
+
+      !----------------------------------------------------------------
+      ! Get the local bounds of the global indexing for the second
+      ! coordinate array on the local DE.  Also get the pointer to the
+      ! second coordinate array.
+      !----------------------------------------------------------------
+      call ESMF_GridGetCoord(grid3D, coordDim=2, localDE=lDE,   &
+             staggerLoc=ESMF_STAGGERLOC_CORNER_VCENTER,         &
+             computationalLBound=lbnd_corner,                   &
+             computationalUBound=ubnd_corner,                   &
+             farrayPtr=cornerY, rc=rc)
+
+      !----------------------------------------------------------------
+      ! Calculate and set coordinates in the second dimension.
+      !----------------------------------------------------------------
+      do j=lbnd_corner(1),ubnd_corner(1)
+         cornerY(j) = (j-1)*(180.0/90.0)
+      enddo
+
+      !----------------------------------------------------------------
+      ! Get the local bounds of the global indexing for the third
+      ! coordinate array on the local DE, and the pointer to the array.
+      !----------------------------------------------------------------
+      call ESMF_GridGetCoord(grid3D, coordDim=3, localDE=lDE,   &
+             staggerloc=ESMF_STAGGERLOC_CENTER_VCENTER,         &
+             computationalLBound=lbnd, computationalUBound=ubnd,&
+             farrayPtr=cornerZ, rc=rc)
+
+      !----------------------------------------------------------------
+      ! Calculate and set the vertical coordinates
+      !----------------------------------------------------------------
+      do k=lbnd(1),ubnd(1)
+         cornerZ(k) = 4000.0*( (1./39.)*(k-1)  )**2
+      enddo
+
+    !------------------------------------------------------------------
+    ! Now fill the coordinates for the center stagger location with
+    ! the average of the corner coordinate location values.
+    !------------------------------------------------------------------
+      !----------------------------------------------------------------
+      ! Get the local bounds of the global indexing for the first
+      ! coordinate array on the local DE, and the pointer to the array.
+      !----------------------------------------------------------------
+      call ESMF_GridGetCoord(grid3D, coordDim=1, localDE=lDE,    &
+             staggerloc=ESMF_STAGGERLOC_CENTER_VCENTER,          &
+             computationalLBound=lbnd, computationalUBound=ubnd, &
+             farrayPtr=centerX, rc=rc)
+
+      !----------------------------------------------------------------
+      ! Calculate and set coordinates in the first dimension.
+      !----------------------------------------------------------------
+      do i=lbnd(1),ubnd(1)
+         centerX(i) = 0.5*(i-1 + i)*(360.0/180.0)
+      enddo
+
+      !----------------------------------------------------------------
+      ! Get the local bounds of the global indexing for the second
+      ! coordinate array on the local DE, and the pointer to the array.
+      !----------------------------------------------------------------
+       call ESMF_GridGetCoord(grid3D, coordDim=2, localDE=lDE,    &
+              staggerloc=ESMF_STAGGERLOC_CENTER_VCENTER,          &
+              computationalLBound=lbnd, computationalUBound=ubnd, &
+              farrayPtr=centerY, rc=rc)
+
+      !----------------------------------------------------------------
+      ! Calculate and set coordinates in the second dimension.
+      !----------------------------------------------------------------
+      do j=lbnd(1),ubnd(1)
+         centerY(j) = 0.5*(j-1 + j)*(180.0/90.0)
+      enddo
+
+      !----------------------------------------------------------------
+      ! Get the local bounds of the global indexing for the third
+      ! coordinate array on the local DE, and the pointer to the array.
+      !----------------------------------------------------------------
+      call ESMF_GridGetCoord(grid3D, coordDim=3, localDE=lDE,   &
+             staggerloc=ESMF_STAGGERLOC_CENTER_VCENTER,         &
+             computationalLBound=lbnd, computationalUBound=ubnd,&
+             farrayPtr=centerZ, rc=rc)
+
+      !----------------------------------------------------------------
+      ! Calculate and set the vertical coordinates
+      !----------------------------------------------------------------
+      do k=lbnd(1),ubnd(1)
+         centerZ(k) = 4000.0*( (1./39.)*(k-1)  )**2
+      enddo
+
+   !-------------------------------------------------------------------
+   ! End of loop over DEs
+   !-------------------------------------------------------------------
+   enddo
+
+  31.3.7 Create an arbitrarily distributed rectilinear Grid with a
+  non-distributed vertical dimension
+
+   There are more restrictions in defining an arbitrarily distributed
+   grid. First, there is always one DE per PET. Secondly, only local index
+   (ESMF_INDEX_LOCAL) is supported. Third, only one stagger location, i.e.
+   ESMF_STAGGERLOC_CENTER is allowed and last there is no extra paddings
+   on the edge of the grid.
+
+   This example demonstrates how a user can build a 3D grid with its
+   rectilinear horizontal Grid distributed arbitrarily and a
+   non-distributed vertical dimension.
+
+   !-------------------------------------------------------------------
+   ! Set up the local index array:  Assuming the grid is 360x180x10.  First
+   ! calculate the localArbIndexCount and localArbIndex array for each PET
+   ! based on the total number of PETs. The cells are evenly distributed in
+   ! all the PETs. If the total number of cells are not divisible by the
+   ! total PETs, the remaining cells are assigned to the last PET.  The
+   ! cells are card dealt to each PET in y dimension first,
+   ! i.e. (1,1) -> PET 0, (1,2)->  PET 1, (1,3)-> PET 2, and so forth.
+   !-------------------------------------------------------------------
+   xdim = 360
+   ydim = 180
+   zdim = 10
+   localArbIndexCount = (xdim*ydim)/petCount
+   remain = (xdim*ydim)-localArbIndexCount*petCount
+   if (localPet == petCount-1) localArbIndexCount = localArbIndexCount+remain
+
+   allocate(localArbIndex(localArbIndexCount,2))
+   ind = localPet
+   do i=1, localArbIndexCount
+      localArbIndex(i,1)=mod(ind,ydim)+1
+      localArbIndex(i,2)=ind/ydim + 1
+      ind = ind + petCount
+   enddo
+   if (localPet == petCount-1) then
+      ind = xdim*ydim-remain+1
+      do i=localArbIndexCount-remain+1,localArbIndexCount
+         localArbIndex(i,1)=mod(ind,ydim)+1
+         localArbIndex(i,2)=ind/ydim+1
+         ind = ind + 1
+      enddo
+   endif
+
+   !-------------------------------------------------------------------
+   ! Create the Grid:  Allocate space for the Grid object.
+   ! the minIndex hasn't been set, so it defaults to (1,1,...). The
+   ! default coordDep1 and coordDep2 are (/ESMF_DIM_ARB/) where
+   ! ESMF_DIM_ARB represents the collapsed dimension for the
+   ! arbitrarily distributed grid dimensions.  For the undistributed
+   ! grid dimension, the default value for coordDep3 is (/3/).  The
+   ! default values for coordDepX in the arbitrary distribution are
+   ! different from the non-arbitrary distributions.
+   !-------------------------------------------------------------------
+   grid3D=ESMF_GridCreateNoPeriDim( &
+            maxIndex = (/xdim, ydim, zdim/), &
+            arbIndexList = localArbIndex, &
+            arbIndexCount = localArbIndexCount, &
+            rc=rc)
+
+   !-------------------------------------------------------------------
+   ! Allocate coordinate storage for the center stagger location, the
+   ! only stagger location supported for the arbitrary distribution.
+   !-------------------------------------------------------------------
+   call ESMF_GridAddCoord(grid3D, &
+          staggerloc=ESMF_STAGGERLOC_CENTER_VCENTER, rc=rc)
+
+   !------------------------------------------------------------------
+   ! Fill in the coordinates for the center stagger location. There is
+   ! always one DE per PET, so localDE is always 0
+   !------------------------------------------------------------------
+   call ESMF_GridGetCoord(grid3D, coordDim=1, localDE=0, &
+          staggerLoc=ESMF_STAGGERLOC_CENTER,       &
+          computationalLBound=lbnd,                 &
+          computationalUBound=ubnd,                 &
+          farrayPtr=centerX, rc=rc)
+
+   !----------------------------------------------------------------
+   ! Calculate and set coordinates in the first dimension.
+   !----------------------------------------------------------------
+   do i=lbnd(1),ubnd(1)
+      centerX(i) = (localArbIndex(i,1)-0.5)*(360.0/xdim)
+   enddo
+
+
+   !----------------------------------------------------------------
+   ! Get the local bounds of the global indexing for the second
+   ! coordinate array on the local DE, and the pointer to the array.
+   !----------------------------------------------------------------
+   call ESMF_GridGetCoord(grid3D, coordDim=2, localDE=0,    &
+          staggerloc=ESMF_STAGGERLOC_CENTER,                  &
+          computationalLBound=lbnd, computationalUBound=ubnd, &
+          farrayPtr=centerY, rc=rc)
+
+   !----------------------------------------------------------------
+   ! Calculate and set coordinates in the second dimension.
+   !----------------------------------------------------------------
+   do j=lbnd(1),ubnd(1)
+      centerY(j) = (localArbIndex(j,2)-0.5)*(180.0/ydim)-90.0
+   enddo
+
+   !----------------------------------------------------------------
+   ! Get the local bounds of the global indexing for the third
+   ! coordinate array on the local DE, and the pointer to the array.
+   !----------------------------------------------------------------
+   call ESMF_GridGetCoord(grid3D, coordDim=3, localDE=0,   &
+          staggerloc=ESMF_STAGGERLOC_CENTER,               &
+          computationalLBound=lbnd, computationalUBound=ubnd,&
+          farrayPtr=centerZ, rc=rc)
+
+   !----------------------------------------------------------------
+   ! Calculate and set the vertical coordinates
+   !----------------------------------------------------------------
+   do k=lbnd(1),ubnd(1)
+      centerZ(k) = 4000.0*( (1./zdim)*(k-1))**2
+   enddo
+
+  31.3.8 Create a curvilinear Grid using the coordinates defined in a SCRIP file
+
+   ESMF supports the creation of a 2D curvilinear Grid using the
+   coordinates defined in a SCRIP format Grid file [[1201]13]. The grid
+   contained in the file must be a 2D logically rectangular grid with
+   grid_rank in the file set to 2. The center coordinates variables
+   grid_center_lat and grid_center_lon in the file are placed in the
+   ESMF_STAGGERLOC_CENTER location. If the parameter addCornerStagger in
+   the ESMF_GridCreate call is set to .true., then the variables
+   grid_corner_lat and grid_corner_lon in the file are used to set the
+   ESMF_STAGGERLOC_CORNER coordinates, otherwise they are ignored. The
+   values in the grid_imask variable in the file are used to set the
+   ESMF_GRIDITEM_MASK in the Grid.
+
+   The following example code shows you how to create a 2D Grid with both
+   center and corner coordinates using a SCRIP file and a row only regular
+   distribution:
+
+   grid2D = ESMF_GridCreate(filename="data/T42_grid.nc",  &
+              fileFormat=ESMF_FILEFORMAT_SCRIP,  &
+              regDecomp=(/PetCount,1/), addCornerStagger=.true., rc=rc)
+
+   where T42_grid.nc is a 2D global grid of size (128x64) and the
+   resulting Grid is distributed by partitioning the rows evenly over all
+   the PETs.
+
+   ESMF also support the creation of a 2D Grid from the SCRIP format Grid
+   file using a user specified ESMF_DistGrid. The following example code
+   demonstrates the creation of an Grid object using a pre-defined
+   DistGrid. The resulting Grid is the same as the one created above:
+
+   distgrid = ESMF_DistGridCreate((/1,1/), (/128,64/), &
+              regDecomp=(/PetCount,1/), rc=rc)
+   grid2D = ESMF_GridCreate(filename="data/T42_grid.nc",  &
+              fileFormat=ESMF_FILEFORMAT_SCRIP,  &
+              distGrid=distgrid, addCornerStagger=.true., rc=rc)
+
+  31.3.9 Create an empty Grid in a parent Component for completion in a child
+  Component
+
+   ESMF Grids can be created incrementally. To do this, the user first
+   calls ESMF_GridEmptyCreate() to allocate the shell of a Grid. Next, we
+   use the ESMF_GridEmptyComplete() call that fills in the Grid and does
+   an internal commit to make it usable. For consistency's sake the
+   ESMF_GridSetCommitShapeTile() call must occur on the same or a subset
+   of the PETs as the ESMF_GridEmptyCreate() call. The
+   ESMF_GridEmptyComplete() call uses the VM for the context in which it's
+   executed and the "empty" Grid contains no information about the VM in
+   which its create was run. This means that if the
+   ESMF_GridEmptyComplete() call occurs in a subset of the PETs in which
+   the ESMF_GridEmptyCreate() was executed that the Grid is created only
+   in that subset. Inside the subset the Grid will be fine, but outside
+   the subset the Grid objects will still be "empty" and not usable. The
+   following example uses the incremental technique to create a
+   rectangular 10x20 Grid with coordinates at the center and corner
+   stagger locations.
+
+!---------------------------------------------------------------------------
+! IN THE PARENT COMPONENT:
+! Create an empty Grid in the parent component for use in a child component.
+! The parent may be defined on more PETs than the child component.
+! The child's [vm or pet list] is passed into the create call so that
+! the Grid is defined on the appropriate subset of the parent's PETs.
+!---------------------------------------------------------------------------
+   grid2D=ESMF_GridEmptyCreate(rc=rc)
+
+!---------------------------------------------------------------------------
+! IN THE CHILD COMPONENT:
+! Set the Grid topology.  Here we define an irregularly distributed
+! rectangular Grid.
+!---------------------------------------------------------------------------
+   call ESMF_GridEmptyComplete(grid2D,             &
+                          countsPerDEDim1=(/6,4/),      &
+                          countsPerDEDim2=(/10,3,7/), rc=rc)
+
+!---------------------------------------------------------------------------
+! Add Grid coordinates at the cell center location.
+!---------------------------------------------------------------------------
+   call ESMF_GridAddCoord(grid2D, staggerLoc=ESMF_STAGGERLOC_CENTER, rc=rc)
+
+!---------------------------------------------------------------------------
+! Add Grid coordinates at the corner stagger location.
+!---------------------------------------------------------------------------
+   call ESMF_GridAddCoord(grid2D, staggerLoc=ESMF_STAGGERLOC_CORNER, rc=rc)
+
+  31.3.10 Create a six-tile cubed sphere Grid
+
+   This example creates a multi-tile Grid to represent a cubed sphere
+   grid. Each of the six tiles making up the cubed sphere has 45 elements
+   on each side, so the total number of elements is 45x45x6=12150. Each
+   tile is decomposed using a regular decomposition. The first two tiles
+   are decomposed into 2x2 blocks each and the remaining 4 tiles are
+   decomposed into 1x2 block. A total of 16 DEs are used.
+
+   In this example, both the center and corner coordinates will be added
+   to the grid.
+
+     ! Set up decomposition for each tile
+     allocate(decomptile(2,6))
+     decomptile(:,1)=(/2,2/) ! Tile 1
+     decomptile(:,2)=(/2,2/) ! Tile 2
+     decomptile(:,3)=(/1,2/) ! Tile 3
+     decomptile(:,4)=(/1,2/) ! Tile 4
+     decomptile(:,5)=(/1,2/) ! Tile 5
+     decomptile(:,6)=(/1,2/) ! Tile 6
+
+     ! Create cubed sphere grid
+     grid2D = ESMF_GridCreateCubedSphere(tileSize=45, regDecompPTile=decomptile,
+ &
+                 staggerLocList=(/ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER
+/), rc=rc)
+
+  31.3.11 Create a six-tile cubed sphere Grid and apply Schmidt transform
+
+   This example creates the same cubed sphere grid with the same regular
+   decomposition as in [1202]31.3.10 with a few differences. First, the
+   coordinates of the grid are of type ESMF_TYPEKIND_R4 instead of the
+   default ESMF_TYPEKIND_R8. Secondly, the coordinate system is
+   ESMF_COORDSYS_SPH_RAD instead of the default ESMF_COORDSYS_SPH_DEG.
+   Lastly, the grid was then transformed using Schmidt Transformation
+   algorithm on an arbitrary target point and a streatching factor. An
+   optional argument TransformArgs of type ESMF_CubedSphereTransform_Args
+   is used to pass the Schmidt Transform arguments.
+   ESMF_CubedSphereTransform_Args is defined as follows:
+     type ESMF_CubedSphereTransform_Args
+        real(ESMF_KIND_R4) :: stretch_factor, target_lat, target_lon
+     end type
+
+   Note target_lat and target_lon are in radians.
+
+     transformArgs%stretch_factor = 0.5;
+     transformArgs%target_lat = 0.0; ! in radians
+     transformArgs%target_lat = 1.3; ! in radians
+     grid2D = ESMF_GridCreateCubedSphere(tileSize=45, regDecompPTile=decomptile,
+ &
+                 staggerLocList = (/ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORN
+ER/), &
+                 coordTypeKind = ESMF_TYPEKIND_R4, &
+                 coordSys = ESMF_COORDSYS_SPH_RAD, &
+                 transformArgs=transformArgs, &
+                 rc=rc)
+
+  31.3.12 Create a six-tile cubed sphere Grid from a GRIDSPEC Mosaic file
+
+   This example creates a six-tile Grid to represent a cubed sphere grid
+   defined in a GRIDSPEC Mosaic file C48_mosaic.nc. The GRIDSPEC mosaic
+   file format is defined in the document [1203]GRIDSPEC: A standard for
+   the description of grids used in Earth System models by V. Balaji,
+   Alistair Adcroft and Zhi Liang.
+
+   The mosaic file contains the following information:
+
+  netcdf C48_mosaic {
+  dimensions:
+         ntiles = 6 ;
+         ncontact = 12 ;
+         string = 255 ;
+  variables:
+         char mosaic(string) ;
+                 mosaic:standard_name = "grid_mosaic_spec" ;
+                 mosaic:children = "gridtiles" ;
+                 mosaic:contact_regions = "contacts" ;
+                 mosaic:grid_descriptor = "" ;
+         char gridlocation(string) ;
+                 gridlocation:standard_name = "grid_file_location" ;
+         char gridfiles(ntiles, string) ;
+         char gridtiles(ntiles, string) ;
+         char contacts(ncontact, string) ;
+                 contacts:standard_name = "grid_contact_spec" ;
+                 contacts:contact_type = "boundary" ;
+                 contacts:alignment = "true" ;
+                 contacts:contact_index = "contact_index" ;
+                 contacts:orientation = "orient" ;
+         char contact_index(ncontact, string) ;
+                 contact_index:standard_name = "starting_ending_point_index_of_c
+ontact" ;
+
+  // global attributes:
+                 :grid_version = "0.2" ;
+                 :code_version = "$Name: testing $" ;
+  data:
+
+  mosaic = "C48_mosaic" ;
+
+  gridlocation = "/archive/z1l/tools/test_20091028/output_all/" ;
+
+  gridfiles =
+    "horizontal_grid.tile1.nc",
+    "horizontal_grid.tile2.nc",
+    "horizontal_grid.tile3.nc",
+    "horizontal_grid.tile4.nc",
+    "horizontal_grid.tile5.nc",
+    "horizontal_grid.tile6.nc" ;
+
+  gridtiles =
+    "tile1",
+    "tile2",
+    "tile3",
+    "tile4",
+    "tile5",
+    "tile6" ;
+
+  contacts =
+    "C48_mosaic:tile1::C48_mosaic:tile2",
+    "C48_mosaic:tile1::C48_mosaic:tile3",
+    "C48_mosaic:tile1::C48_mosaic:tile5",
+    "C48_mosaic:tile1::C48_mosaic:tile6",
+    "C48_mosaic:tile2::C48_mosaic:tile3",
+    "C48_mosaic:tile2::C48_mosaic:tile4",
+    "C48_mosaic:tile2::C48_mosaic:tile6",
+    "C48_mosaic:tile3::C48_mosaic:tile4",
+    "C48_mosaic:tile3::C48_mosaic:tile5",
+    "C48_mosaic:tile4::C48_mosaic:tile5",
+    "C48_mosaic:tile4::C48_mosaic:tile6",
+    "C48_mosaic:tile5::C48_mosaic:tile6" ;
+
+   contact_index =
+    "96:96,1:96::1:1,1:96",
+    "1:96,96:96::1:1,96:1",
+    "1:1,1:96::96:1,96:96",
+    "1:96,1:1::1:96,96:96",
+    "1:96,96:96::1:96,1:1",
+    "96:96,1:96::96:1,1:1",
+    "1:96,1:1::96:96,96:1",
+    "96:96,1:96::1:1,1:96",
+    "1:96,96:96::1:1,96:1",
+    "1:96,96:96::1:96,1:1",
+    "96:96,1:96::96:1,1:1",
+    "96:96,1:96::1:1,1:96" ;
+  }
+
+   A dummy variable with its standard_name attribute set to
+   grid_mosaic_spec is required. The children attribute of this dummy
+   variable provides the variable name that contains the tile names and
+   the contact_region attribute points to the variable name that defines a
+   list of tile pairs that are connected to each other. For a Cubed Sphere
+   grid, there are six tiles and 12 connections. The contacts variable has
+   three required attributes: standard_name, contact_type, and
+   contact_index. startand_name has to be set to grid_contact_spec.
+   contact_type has to be boundary. ESMF does not support overlapping
+   contact regions. contact_index defines the variable name that contains
+   the information how the two adjacent tiles are connected to each other.
+   The contact_index variable contains 12 entries. Each entry contains the
+   index of four points that defines the two edges that contact to each
+   other from the two neighboring tiles. Assuming the four points are A,
+   B, C, and D. A and B defines the edge of tile 1 and C and D defines the
+   edge of tile2. A is the same point as C and B is the same as D. (Ai,
+   Aj) is the index for point A. The entry looks like this:
+    Ai:Bi,Aj:Bj::Ci:Di,Cj:Dj
+
+   The associated tile file names are defined in variable gridfiles and
+   the directory path is defined in variable gridlocation. The
+   gridlocation can be overwritten with an optional arguemnt TileFilePath.
+   Each tile is decomposed using a regular decomposition. The first two
+   tiles are decomposed into 2x2 blocks each and the remaining 4 tiles are
+   decomposed into 1x2 block. A total of 16 DEs are used.
+
+   ESMF_GridCreateMosaic() first reads in the mosaic file and defines the
+   tile connections in the ESMF_DistGrid using the information defined in
+   variables contacts and contact_index. Then it reads in the coordinates
+   defined in the tile files if the optional argument staggerLocList is
+   provided. The coordinates defined in the tile file are a supergrid. A
+   supergrid contains all the stagger locations in one grid. It contains
+   the corner, edge and center coordinates all in one 2D array. In this
+   example, there are 48 elements in each side of a tile, therefore, the
+   size of the supergrid is 48*2+1=97, i.e. 97x97.
+
+   Here is the header of one of the tile files:
+
+  netcdf horizontal_grid.tile1 {
+  dimensions:
+         string = 255 ;
+         nx = 96 ;
+         ny = 96 ;
+         nxp = 97 ;
+         nyp = 97 ;
+  variables:
+         char tile(string) ;
+                 tile:standard_name = "grid_tile_spec" ;
+                 tile:geometry = "spherical" ;
+                 tile:north_pole = "0.0 90.0" ;
+                 tile:projection = "cube_gnomonic" ;
+                 tile:discretization = "logically_rectangular" ;
+                 tile:conformal = "FALSE" ;
+         double x(nyp, nxp) ;
+                 x:standard_name = "geographic_longitude" ;
+                 x:units = "degree_east" ;
+         double y(nyp, nxp) ;
+                 y:standard_name = "geographic_latitude" ;
+                 y:units = "degree_north" ;
+         double dx(nyp, nx) ;
+                 dx:standard_name = "grid_edge_x_distance" ;
+                 dx:units = "meters" ;
+         double dy(ny, nxp) ;
+                 dy:standard_name = "grid_edge_y_distance" ;
+                 dy:units = "meters" ;
+         double area(ny, nx) ;
+                 area:standard_name = "grid_cell_area" ;
+                 area:units = "m2" ;
+         double angle_dx(nyp, nxp) ;
+                 angle_dx:standard_name = "grid_vertex_x_angle_WRT_geographic_ea
+st" ;
+                 angle_dx:units = "degrees_east" ;
+         double angle_dy(nyp, nxp) ;
+                 angle_dy:standard_name = "grid_vertex_y_angle_WRT_geographic_no
+rth" ;
+                 angle_dy:units = "degrees_north" ;
+         char arcx(string) ;
+                 arcx:standard_name = "grid_edge_x_arc_type" ;
+                 arcx:north_pole = "0.0 90.0" ;
+
+  // global attributes:
+                 :grid_version = "0.2" ;
+                 :code_version = "$Name: testing $" ;
+                 :history = "/home/z1l/bin/tools_20091028/make_hgrid --grid_type
+ gnomonic_ed --nlon 96" ;
+  }
+
+   The tile file not only defines the coordinates at all staggers, it also
+   has a complete specification of distances, angles, and areas. In ESMF,
+   we currently only use the geographic_longitude and geographic_latitude
+   variables.
+
+     ! Set up decomposition for each tile
+     allocate(decomptile(2,6))
+     decomptile(:,1)=(/2,2/) ! Tile 1
+     decomptile(:,2)=(/2,2/) ! Tile 2
+     decomptile(:,3)=(/1,2/) ! Tile 3
+     decomptile(:,4)=(/1,2/) ! Tile 4
+     decomptile(:,5)=(/1,2/) ! Tile 5
+     decomptile(:,6)=(/1,2/) ! Tile 6
+
+     ! Create cubed sphere grid without reading in the coordinates
+     grid2D = ESMF_GridCreateMosaic(filename='data/C48_mosaic.nc', &
+                tileFilePath='./data/', regDecompPTile=decomptile, rc=rc)
+
+     ! Create cubed sphere grid and read in the center and corner stagger coordi
+nates
+     ! from the tile files
+
+     grid2D = ESMF_GridCreateMosaic(filename='data/C48_mosaic.nc', &
+                staggerLocList=(/ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER/
+), &
+                tileFilePath='./data/', regDecompPTile=decomptile, rc=rc)
+
+     ! Create cubed sphere grid and read in the edge staggers' coordinates
+     ! from the tile files, set the coordTypeKind to ESMF_TYPEKIND_R4
+
+     grid2D = ESMF_GridCreateMosaic(filename='data/C48_mosaic.nc', &
+                staggerLocList=(/ESMF_STAGGERLOC_EDGE1, ESMF_STAGGERLOC_EDGE2/),
+ &
+                coordTypeKind = ESMF_TYPEKIND_R4, &
+                tileFilePath='./data/', regDecompPTile=decomptile, rc=rc)
+
+  31.3.13 Grid stagger locations
+
+   A useful finite difference technique is to place different physical
+   quantities at different locations within a grid cell. This staggering
+   of the physical variables on the mesh is introduced so that the
+   difference of a field is naturally defined at the location of another
+   variable. This method was first formalized by Mesinger and Arakawa
+   (1976).
+
+   To support the staggering of variables, the Grid provides the idea of
+   stagger locations. Stagger locations refer to the places in a Grid cell
+   that can contain coordinates or other data and once a Grid is
+   associated with a Field object, field data. Typically Grid data can be
+   located at the cell center, at the cell corners, or at the cell faces,
+   in 2D, 3D, and higher dimensions. (Note that any Arakawa stagger can be
+   constructed of a set of Grid stagger locations.) There are predefined
+   stagger locations (see Section [1204]31.2.6), or, should the user wish
+   to specify their own, there is also a set of methods for generating
+   custom locations (See Section [1205]31.3.25). Users can put Grid data
+   (e.g. coordinates) at multiple stagger locations in a Grid. In
+   addition, the user can create a Field at any of the stagger locations
+   in a Grid.
+
+   By default the Grid data array at the center stagger location starts at
+   the bottom index of the Grid (default (1,1..,1)) and extends up to the
+   maximum cell index in the Grid (e.g. given by the maxIndex argument).
+   Other stagger locations also start at the bottom index of the Grid,
+   however, they can extend to +1 element beyond the center in some
+   dimensions to allow for the extra space to surround the center
+   elements. See Section [1206]31.3.25 for a description of this extra
+   space and how to adjust if it necessary. There are ESMF_GridGet
+   subroutines (e.g. ESMF_GridGetCoord() or ESMF_GridGetItem()) which can
+   be used to retrieve the stagger bounds for the piece of Grid data on a
+   particular DE.
+
+  31.3.14 Associate coordinates with stagger locations
+
+   The primary type of data the Grid is responsible for storing is
+   coordinates. The coordinate values in a Grid can be employed by the
+   user in calculations or to describe the geometry of a Field. The Grid
+   coordinate values are also used by ESMF_FieldRegridStore() when
+   calculating the interpolation matrix between two Fields. The user can
+   allocate coordinate arrays without setting coordinate values using the
+   ESMF_GridAddCoord() call. (See Section [1207]31.3.16 for a discussion
+   of setting/getting coordinate values.) When adding or accessing
+   coordinate data, the stagger location is specified to tell the Grid
+   method where in the cell to get the data. The different stagger
+   locations may also have slightly different index ranges and sizes.
+   Please see Section [1208]31.3.13 for a discussion of Grid stagger
+   locations.
+
+   The following example adds coordinate storage to the corner stagger
+   location in a Grid using one of the predefined stagger locations.
+
+   call ESMF_GridAddCoord(grid2D, staggerLoc=ESMF_STAGGERLOC_CORNER, rc=rc)
+
+   Note only the center stagger location ESMF_STAGGERLOC_CENTER is
+   supported in an arbitrarily distributed Grid.
+
+  31.3.15 Specify the relationship of coordinate Arrays to index space
+  dimensions
+
+   To specify how the coordinate arrays are mapped to the index dimensions
+   the arguments coordDep1, coordDep2, and coordDep3 are used, each of
+   which is a Fortran array. The values of the elements in a coordDep
+   array specify which index dimension the corresponding coordinate
+   dimension maps to. For example, coordDep1=(/1,2/) means that the first
+   dimension of coordinate 1 maps to index dimension 1 and the second maps
+   to index dimension 2. For a grid with non-arbitrary distribution, the
+   default values for coordDep1, coordDep2 and coordDep3 are
+   /1,2..,gridDimCount/. This default thus specifies a curvilinear grid.
+
+   The following call demonstrates the creation of a 10x20 2D rectilinear
+   grid where the first coordinate component is mapped to the second index
+   dimension (i.e. is of size 20) and the second coordinate component is
+   mapped to the first index dimension (i.e. is of size 10).
+
+   grid2D=ESMF_GridCreateNoPeriDim(countsPerDEDim1=(/5,5/), &
+          countsPerDEDim2=(/7,7,6/),                    &
+          coordDep1=(/2/),                              &
+          coordDep2=(/1/), rc=rc)
+
+   The following call demonstrates the creation of a 10x20x30 2D plus 1
+   curvilinear grid where coordinate component 1 and 2 are still 10x20,
+   but coordinate component 3 is mapped just to the third index dimension.
+
+   grid2D=ESMF_GridCreateNoPeriDim(countsPerDEDim1=(/6,4/), &
+          countsPerDEDim2=(/10,7,3/), countsPerDEDim3=(/30/), &
+          coordDep1=(/1,2/), coordDep2=(/1,2/), &
+          coordDep3=(/3/), rc=rc)
+
+   By default the local piece of the array on each PET starts at (1,1,..),
+   however, the indexing for each grid coordinate array on each DE may be
+   shifted to the global indices by using the indexflag. For example, the
+   following call switches the grid to use global indices.
+
+   grid2D=ESMF_GridCreateNoPeriDim(countsPerDEDim1=(/6,4/), &
+           countsPerDEDim2=(/10,7,3/), indexflag=ESMF_INDEX_GLOBAL, rc=rc)
+
+   For an arbitrarily distributed grid, the default value of a coordinate
+   array dimension is ESMF_DIM_ARB if the index dimension is arbitrarily
+   distributed and is n where n is the index dimension itself when it is
+   not distributed. The following call is equivalent to the example in
+   Section [1209]31.3.7
+
+   grid3D=ESMF_GridCreateNoPeriDim( &
+            maxIndex = (/xdim, ydim, zdim/), &
+            arbIndexList = localArbIndex, &
+            arbIndexCount = localArbIndexCount,          &
+            coordDep1 = (/ESMF_DIM_ARB/), &
+            coordDep2 = (/ESMF_DIM_ARB/), &
+            coordDep3 = (/3/), &
+            rc=rc)
+
+   The following call uses non-default coordDep1, coordDep2, and coordDep3
+   to create a 3D curvilinear grid with its horizontal dimensions
+   arbitrarily distributed.
+
+   grid3D=ESMF_GridCreateNoPeriDim( &
+            maxIndex = (/xdim, ydim, zdim/), &
+            arbIndexList = localArbIndex, &
+            arbIndexCount = localArbIndexCount,          &
+            coordDep1 = (/ESMF_DIM_ARB, 3/), &
+            coordDep2 = (/ESMF_DIM_ARB, 3/), &
+            coordDep3 = (/ESMF_DIM_ARB, 3/), &
+            rc=rc)
+
+  31.3.16 Access coordinates
+
+   Once a Grid has been created, the user has several options to access
+   the Grid coordinate data. The first of these, ESMF_GridSetCoord(),
+   enables the user to use ESMF Arrays to set data for one stagger
+   location across the whole Grid. For example, the following sets the
+   coordinates in the first dimension (e.g. x) for the corner stagger
+   location to those in the ESMF Array arrayCoordX.
+
+   call ESMF_GridSetCoord(grid2D, &
+          staggerLoc=ESMF_STAGGERLOC_CORNER, &
+          coordDim=1, array=arrayCoordX, rc=rc)
+
+   The method ESMF_GridGetCoord() allows the user to obtain a reference to
+   an ESMF Array which contains the coordinate data for a stagger location
+   in a Grid. The user can then employ any of the standard ESMF_Array
+   tools to operate on the data. The following copies the coordinates from
+   the second component of the corner and puts it into the ESMF Array
+   arrayCoordY.
+
+   call ESMF_GridGetCoord(grid2D,    &
+          staggerLoc=ESMF_STAGGERLOC_CORNER,    &
+          coordDim=2,                           &
+          array=arrayCoordY, rc=rc)
+
+   Alternatively, the call ESMF_GridGetCoord() gets a Fortran pointer to
+   the coordinate data. The user can then operate on this array in the
+   usual manner. The following call gets a reference to the Fortran array
+   which holds the data for the second coordinate (e.g. y).
+
+   call ESMF_GridGetCoord(grid2D, coordDim=2, localDE=0, &
+          staggerloc=ESMF_STAGGERLOC_CORNER, farrayPtr=coordY2D, rc=rc)
+
+  31.3.17 Associate items with stagger locations
+
+   The ESMF Grids contain the ability to store other kinds of data beyond
+   coordinates. These kinds of data are referred to as "items". Although
+   the user is free to use this data as they see fit, the user should be
+   aware that this data may also be used by other parts of ESMF (e.g. the
+   ESMF_GRIDITEM_MASK item is used in regridding). Please see
+   Section [1210]31.2.2 for a list of valid items.
+
+   Like coordinates items are also created on stagger locations. When
+   adding or accessing item data, the stagger location is specified to
+   tell the Grid method where in the cell to get the data. The different
+   stagger locations may also have slightly different index ranges and
+   sizes. Please see Section [1211]31.3.13 for a discussion of Grid
+   stagger locations. The user can allocate item arrays without setting
+   item values using the ESMF_GridAddItem() call. (See
+   Section [1212]31.3.18 for a discussion of setting/getting item values.)
+
+   The following example adds mask item storage to the corner stagger
+   location in a grid.
+
+   call ESMF_GridAddItem(grid2D, staggerLoc=ESMF_STAGGERLOC_CORNER, &
+          itemflag=ESMF_GRIDITEM_MASK, rc=rc)
+
+  31.3.18 Access items
+
+   Once an item has been added to a Grid, the user has several options to
+   access the data. The first of these, ESMF_GridSetItem(), enables the
+   user to use ESMF Arrays to set data for one stagger location across the
+   whole Grid. For example, the following sets the mask item in the corner
+   stagger location to those in the ESMF Array arrayMask.
+
+   call ESMF_GridSetItem(grid2D,             &
+          staggerLoc=ESMF_STAGGERLOC_CORNER, &
+          itemflag=ESMF_GRIDITEM_MASK, array=arrayMask, rc=rc)
+
+   The method ESMF_GridGetItem() allows the user to get a reference to the
+   Array which contains item data for a stagger location on a Grid. The
+   user can then employ any of the standard ESMF_Array tools to operate on
+   the data. The following gets the mask data from the corner and puts it
+   into the ESMF Array arrayMask.
+
+   call ESMF_GridGetItem(grid2D,             &
+          staggerLoc=ESMF_STAGGERLOC_CORNER, &
+          itemflag=ESMF_GRIDITEM_MASK,           &
+          array=arrayMask, rc=rc)
+
+   Alternatively, the call ESMF_GridGetItem() gets a Fortran pointer to
+   the item data. The user can then operate on this array in the usual
+   manner. The following call gets a reference to the Fortran array which
+   holds the data for the mask data.
+
+   call ESMF_GridGetItem(grid2D, localDE=0,   &
+          staggerloc=ESMF_STAGGERLOC_CORNER,  &
+          itemflag=ESMF_GRIDITEM_MASK, farrayPtr=mask2D, rc=rc)
+
+  31.3.19 Grid regions and bounds
+
+   Like an Array or a Field, the index space of each stagger location in
+   the Grid contains an exclusive region, a computational region and a
+   total region. Please see Section [1213]28.2.6 for an in depth
+   description of these regions.
+
+   The exclusive region is the index space defined by the distgrid of each
+   stagger location of the Grid. This region is the region which is owned
+   by the DE and is the region operated on by communication methods such
+   as ESMF_FieldRegrid(). The exclusive region for a stagger location is
+   based on the exclusive region defined by the DistGrid used to create
+   the Grid. The size of the stagger exclusive region is the index space
+   for the Grid cells, plus the stagger padding.
+
+   The default stagger padding depends on the topology of the Grid. For an
+   unconnected dimension the stagger padding is a width of 1 on the upper
+   side (i.e. gridEdgeUWidth=(1,1,1,1...)). For a periodic dimension there
+   is no stagger padding. By adjusting gridEdgeLWidth and gridEdgeUWidth,
+   the user can set the stagger padding for the whole Grid and thus the
+   exclusive region can be adjusted at will around the index space
+   corresponding to the cells. The user can also use staggerEdgeLWidth and
+   staggerEdgeUWidth to adjust individual stagger location padding within
+   the Grid's padding (Please see Section [1214]31.3.26 for further
+   discussion of customizing the stagger padding).
+
+   CAPTION: Figure 17: An example of a Grid's exclusive region for the
+   corner stagger
+
+             \scalebox{0.75}{\includegraphics{GridExclusiveReg}}
+
+   Figure [1215]17 shows an example of a Grid exclusive region for the
+   ESMF_STAGGERLOC_CORNER stagger with default stagger padding. This
+   exclusive region would be for a Grid generated by either of the
+   following calls:
+
+  grid2D=ESMF_GridCreateNoPeriDim(regDecomp=(/2,4/), maxIndex=(/5,15/), &
+           indexflag=ESMF_INDEX_GLOBAL, rc=rc)
+
+  grid2D=ESMF_GridCreateNoPeriDim(countsPerDEDim1=(/4,4,4,3/), &
+           countsPerDEDim2=(/3,2/), indexflag=ESMF_INDEX_GLOBAL, rc=rc)
+
+   Each rectangle in this diagram represents a DE and the numbers along
+   the sides are the index values of the locations in the DE. Note that
+   the exclusive region has one extra index location in each dimension
+   than the number of cells because of the padding for the larger corner
+   stagger location.
+
+   The computational region is a user-settable region which can be used to
+   distinguish a particular area for computation. The Grid doesn't
+   currently contain functionality to let the user set the computational
+   region so it defaults to the exclusive region. However, if the user
+   sets an Array holding different computational bounds into the Grid then
+   that Array's computational bounds will be used.
+
+   The total region is the outermost boundary of the memory allocated on
+   each DE to hold the data for the stagger location on that DE. This
+   region can be as small as the exclusive region, but may be larger to
+   include space for halos, memory padding, etc. The total region is what
+   is enlarged to include space for halos, and the total region must be
+   large enough to contain the maximum halo operation on the Grid. The
+   Grid doesn't currently contain functionality to let the user set the
+   total region so it defaults to the exclusive region. However, if the
+   user sets an Array holding different total bounds into the Grid then
+   that Array's total bounds will be used.
+
+   The user can retrieve a set of bounds for each index space region
+   described above: exclusive bounds, computational bounds, and total
+   bounds. Note that although some of these are similar to bounds provided
+   by ESMF_Array subroutines (see Section [1216]28.2.6) the format here is
+   different. The Array bounds are only for distributed dimensions and are
+   ordered to correspond to the dimension order in the associated
+   DistGrid. The bounds provided by the Grid are ordered according to the
+   order of dimensions of the data in question. This means that the bounds
+   provided should be usable "as is" to access the data.
+
+   Each of the three types of bounds refers to the maximum and minimum per
+   dimension of the index ranges of a particular region. The parameters
+   referring to the maximums contain a 'U' for upper. The parameters
+   referring to the minimums contain an 'L' for lower. The bounds and
+   associated quantities are almost always given on a per DE basis. The
+   three types of bounds exclusiveBounds, computationalBounds, and
+   totalBounds refer to the ranges of the exclusive region, the
+   computational region, and the total region. Each of these bounds also
+   has a corresponding count parameter which gives the number of items
+   across that region (on a DE) in each dimension. (e.g.
+   totalCount(d)=totallUBound(i)-totalLBound(i)+1). Width parameters give
+   the spacing between two different types of region. The
+   computationalWidth argument gives the spacing between the exclusive
+   region and the computational region. The totalWidth argument gives the
+   spacing between the total region and the computational region. Like the
+   other bound information these are typically on a per DE basis, for
+   example specifying totalLWidth=(1,1) makes the bottom of the total
+   region one lower in each dimension than the computational region on
+   each DE. The exceptions to the per DE rule are staggerEdgeWidth, and
+   gridEdgeWidth which give the spacing only on the DEs along the boundary
+   of the Grid.
+
+   All the above bound discussions only apply to the grid with
+   non-arbitrary distributions, i.e., regular or irregular distributions.
+   For an arbitrarily distributed grid, only center stagger location is
+   supported and there is no padding around the grid. Thus, the exclusive
+   bounds, the total bounds and the computational bounds are identical and
+   staggerEdgeWidth, and gridEdgeWidth are all zeros.
+
+  31.3.20 Get Grid coordinate bounds
+
+   When operating on coordinates the user may often wish to retrieve the
+   bounds of the piece of coordinate data on a particular local DE. This
+   is useful for iterating through the data to set coordinates, retrieve
+   coordinates, or do calculations. The method ESMF_GridGetCoord allows
+   the user to retrieve bound information for a particular coordinate
+   array.
+
+   As described in the previous section there are three types of bounds
+   the user can get: exclusive bounds, computational bounds, and total
+   bounds. The bounds provided by ESMF_GridGetCoordBounds are for both
+   distributed and undistributed dimensions and are ordered according to
+   the order of dimensions in the coordinate. This means that the bounds
+   provided should be usable "as is" to access data in the coordinate
+   array. In the case of factorized coordinate Arrays where a coordinate
+   may have a smaller dimension than its associated Grid, then the
+   dimension of the coordinate's bounds are the dimension of the
+   coordinate, not the Grid.
+
+   The following is an example of retrieving the bounds for localDE 0 for
+   the first coordinate array from the corner stagger location.
+
+   call ESMF_GridGetCoordBounds(grid2D, coordDim=1, localDE=0,  &
+          staggerLoc=ESMF_STAGGERLOC_CORNER,                         &
+          exclusiveLBound=elbnd, exclusiveUBound=eubnd,              &
+          computationalLBound=clbnd, computationalUBound=cubnd,      &
+          totalLBound=tlbnd, totalUBound=tubnd, rc=rc)
+
+  31.3.21 Get Grid stagger location bounds
+
+   When operating on data stored at a particular stagger in a Grid the
+   user may find it useful to be able to retrieve the bounds of the data
+   on a particular local DE. This is useful for iterating through the data
+   for computations or allocating arrays to hold the data. The method
+   ESMF_GridGet allows the user to retrieve bound information for a
+   particular stagger location.
+
+   As described in Section [1217]31.3.19 there are three types of bounds
+   the user can typically get, however, the Grid doesn't hold data at a
+   stagger location (that is the job of the Field), and so no Array is
+   contained there and so no total region exists, so the user may only
+   retrieve exclusive and computational bounds from a stagger location.
+   The bounds provided by ESMF_GridGet are ordered according to the order
+   of dimensions in the Grid.
+
+   The following is an example of retrieving the bounds for localDE 0 from
+   the corner stagger location.
+
+   call ESMF_GridGet(grid2D, localDE=0,                         &
+          staggerLoc=ESMF_STAGGERLOC_CORNER,                    &
+          exclusiveLBound=elbnd, exclusiveUBound=eubnd,         &
+          computationalLBound=clbnd, computationalUBound=cubnd, rc=rc)
+
+  31.3.22 Get Grid stagger location information
+
+   In addition to the per DE information that can be accessed about a
+   stagger location there is some global information that can accessed by
+   using ESMF_GridGet without specifying a localDE. One of the uses of
+   this information is to create an ESMF Array to hold data for a stagger
+   location.
+
+   The information currently available from a stagger location is the
+   distgrid. The distgrid gives the distgrid which describes the size and
+   distribution of the elements in the stagger location.
+
+   The following is an example of retrieving information for localDE 0
+   from the corner stagger location.
+
+    ! Get info about staggerloc
+    call ESMF_GridGet(grid2D, staggerLoc=ESMF_STAGGERLOC_CORNER,  &
+           distgrid=staggerDistgrid, &
+           rc=rc)
+
+  31.3.23 Create an Array at a stagger location
+
+   In order to create an Array to correspond to a Grid stagger location
+   several pieces of information need to be obtained from both the Grid
+   and the stagger location in the Grid.
+
+   The information that needs to be obtained from the Grid is the
+   distgridToGridMap to ensure that the new Array has its dimensions are
+   mapped correctly to the Grid. These are obtained using the ESMF_GridGet
+   method.
+
+   The information that needs to be obtained from the stagger location is
+   the distgrid that describes the size and distribution of the elements
+   in the stagger location. This information can be obtained using the
+   stagger location specific ESMF_GridGet method.
+
+   The following is an example of using information from a 2D Grid with
+   non-arbitrary distribution to create an Array corresponding to a
+   stagger location.
+
+    ! Get info from Grid
+    call ESMF_GridGet(grid2D, distgridToGridMap=distgridToGridMap, rc=rc)
+
+    ! Get info about staggerloc
+    call ESMF_GridGet(grid2D, staggerLoc=ESMF_STAGGERLOC_CORNER, &
+           distgrid=staggerDistgrid, &
+           rc=rc)
+
+    ! construct ArraySpec
+    call ESMF_ArraySpecSet(arrayspec, rank=2, typekind=ESMF_TYPEKIND_R8, rc=rc)
+
+    ! Create an Array based on info from grid
+    array=ESMF_ArrayCreate(arrayspec=arrayspec, &
+            distgrid=staggerDistgrid, distgridToArrayMap=distgridToGridMap, &
+            rc=rc)
+
+   Creating an Array for a Grid with arbitrary distribution is different.
+   For a 2D Grid with both dimension arbitrarily distributed, the Array
+   dimension is 1. For a 3D Grid with two arbitrarily distributed
+   dimensions and one undistributed dimension, the Array dimension is 2.
+   In general, if the Array does not have any ungridded dimension, the
+   Array dimension should be 1 plus the number of undistributed dimensions
+   of the Grid.
+
+   The following is an example of creating an Array for a 3D Grid with 2
+   arbitrarily distributed dimensions such as the one defined in
+   Section [1218]31.3.7.
+
+    ! Get distGrid from Grid
+    call ESMF_GridGet(grid3D, distgrid=distgrid, rc=rc)
+
+    ! construct ArraySpec
+    call ESMF_ArraySpecSet(arrayspec, rank=2, typekind=ESMF_TYPEKIND_R8, rc=rc)
+
+    ! Create an Array based on the presence of distributed dimensions
+    array=ESMF_ArrayCreate(arrayspec=arrayspec,distgrid=distgrid, rc=rc)
+
+  31.3.24 Create more complex Grids using DistGrid
+
+   Besides the shortcut methods for creating a Grid object such as
+   ESMF_GridCreateNoPeriDim(), there is a set of methods which give the
+   user more control over the specifics of the grid. The following
+   describes the more general interface, using DistGrid. The basic idea is
+   to first create an ESMF DistGrid object describing the distribution and
+   shape of the Grid, and then to employ that to either directly create
+   the Grid or first create Arrays and then create the Grid from those.
+   This method gives the user maximum control over the topology and
+   distribution of the Grid. See the DistGrid documentation in
+   Section [1219]36.1 for an in-depth description of its interface and
+   use.
+
+   As an example, the following call constructs a 10x20 Grid with a lower
+   bound of (1,2).
+
+   ! Create DistGrid
+   distgrid2D = ESMF_DistGridCreate(minIndex=(/1,2/), maxIndex=(/11,22/), &
+           rc=rc)
+
+   ! Create Grid
+   grid3D=ESMF_GridCreate(distGrid=distgrid2D, rc=rc)
+
+   To alter which dimensions are distributed, the distgridToGridMap
+   argument can be used. The distgridToGridMap is used to set which
+   dimensions of the Grid are mapped to the dimensions described by
+   maxIndex. In other words, it describes how the dimensions of the
+   underlying default DistGrid are mapped to the Grid. Each entry in
+   distgridToGridMap contains the Grid dimension to which the
+   corresponding DistGrid dimension should be mapped. The following
+   example illustrates the creation of a Grid where the largest dimension
+   is first. To accomplish this the two dimensions are swapped.
+
+   ! Create DistGrid
+   distgrid2D = ESMF_DistGridCreate(minIndex=(/1,2/), maxIndex=(/11,22/), &
+        rc=rc)
+
+   ! Create Grid
+   grid2D=ESMF_GridCreate(distGrid=distgrid2D, distgridToGridMap=(/2,1/), &
+        rc=rc)
+
+  31.3.25 Specify custom stagger locations
+
+   Although ESMF provides a set of predefined stagger locations (See
+   Section [1220]31.2.6), the user may need one outside this set. This
+   section describes the construction of custom stagger locations.
+
+   To completely specify a stagger for an arbitrary number of dimensions,
+   we define the stagger location in terms of a set of cartesian
+   coordinates. The cell is represented by a n-dimensional cube with sides
+   of length 2, and the coordinate origin located at the center of the
+   cell. The geometry of the cell is for reference purposes only, and does
+   not literally represent the actual shape of the cell. Think of this
+   method instead as an easy way to specify a part (e.g. center, corner,
+   face) of a higher dimensional cell which is extensible to any number of
+   dimensions.
+
+   To illustrate this approach, consider a 2D cell. In 2 dimensions the
+   cell is represented by a square. An xy axis is placed at its center,
+   with the positive x-axis oriented East and the positive y-axis oriented
+   North. The resulting coordinate for the lower left corner is at
+   $(-1,-1)$ , and upper right corner at $(1,1)$ . However, because our
+   staggers are symmetric they don't need to distinguish between the $-1$
+   , and the $1$ , so we only need to concern ourselves with the first
+   quadrant of this cell. We only need to use the $1$ , and the $0$ , and
+   many of the cell locations collapse together (e.g. we only need to
+   represent one corner). See figure [1221]18 for an illustration of these
+   concepts.
+
+   CAPTION: Figure 18: An example of specifying 2D stagger locations using
+   coordinates.
+
+            \scalebox{0.75}{\includegraphics{GridCustStaggerLoc}}
+
+   The cell center is represented by the coordinate pair $(0,0)$
+   indicating the origin. The cell corner is $+1$ in each direction,
+   giving a coordinate pair of $(1,1)$ . The edges are each $+1$ in one
+   dimension and $0$ in the other indicating that they're even with the
+   center in one dimension and offset in the other.
+
+   For three dimensions, the vertical component of the stagger location
+   can be added by simply adding an additional coordinate. The three
+   dimensional generalization of the cell center becomes $(0,0,0)$ and the
+   cell corner becomes $(1,1,1)$ . The rest of the 3D stagger locations
+   are combinations of $+1$ offsets from the center.
+
+   To generalize this to $d$ dimensions, to represent a $d$ dimensional
+   stagger location. A set of $d$ $0$ and $1$ is used to specify for each
+   dimension whether a stagger location is aligned with the cell center in
+   that dimension ( $0$ ), or offset by $+1$ in that dimension ( $1$ ).
+   Using this scheme we can represent any symmetric stagger location.
+
+   To construct a custom stagger location in ESMF the subroutine
+   ESMF_StaggerLocSet() is used to specify, for each dimension, whether
+   the stagger is located at the interior (0) or on the boundary (1) of
+   the cell. This method allows users to construct stagger locations for
+   which there is no predefined value. In this example, it's used to set
+   the 4D center and 4D corner locations.
+
+   ! Set Center
+   call ESMF_StaggerLocSet(staggerLoc,loc=(/0,0,0,0/),rc=rc)
+
+   call ESMF_GridAddCoord(grid4D, staggerLoc=staggerLoc, rc=rc)
+
+   ! Set Corner
+   call ESMF_StaggerLocSet(staggerLoc,loc=(/1,1,1,1/),rc=rc)
+
+   call ESMF_GridAddCoord(grid4D, staggerLoc=staggerLoc, rc=rc)
+
+  31.3.26 Specify custom stagger padding
+
+   There is an added complication with the data (e.g. coordinates) stored
+   at stagger locations in that they can require different amounts of
+   storage depending on the underlying Grid type.
+
+   CAPTION: Figure 19: An example 2D Grid with cell centers and corners.
+
+           \scalebox{0.75}{\includegraphics{GridCellsAndCorners}}
+
+   Consider the example 2D grid in figure [1222]19, where the dots
+   represent the cell corners and the “+” represents the cell centers. For
+   the corners to completely enclose the cell centers (symmetric stagger),
+   the number of corners in each dimension needs to be one greater then
+   the number of cell centers. In the above figure, there are two rows and
+   three columns of cell centers. To enclose the cell centers, there must
+   be three rows and four columns of cell corners. This is true in general
+   for Grids without periodicity or other connections. In fact, for a
+   symmetric stagger, given that the center location requires n x m
+   storage, the corresponding corner location requires n+1 x m+1, and the
+   edges, depending on the side, require n+1 x m or m+1 x n. In order to
+   add the extra storage, a new DistGrid is created at each stagger
+   location. This Distgrid is similar to the DistGrid used to create the
+   Grid, but has an extra set of elements added to hold the index
+   locations for the stagger padding. By default, when the coordinate
+   arrays are created, one extra layer of padding is added to the index
+   space to create symmetric staggers (i.e. the center location is
+   surrounded). The default is to add this padding on the positive side,
+   and to only add this padding where needed (e.g. no padding for the
+   center, padding on both dimensions for the corner, in only one
+   dimension for the edge in 2D.) There are two ways for the user to
+   change these defaults.
+
+   One way is to use the GridEdgeWidth or GridAlign arguments when
+   creating a Grid. These arguments can be used to change the default
+   padding around the Grid cell index space. This extra padding is used by
+   default when setting the padding for a stagger location.
+
+   The gridEdgeLWidth and gridEdgeUWidth arguments are both 1D arrays of
+   the same size as the Grid dimension. The entries in the arrays give the
+   extra offset from the outer boundary of the grid cell index space. The
+   following example shows the creation of a Grid with all the extra space
+   to hold stagger padding on the negative side of a Grid. This is the
+   reverse of the default behavior. The resulting Grid will have an
+   exclusive region which extends from $(-1,-1)$ to $(10,10)$ , however,
+   the cell center stagger location will still extend from $(1,1)$ to
+   $(10,10)$ .
+
+   grid2D=ESMF_GridCreateNoPeriDim(minIndex=(/1,1/),maxIndex=(/10,10/), &
+            gridEdgeLWidth=(/1,1/), gridEdgeUWidth=(/0,0/), rc=rc)
+
+   To indicate how the data in a Grid's stagger locations are aligned with
+   the cell centers, the optional gridAlign parameter may be used. This
+   parameter indicates which stagger elements in a cell share the same
+   index values as the cell center. For example, in a 2D cell, it would
+   indicate which of the four corners has the same index value as the
+   center. To set gridAlign, the values -1,+1 are used to indicate the
+   alignment in each dimension. This parameter is mostly informational,
+   however, if the gridEdgeWidth parameters are not set then its value
+   determines where the default padding is placed. If not specified, then
+   the default is to align all staggers to the most negative, so the
+   padding is on the positive side. The following code illustrates
+   creating a Grid aligned to the reverse of default (with everything to
+   the positive side). This creates a Grid identical to that created in
+   the previous example.
+
+   grid2D=ESMF_GridCreateNoPeriDim(minIndex=(/1,1/),maxIndex=(/10,10/), &
+            gridAlign=(/1,1/), rc=rc)
+
+   The gridEdgeWidth and gridAlign arguments both allow the user to set
+   the default padding to be used by stagger locations in a Grid. By
+   default, stagger locations allocated in a Grid set their stagger
+   padding based on these values. A stagger location's padding in each
+   dimension is equal to the value of gridEdgeWidth (or the value implied
+   by gridAlign), unless the stagger location is centered in a dimension
+   in which case the stagger padding is 0. For example, the cell center
+   stagger location has 0 stagger padding in all dimensions, whereas the
+   edge stagger location lower padding is equal to gridEdgeLWidth and the
+   upper padding is equal to gridEdgeUWidth in one dimension, but both are
+   0 in the other, centered, dimension. If the user wishes to set the
+   stagger padding individually for each stagger location they may use the
+   staggerEdgeWidth and staggerAlign arguments.
+
+   The staggerEdgeLWidth and staggerEdgeUWidth arguments are both 1D
+   arrays of the same size as the Grid dimension. The entries in the
+   arrays give the extra offset from the Grid cell index space for a
+   stagger location. The following example shows the addition of two
+   stagger locations. The corner location has no extra boundary and the
+   center has a single layer of extra padding on the negative side and
+   none on the positive. This is the reverse of the default behavior.
+
+   grid2D=ESMF_GridCreate(distgrid=distgrid2D, &
+            gridEdgeLWidth=(/1,1/), gridEdgeUWidth=(/0,0/), rc=rc)
+
+   call ESMF_GridAddCoord(grid2D, &
+          staggerLoc=ESMF_STAGGERLOC_CORNER, &
+          staggerEdgeLWidth=(/0,0/), staggerEdgeUWidth=(/0,0/), rc=rc)
+
+   call ESMF_GridAddCoord(grid2D, &
+          staggerLoc=ESMF_STAGGERLOC_CENTER, &
+          staggerEdgeLWidth=(/1,1/), staggerEdgeUWidth=(/0,0/), rc=rc)
+
+   To indicate how the data at a particular stagger location is aligned
+   with the cell center, the optional staggerAlign parameter may be used.
+   This parameter indicates which stagger elements in a cell share the
+   same index values as the cell center. For example, in a 2D cell, it
+   would indicate which of the four corners has the same index value as
+   the center. To set staggerAlign, the values -1,+1 are used to indicate
+   the alignment in each dimension. If a stagger location is centered in a
+   dimension (e.g. an edge in 2D), then that dimension is ignored in the
+   alignment. This parameter is mostly informational, however, if the
+   staggerEdgeWidth parameters are not set then its value determines where
+   the default padding is placed. If not specified, then the default is to
+   align all staggers to the most negative, so the padding is on the
+   positive side. The following code illustrates aligning the positive
+   (northeast in 2D) corner with the center.
+
+   call ESMF_GridAddCoord(grid2D, &
+          staggerLoc=ESMF_STAGGERLOC_CORNER, staggerAlign=(/1,1/), rc=rc)
+
+31.4 Restrictions and Future Work
+
+     * Grids with factorized coordinates can only be redisted when they
+       are 2D. Using the ESMF_GridCreate() interface that allows the user
+       to create a copy of an existing Grid with a new distribution will
+       give incorrect results when used on a Grid with 3 or more
+       dimensions and whose coordinate arrays are less than the full
+       dimension of the Grid (i.e. it contains factorized coordinates).
+     * 7D limit. Only grids up to 7D will be supported.
+     * Future adaptation. Currently Grids are created and then remain
+       unchanged. In the future, it would be useful to provide support for
+       the various forms of grid adaptation. This would allow the grids to
+       dynamically change their resolution to more closely match what is
+       needed at a particular time and position during a computation for
+       front tracking or adaptive meshes.
+     * Future Grid generation. This class for now only contains the basic
+       functionality for operating on the grid. In the future methods will
+       be added to enable the automatic generation of various types of
+       grids.
+
+31.5 Design and Implementation Notes
+
+  31.5.1 Grid Topology
+
+   The ESMF_Grid class depends upon the ESMF_DistGrid class for the
+   specification of its topology. That is, when creating a Grid, first an
+   ESMF_DistGrid is created to describe the appropriate index space
+   topology. This decision was made because it seemed redundant to have a
+   system for doing this in both classes. It also seems most appropriate
+   for the machinary for topology creation to be located at the lowest
+   level possible so that it can be used by other classes (e.g. the
+   ESMF_Array class). Because of this, however, the authors recommend that
+   as a natural part of the implementation of subroutines to generate
+   standard grid shapes (e.g. ESMF_GridGenSphere) a set of standard
+   topology generation subroutines be implemented (e.g.
+   ESMF_DistGridGenSphere) for users who want to create a standard
+   topology, but a custom geometry.
+
+31.6 Class API: General Grid Methods
+
+  31.6.1 ESMF_GridAssignment(=) - Grid assignment
+
+   INTERFACE:
+     interface assignment(=)
+     grid1 = grid2
+
+   ARGUMENTS:
+     type(ESMF_Grid) :: grid1
+     type(ESMF_Grid) :: grid2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign grid1 as an alias to the same ESMF Grid object in memory as
+   grid2. If grid2 is invalid, then grid1 will be equally invalid after
+   the assignment.
+
+   The arguments are:
+
+   grid1
+          The ESMF_Grid object on the left hand side of the assignment.
+
+   grid2
+          The ESMF_Grid object on the right hand side of the assignment.
+
+  31.6.2 ESMF_GridOperator(==) - Grid equality operator
+
+   INTERFACE:
+   interface operator(==)
+     if (grid1 == grid2) then ... endif
+               OR
+     result = (grid1 == grid2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_Grid), intent(in) :: grid1
+     type(ESMF_Grid), intent(in) :: grid2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether grid1 and grid2 are valid aliases to the same ESMF Grid
+   object in memory. For a more general comparison of two ESMF Grids,
+   going beyond the simple alias test, the ESMF_GridMatch() function must
+   be used.
+
+   The arguments are:
+
+   grid1
+          The ESMF_Grid object on the left hand side of the equality
+          operation.
+
+   grid2
+          The ESMF_Grid object on the right hand side of the equality
+          operation.
+
+  31.6.3 ESMF_GridOperator(/=) - Grid not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (grid1 /= grid2) then ... endif
+               OR
+     result = (grid1 /= grid2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_Grid), intent(in) :: grid1
+     type(ESMF_Grid), intent(in) :: grid2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether grid1 and grid2 are not valid aliases to the same ESMF
+   Grid object in memory. For a more general comparison of two ESMF Grids,
+   going beyond the simple alias test, the ESMF_GridMatch() function (not
+   yet fully implemented) must be used.
+
+   The arguments are:
+
+   grid1
+          The ESMF_Grid object on the left hand side of the non-equality
+          operation.
+
+   grid2
+          The ESMF_Grid object on the right hand side of the non-equality
+          operation.
+

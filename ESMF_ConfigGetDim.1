@@ -1,0 +1,45 @@
+  47.3.13 ESMF_ConfigGetDim - Get table sizes from Config object
+
+   INTERFACE:
+     subroutine ESMF_ConfigGetDim(config, lineCount, columnCount, &
+       label, rc)
+
+   ARGUMENTS:
+       type(ESMF_Config), intent(inout)         :: config
+       integer,           intent(out)           :: lineCount
+       integer,           intent(out)           :: columnCount
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character(len=*),  intent(in),  optional :: label
+       integer,           intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Returns the number of lines in the table in lineCount and the maximum
+   number of words in a table line in columnCount.
+
+   After the call, the line pointer is positioned to the end of the table.
+   To reset it to the beginning of the table, use ESMF_ConfigFindLabel.
+
+   The arguments are:
+
+   config
+          Already created ESMF_Config object.
+
+   lineCount
+          Returned number of lines in the table.
+
+   columnCount
+          Returned maximum number of words in a table line.
+
+   [label]
+          Identifying label (if present), otherwise current line.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,155 @@
+  17.4.16 ESMF_GridCompSet - Set or reset information about the GridComp
+
+   INTERFACE:
+   subroutine ESMF_GridCompSet(gridcomp, grid, gridList, &
+     mesh, meshList, locstream, locstreamList, xgrid, xgridList, &
+     config, configFile, clock, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp),    intent(inout)         :: gridcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_Grid),        intent(in),  optional :: grid
+     type(ESMF_Grid),        intent(in),  optional :: gridList(:)
+     type(ESMF_Mesh),        intent(in),  optional :: mesh
+     type(ESMF_Mesh),        intent(in),  optional :: meshList(:)
+     type(ESMF_LocStream),   intent(in),  optional :: locstream
+     type(ESMF_LocStream),   intent(in),  optional :: locstreamList(:)
+     type(ESMF_XGrid),       intent(in),  optional :: xgrid
+     type(ESMF_XGrid),       intent(in),  optional :: xgridList(:)
+     type(ESMF_Config),      intent(in),  optional :: config
+     character(len=*),       intent(in),  optional :: configFile
+     type(ESMF_Clock),       intent(in),  optional :: clock
+     character(len=*),       intent(in),  optional :: name
+     integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added arguments gridList, mesh, meshList, locstream,
+                locstreamList, xgrid, and xgridList. These arguments add
+                support for holding references to multiple geom objects,
+                either of the same type, or different type, in the same
+                ESMF_GridComp object.
+
+   DESCRIPTION:
+
+   Sets or resets information about an ESMF_GridComp.
+
+   The arguments are:
+
+   gridcomp
+          ESMF_GridComp to change.
+
+   [grid]
+          Associate an ESMF_Grid object with the gridcomp component. This
+          is simply a convenience feature for the user. The ESMF library
+          code does not access the grid object. The grid argument is
+          mutually exclusive with the gridList argument. If both arguments
+          are provided, the routine will fail, and an error is returned in
+          rc. By default, i.e. if neither grid nor gridList are provided,
+          the ESMF_Grid association of the incoming gridcomp component
+          remains unchanged.
+
+   [gridList]
+          Associate a list of ESMF_Grid objects with the gridcomp
+          component. This is simply a convenience feature for the user.
+          The ESMF library code does not access the gridList object. The
+          gridList argument is mutually exclusive with the grid argument.
+          If both arguments are provided, the routine will fail, and an
+          error is returned in rc. By default, i.e. if neither grid nor
+          gridList are provided, the ESMF_Grid association of the incoming
+          gridcomp component remains unchanged.
+
+   [mesh]
+          Associate an ESMF_Mesh object with the gridcomp component. This
+          is simply a convenience feature for the user. The ESMF library
+          code does not access the mesh object. The mesh argument is
+          mutually exclusive with the meshList argument. If both arguments
+          are provided, the routine will fail, and an error is returned in
+          rc. By default, i.e. if neither mesh nor meshList are provided,
+          the ESMF_Mesh association of the incoming gridcomp component
+          remains unchanged.
+
+   [meshList]
+          Associate a list of ESMF_Mesh objects with the gridcomp
+          component. This is simply a convenience feature for the user.
+          The ESMF library code does not access the meshList object. The
+          meshList argument is mutually exclusive with the mesh argument.
+          If both arguments are provided, the routine will fail, and an
+          error is returned in rc. By default, i.e. if neither mesh nor
+          meshList are provided, the ESMF_Mesh association of the incoming
+          gridcomp component remains unchanged.
+
+   [locstream]
+          Associate an ESMF_LocStream object with the gridcomp component.
+          This is simply a convenience feature for the user. The ESMF
+          library code does not access the locstream object. The locstream
+          argument is mutually exclusive with the locstreamList argument.
+          If both arguments are provided, the routine will fail, and an
+          error is returned in rc. By default, i.e. if neither locstream
+          nor locstreamList are provided, the ESMF_LocStream association
+          of the incoming gridcomp component remains unchanged.
+
+   [locstreamList]
+          Associate a list of ESMF_LocStream objects with the gridcomp
+          component. This is simply a convenience feature for the user.
+          The ESMF library code does not access the locstreamList object.
+          The locstreamList argument is mutually exclusive with the
+          locstream argument. If both arguments are provided, the routine
+          will fail, and an error is returned in rc. By default, i.e. if
+          neither locstream nor locstreamList are provided, the
+          ESMF_LocStream association of the incoming gridcomp component
+          remains unchanged.
+
+   [xgrid]
+          Associate an ESMF_XGrid object with the gridcomp component. This
+          is simply a convenience feature for the user. The ESMF library
+          code does not access the xgrid object. The xgrid argument is
+          mutually exclusive with the xgridList argument. If both
+          arguments are provided, the routine will fail, and an error is
+          returned in rc. By default, i.e. if neither xgrid nor xgridList
+          are provided, the ESMF_XGrid association of the incoming
+          gridcomp component remains unchanged.
+
+   [xgridList]
+          Associate a list of ESMF_XGrid objects with the gridcomp
+          component. This is simply a convenience feature for the user.
+          The ESMF library code does not access the xgridList object. The
+          xgridList argument is mutually exclusive with the xgrid
+          argument. If both arguments are provided, the routine will fail,
+          and an error is returned in rc. By default, i.e. if neither
+          xgrid nor xgridList are provided, the ESMF_XGrid association of
+          the incoming gridcomp component remains unchanged.
+
+   [config]
+          An already-created ESMF_Config object to be attached to the
+          component. If both config and configFile arguments are
+          specified, config takes priority.
+
+   [configFile]
+          The filename of an ESMF_Config format file. If specified, a new
+          ESMF_Config object is created and attached to the component. The
+          configFile file is opened and associated with the new config
+          object. If both config and configFile arguments are specified,
+          config takes priority.
+
+   [clock]
+          Set the private clock for this ESMF_GridComp.
+
+   [name]
+          Set the name of the ESMF_GridComp.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

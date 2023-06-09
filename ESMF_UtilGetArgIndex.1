@@ -1,0 +1,43 @@
+  53.4.3 ESMF_UtilGetArgIndex - Return the index of a command line argument
+
+   INTERFACE:
+   subroutine ESMF_UtilGetArgIndex(argvalue, argindex, rc)
+
+   ARGUMENTS:
+     character(*), intent(in)            :: argvalue
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,      intent(out), optional :: argindex
+     integer,      intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method searches for, and returns the index of a desired command
+   line argument. An example might be to find a specific keyword (e.g.,
+   -esmf_path) so that its associated value argument could be obtained by
+   adding 1 to the argindex and calling ESMF_UtilGetArg().
+
+   Some MPI implementations do not consistently provide command line
+   arguments on PETs other than PET 0. It is therefore recommended that
+   PET 0 call this method and broadcast the results to the other PETs by
+   using the ESMF_VMBroadcast() method.
+
+   The arguments are:
+
+   argvalue
+          A character string which will be searched for in the command
+          line argument list.
+
+   [argindex]
+          If the value string is found, the position will be returned as a
+          non-negative integer. If the string is not found, a negative
+          value will be returned.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

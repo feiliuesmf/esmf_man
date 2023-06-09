@@ -1,0 +1,27 @@
+  21.7.11 ESMF_StateIsCreated - Check whether an State object has been created
+
+   INTERFACE:
+   function ESMF_StateIsCreated(state, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_StateIsCreated
+
+   ARGUMENTS:
+     type(ESMF_State), intent(in) :: state
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the state has been created. Otherwise return .false..
+   If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return
+   value of the function will also be .false..
+
+   The arguments are:
+
+   state
+          ESMF_State queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

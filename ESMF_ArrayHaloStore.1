@@ -1,0 +1,122 @@
+  28.5.24 ESMF_ArrayHaloStore - Precompute an Array halo operation
+
+   INTERFACE:
+     subroutine ESMF_ArrayHaloStore(array, routehandle, &
+       startregion, haloLDepth, haloUDepth, pipelineDepth, rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),            intent(inout)           :: array
+     type(ESMF_RouteHandle),      intent(inout)           :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_StartRegion_Flag), intent(in),    optional :: startregion
+     integer,                     intent(in),    optional :: haloLDepth(:)
+     integer,                     intent(in),    optional :: haloUDepth(:)
+     integer,                     intent(inout), optional :: pipelineDepth
+     integer,                     intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument pipelineDepth. The new argument provide
+                access to the tuning parameter affecting the sparse matrix
+                execution.
+
+   DESCRIPTION:
+
+   Store an Array halo operation over the data in array. By default, i.e.
+   without specifying startregion, haloLDepth and haloUDepth, all elements
+   in the total Array region that lie outside the exclusive region will be
+   considered potential destination elements for halo. However, only those
+   elements that have a corresponding halo source element, i.e. an
+   exclusive element on one of the DEs, will be updated under the halo
+   operation. Elements that have no associated source remain unchanged
+   under halo.
+
+   Specifying startregion allows the shape of the effective halo region to
+   be changed from the inside. Setting this flag to
+   ESMF_STARTREGION_COMPUTATIONAL means that only elements outside the
+   computational region of the Array are considered for potential
+   destination elements for the halo operation. The default is
+   ESMF_STARTREGION_EXCLUSIVE.
+
+   The haloLDepth and haloUDepth arguments allow to reduce the extent of
+   the effective halo region. Starting at the region specified by
+   startregion, the haloLDepth and haloUDepth define a halo depth in each
+   direction. Note that the maximum halo region is limited by the total
+   Array region, independent of the actual haloLDepth and haloUDepth
+   setting. The total Array region is local DE specific. The haloLDepth
+   and haloUDepth are interpreted as the maximum desired extent, reducing
+   the potentially larger region available for the halo operation.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArrayHalo() on any Array that matches array in type, kind, and
+   memory layout of the distributed dimensions. However, the size, number,
+   and index order of undistributed dimensions may be different. See
+   section [1098]37.2.5 for a more detailed discussion of RouteHandle
+   reusability.
+
+   This call is collective across the current VM.
+
+   array
+          ESMF_Array containing data to be haloed. The data in the halo
+          region may be destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [startregion]
+          The start of the effective halo region on every DE. The default
+          setting is ESMF_STARTREGION_EXCLUSIVE, rendering all
+          non-exclusive elements potential halo destination elements. See
+          section [1099]54.54 for a complete list of valid settings.
+
+   [haloLDepth]
+          This vector specifies the lower corner of the effective halo
+          region with respect to the lower corner of startregion. The size
+          of haloLDepth must equal the number of distributed Array
+          dimensions.
+
+   [haloUDepth]
+          This vector specifies the upper corner of the effective halo
+          region with respect to the upper corner of startregion. The size
+          of haloUDepth must equal the number of distributed Array
+          dimensions.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a halo exchange. Larger values of
+          pipelineDepth typically lead to better performance. However, on
+          some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

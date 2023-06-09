@@ -1,0 +1,249 @@
+  43.4.11 ESMF_TimeGet - Get a Time value
+
+   INTERFACE:
+       subroutine ESMF_TimeGet(time, &
+         yy, yy_i8, &
+         mm, dd, &
+         d, d_i8, &
+         h, m, &
+         s, s_i8, &
+         ms, us, ns, &
+         d_r8, h_r8, m_r8, s_r8, &
+         ms_r8, us_r8, ns_r8, &
+         sN, sN_i8, sD, sD_i8, &
+         calendar, calkindflag, timeZone, &
+         timeString, timeStringISOFrac, &
+         dayOfWeek, midMonth, &
+         dayOfYear,  dayOfYear_r8, &
+         dayOfYear_intvl, rc)
+
+   ARGUMENTS:
+       type(ESMF_Time),         intent(in)            :: time
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),   intent(out), optional :: yy
+       integer(ESMF_KIND_I8),   intent(out), optional :: yy_i8
+       integer,                 intent(out), optional :: mm
+       integer,                 intent(out), optional :: dd
+       integer(ESMF_KIND_I4),   intent(out), optional :: d
+       integer(ESMF_KIND_I8),   intent(out), optional :: d_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: h
+       integer(ESMF_KIND_I4),   intent(out), optional :: m
+       integer(ESMF_KIND_I4),   intent(out), optional :: s
+       integer(ESMF_KIND_I8),   intent(out), optional :: s_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: ms
+       integer(ESMF_KIND_I4),   intent(out), optional :: us
+       integer(ESMF_KIND_I4),   intent(out), optional :: ns
+       real(ESMF_KIND_R8),      intent(out), optional :: d_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: h_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: m_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: s_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ms_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: us_r8
+       real(ESMF_KIND_R8),      intent(out), optional :: ns_r8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sN
+       integer(ESMF_KIND_I8),   intent(out), optional :: sN_i8
+       integer(ESMF_KIND_I4),   intent(out), optional :: sD
+       integer(ESMF_KIND_I8),   intent(out), optional :: sD_i8
+       type(ESMF_Calendar),     intent(out), optional :: calendar
+       type(ESMF_CalKind_Flag), intent(out), optional :: calkindflag
+       integer,                 intent(out), optional :: timeZone ! not imp
+       character (len=*),       intent(out), optional :: timeString
+       character (len=*),       intent(out), optional :: timeStringISOFrac
+       integer,                 intent(out), optional :: dayOfWeek
+       type(ESMF_Time),         intent(out), optional :: midMonth
+       integer(ESMF_KIND_I4),   intent(out), optional :: dayOfYear
+       real(ESMF_KIND_R8),      intent(out), optional :: dayOfYear_r8
+       type(ESMF_TimeInterval), intent(out), optional :: dayOfYear_intvl
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets the value of time in units specified by the user via Fortran
+   optional arguments. See ESMF_TimeSet() above for a description of time
+   units and calendars.
+
+   The ESMF Time Manager represents and manipulates time internally with
+   integers to maintain precision. Hence, user-specified floating point
+   values are converted internally from integers. For example, if a time
+   value is 5 and 3/8 seconds (s=5, sN=3, sD=8), and you want to get it as
+   floating point seconds, you would get 5.375 (s_r8=5.375).
+
+   Units are bound (normalized) by the next larger unit specified. For
+   example, if a time is defined to be 2:00 am on February 2, 2004, then
+   ESMF_TimeGet(dd=day, h=hours, s=seconds) would return day = 2, hours =
+   2, seconds = 0, whereas ESMF_TimeGet(dd = day, s=seconds) would return
+   day = 2, seconds = 7200. Note that hours and seconds are bound by a
+   day. If bound by a month, ESMF_TimeGet(mm=month, h=hours, s=seconds)
+   would return month = 2, hours = 26, seconds = 0, and ESMF_TimeGet(mm =
+   month, s=seconds) would return month = 2, seconds = 93600 (26 * 3600).
+   Similarly, if bound to a year, ESMF_TimeGet(yy=year, h=hours,
+   s=seconds) would return year = 2004, hours = 770 (32*24 + 2), seconds =
+   0, and ESMF_TimeGet(yy = year, s=seconds) would return year = 2004,
+   seconds = 2772000 (770 * 3600).
+
+   For timeString, timeStringISOFrac, dayOfWeek, midMonth, dayOfYear,
+   dayOfYear_intvl, and dayOfYear_r8 described below, valid calendars are
+   Gregorian, Julian, No Leap, 360 Day and Custom calendars. Not valid for
+   Julian Day, Modified Julian Day, or No Calendar.
+
+   For timeString and timeStringISOFrac, YYYY format returns at least 4
+   digits; years <= 999 are padded on the left with zeroes and years >=
+   10000 return the number of digits required.
+
+   For timeString, convert ESMF_Time's value into partial ISO 8601 format
+   YYYY-MM-DDThh:mm:ss[:n/d]. See [[527]26] and [[528]14]. See also method
+   ESMF_TimePrint().
+
+   For timeStringISOFrac, convert ESMF_Time's value into full ISO 8601
+   format YYYY-MM-DDThh:mm:ss[.f]. See [[529]26] and [[530]14]. See also
+   method ESMF_TimePrint().
+
+   For dayOfWeek, gets the day of the week the given ESMF_Time instant
+   falls on. ISO 8601 standard: Monday = 1 through Sunday = 7.
+   See [[531]26] and [[532]14].
+
+   For midMonth, gets the middle time instant of the month that the given
+   ESMF_Time instant falls on.
+
+   For dayOfYear, gets the day of the year that the given ESMF_Time
+   instant falls on. See range discussion in argument list below. Return
+   as an integer value.
+
+   For dayOfYear_r8, gets the day of the year the given ESMF_Time instant
+   falls on. See range discussion in argument list below. Return as
+   floating point value; fractional part represents the time of day.
+
+   For dayOfYear_intvl, gets the day of the year the given ESMF_Time
+   instant falls on. Return as an ESMF_TimeInterval.
+
+   The arguments are:
+
+   time
+          The object instance to query.
+
+   [yy]
+          Integer year (32-bit).
+
+   [yy_i8]
+          Integer year (large, 64-bit).
+
+   [mm]
+          Integer month.
+
+   [dd]
+          Integer day of the month.
+
+   [d]
+          Integer Julian date, or Modified Julian date (32-bit).
+
+   [d_i8]
+          Integer Julian date, or Modified Julian date (large, 64-bit).
+
+   [h]
+          Integer hour.
+
+   [m]
+          Integer minute.
+
+   [s]
+          Integer second (32-bit).
+
+   [s_i8]
+          Integer second (large, 64-bit).
+
+   [ms]
+          Integer millisecond.
+
+   [us]
+          Integer microsecond.
+
+   [ns]
+          Integer nanosecond.
+
+   [d_r8]
+          Double precision day.
+
+   [h_r8]
+          Double precision hour.
+
+   [m_r8]
+          Double precision minute.
+
+   [s_r8]
+          Double precision second.
+
+   [ms_r8]
+          Double precision millisecond.
+
+   [us_r8]
+          Double precision microsecond.
+
+   [ns_r8]
+          Double precision nanosecond.
+
+   [sN]
+          Integer numerator of fractional second (sN/sD).
+
+   [sN_i8]
+          Integer numerator of fractional second (sN_i8/sD_i8) (large, <=
+          64-bit).
+
+   [sD]
+          Integer denominator of fractional second (sN/sD).
+
+   [sD_i8]
+          Integer denominator of fractional second (sN_i8/sD_i8) (large,
+          <= 64-bit).
+
+   [calendar]
+          Associated Calendar.
+
+   [calkindflag]
+          Associated CalKind_Flag.
+
+   [timeZone]
+          Associated timezone (hours offset from UCT, e.g. EST = -5). (Not
+          implemented yet).
+
+   [timeString]
+          Convert time value to format string YYYY-MM-DDThh:mm:ss[:n/d],
+          where n/d is numerator/denominator of any fractional seconds and
+          all other units are in ISO 8601 format. See [[533]26] and
+          [[534]14]. See also method ESMF_TimePrint().
+
+   [timeStringISOFrac]
+          Convert time value to strict ISO 8601 format string
+          YYYY-MM-DDThh:mm:ss[.f], where f is decimal form of any
+          fractional seconds. See [[535]26] and [[536]14]. See also method
+          ESMF_TimePrint().
+
+   [dayOfWeek]
+          The time instant's day of the week [1-7].
+
+   [MidMonth]
+          The given time instant's middle-of-the-month time instant.
+
+   [dayOfYear]
+          The ESMF_Time instant's integer day of the year. [1-366] for
+          Gregorian and Julian calendars, [1-365] for No-Leap calendar.
+          [1-360] for 360-Day calendar. User-defined range for Custom
+          calendar.
+
+   [dayOfYear_r8]
+          The ESMF_Time instant's floating point day of the year.
+          [1.x-366.x] for Gregorian and Julian calendars, [1.x-365.x] for
+          No-Leap calendar. [1.x-360.x] for 360-Day calendar. User-defined
+          range for Custom calendar.
+
+   [dayOfYear_intvl]
+          The ESMF_Time instant's day of the year as an ESMF_TimeInterval.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,51 @@
+  25.5.28 ESMF_FieldBundleReplace - Replace Fields in FieldBundle
+
+   INTERFACE:
+   subroutine ESMF_FieldBundleReplace(fieldbundle, fieldList, &
+     multiflag, relaxedflag, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(inout) :: fieldbundle
+     type(ESMF_Field), intent(in) :: fieldList(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical, intent(in), optional :: multiflag
+     logical, intent(in), optional :: relaxedflag
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Replace field(s) by name in FieldBundle. In the relaxed setting it is
+   not an error if fieldList contains Fields that do not match by name any
+   item in fieldbundle. These Fields are simply ignored in this case.
+
+   fieldbundle
+          ESMF_FieldBundle in which to replace items.
+
+   fieldList
+          List of items to replace.
+
+   [multiflag]
+          A setting of .true. allows multiple items with the same name to
+          be replaced in fieldbundle. For .false., items to be replaced
+          must have unique names. The default setting is .false..
+
+   [relaxedflag]
+          A setting of .true. indicates a relaxed definition of "replace"
+          where it is not an error if fieldList contains items with names
+          that are not found in fieldbundle. These items in fieldList are
+          ignored in the relaxed mode. For .false. this is treated as an
+          error condition. Further, in multiflag=.false. mode, the relaxed
+          definition of "replace" also covers the case where there are
+          multiple items in fieldbundle that match a single entry by name
+          in fieldList. For relaxedflag=.false. this is treated as an
+          error condition. The default setting is .false..
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

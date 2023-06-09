@@ -1,0 +1,34 @@
+  31.6.53 ESMF_GridRedist - Redistribute the coordinates of a Grid
+
+   INTERFACE:
+     subroutine ESMF_GridRedist(srcGrid, dstGrid, routehandle, rc)
+
+   ARGUMENTS:
+        type(ESMF_Grid),       intent(in)              :: srcGrid
+        type(ESMF_Grid),       intent(inout)           :: dstGrid
+        type(ESMF_RouteHandle),intent(inout)           :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        integer,               intent(out),  optional  :: rc
+
+   DESCRIPTION:
+
+   This call is companion to the ESMF_GridCreate() that allows the user to
+   copy an existing ESMF Grid, but with a new distribution. The
+   ESMF_GridRedist() allows the user to repeatedly redistribute the
+   coordinates from srcGrid to dstGrid.
+
+   The arguments are:
+
+   srcGrid
+          The source grid providing the coordinates.
+
+   srcGrid
+          The destination grid receiving the coordinates from srcGrid.
+
+   routehandle
+          The ESMF_RouteHandle object returned by the companion method
+          ESMF_GridCreate() used to create dstGrid from srcGrid.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

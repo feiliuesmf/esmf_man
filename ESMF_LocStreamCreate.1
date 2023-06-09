@@ -1,0 +1,455 @@
+  32.4.7 ESMF_LocStreamCreate - Create a new LocStream by projecting onto a Grid
+
+   INTERFACE:
+       ! Private name; call using ESMF_LocStreamCreate()
+       function ESMF_LocStreamCreateByBkgGrid(locstream, &
+                  background, maskValues, &
+                  unmappedaction, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_LocStream) :: ESMF_LocStreamCreateByBkgGrid
+
+   ARGUMENTS:
+       type(ESMF_LocStream),           intent(in)            :: locstream
+       type(ESMF_Grid),                intent(in)            :: background
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer(ESMF_KIND_I4),          intent(in),  optional :: maskValues(:)
+       type(ESMF_UnmappedAction_Flag), intent(in),  optional :: unmappedaction
+       character (len=*),              intent(in),  optional :: name
+       integer,                        intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create an location stream from an existing one in accordance with the
+   distribution of the background Grid. The entries in the new location
+   stream are redistributed, so that they lie on the same PET as the piece
+   of Grid which contains the coordinates of the entries. The coordinates
+   of the entries are the data in the keys named ESMF:Lon, ESMF:Lat,
+   ESMF:Radius in the case of a spherical system and ESMF:X, ESMF:Y,
+   ESMF:Z for cartesian. To copy data in Fields or FieldBundles built on
+   locstream to the new one simply use ESMF_FieldRedist() or
+   ESMF_FieldBundleRedist().
+
+   The arguments are:
+
+   locstream
+          Location stream from which the new location stream is to be
+          created
+
+   background
+          Background Grid which determines the distribution of the entries
+          in the new location stream. The background Grid Note also that
+          this subroutine uses the corner stagger location in the Grid for
+          determining where a point lies, because this is the stagger
+          location which fully contains the cell. A Grid must have
+          coordinate data in this stagger location to be used in this
+          subroutine. For a 2D Grid this stagger location is
+          ESMF_STAGGERLOC_CORNER for a 3D Grid this stagger location is
+          ESMF_STAGGERLOC_CORNER_VFACE. Note that currently the background
+          Grid also needs to have been created with
+          indexflag=ESMF_INDEX_GLOBAL to be usable here.
+
+   [maskValues]
+          List of values that indicate a background grid point should be
+          masked out. If not specified, no masking will occur.
+
+   [unmappedaction]
+          Specifies what should happen if there are destination points
+          that can't be mapped to a source cell. Please see
+          Section [1435]54.60 for a list of valid options. If not
+          specified, unmappedaction defaults to ESMF_UNMAPPEDACTION_ERROR.
+          [NOTE: the unmappedaction=ESMF_UNMAPPEDACTION_IGNORE option is
+          currently not implemented.]
+
+   [name]
+          Name of the resulting location stream
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.8 ESMF_LocStreamCreate - Create a new LocStream by projecting onto a Mesh
+
+   INTERFACE:
+       ! Private name; call using ESMF_LocStreamCreate()
+       function ESMF_LocStreamCreateByBkgMesh(locstream, &
+                  background, unmappedaction, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_LocStream) :: ESMF_LocStreamCreateByBkgMesh
+
+   ARGUMENTS:
+       type(ESMF_LocStream),           intent(in)           :: locstream
+       type(ESMF_Mesh),                intent(in)           :: background
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_UnmappedAction_Flag), intent(in), optional :: unmappedaction
+       character (len=*),              intent(in), optional :: name
+       integer,                        intent(out),optional :: rc
+
+   DESCRIPTION:
+
+   Create an location stream from an existing one in accordance with the
+   distribution of the background Mesh. The entries in the new location
+   stream are redistributed, so that they lie on the same PET as the piece
+   of Mesh which contains the coordinates of the entries. The coordinates
+   of the entries are the data in the keys named ESMF:Lon, ESMF:Lat,
+   ESMF:Radius in the case of a spherical system and ESMF:X, ESMF:Y,
+   ESMF:Z for cartesian. To copy data in Fields or FieldBundles built on
+   locstream to the new one simply use ESMF_FieldRedist() or
+   ESMF_FieldBundleRedist().
+
+   The arguments are:
+
+   locstream
+          Location stream from which the new location stream is to be
+          created
+
+   background
+          Background Mesh which determines the distribution of entries in
+          the new locatiion stream.
+
+   [unmappedaction]
+          Specifies what should happen if there are destination points
+          that can't be mapped to a source cell. Please see
+          Section [1436]54.60 for a list of valid options. If not
+          specified, unmappedaction defaults to ESMF_UNMAPPEDACTION_ERROR.
+          [NOTE: the unmappedaction=ESMF_UNMAPPEDACTION_IGNORE option is
+          currently not implemented.]
+
+   [name]
+          Name of the resulting location stream
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.9 ESMF_LocStreamCreate - Create a new LocStream from a distgrid
+
+   INTERFACE:
+       ! Private name: call using ESMF_LocStreamCreate()
+       function ESMF_LocStreamCreateFromDG(distgrid, &
+         indexflag, coordSys, name, vm, rc )
+
+   RETURN VALUE:
+       type(ESMF_LocStream) :: ESMF_LocStreamCreateFromDG
+
+   ARGUMENTS:
+       type(ESMF_DistGrid),      intent(in)            :: distgrid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_Index_Flag),    intent(in),  optional :: indexflag
+       type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+       character (len=*),        intent(in),  optional :: name
+       type(ESMF_VM),            intent(in),  optional :: vm
+       integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Allocates memory for a new ESMF_LocStream object, constructs its
+   internal derived types.
+
+   The arguments are:
+
+   distgrid
+          Distgrid specifying size and distribution. Only 1D distgrids are
+          allowed.
+
+   [indexflag]
+          Flag that indicates how the DE-local indices are to be defined.
+          Defaults to ESMF_INDEX_DELOCAL, which indicates that the index
+          range on each DE starts at 1. See Section [1437]54.27 for the
+          full range of options.
+
+   [coordSys]
+          The coordinate system of the location stream coordinate data.
+          For a full list of options, please see Section [1438]54.11. If
+          not specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [name]
+          Name of the location stream
+
+   [vm]
+          If present, the LocStream object is created on the specified
+          ESMF_VM object. The default is to create on the VM of the
+          current context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.10 ESMF_LocStreamCreate - Create a new LocStream from an irregular
+  distribution
+
+   INTERFACE:
+       ! Private name: call using ESMF_LocStreamCreate()
+       function ESMF_LocStreamCreateIrreg(minIndex, countsPerDE, &
+                   indexflag, coordSys, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_LocStream) :: ESMF_LocStreamCreateIrreg
+
+   ARGUMENTS:
+       integer, intent(in), optional                   :: minIndex
+       integer, intent(in)                             :: countsPerDE(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_Index_Flag), intent(in), optional     :: indexflag
+       type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+       character (len=*), intent(in), optional         :: name
+       integer, intent(out), optional                  :: rc
+
+   DESCRIPTION:
+
+   Allocates memory for a new ESMF_LocStream object, constructs its
+   internal derived types. The ESMF_DistGrid is set up, indicating how the
+   LocStream is distributed.
+
+   The arguments are:
+
+   [minIndex]
+          If indexflag=ESMF_INDEX_DELOCAL, this setting is used to
+          indicate the number to start the index ranges at. If not
+          present, defaults to 1.
+
+   countsPerDE
+          This array has an element for each DE, specifying the number of
+          locations for that DE.
+
+   [indexflag]
+          Flag that indicates how the DE-local indices are to be defined.
+          Defaults to ESMF_INDEX_DELOCAL, which indicates that the index
+          range on each DE starts at 1. See Section [1439]54.27 for the
+          full range of options.
+
+   [coordSys]
+          The coordinate system of the location stream coordinate data.
+          For a full list of options, please see Section [1440]54.11. If
+          not specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [name]
+          Name of the location stream
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.11 ESMF_LocStreamCreate - Create a new LocStream from a local count
+
+   INTERFACE:
+       ! Private name: call using ESMF_LocStreamCreate()
+       function ESMF_LocStreamCreateFromLocal(localCount, &
+                   indexflag, coordSys, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_LocStream) :: ESMF_LocStreamCreateFromLocal
+
+   ARGUMENTS:
+       integer, intent(in)                             :: localCount
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_Index_Flag), intent(in), optional     :: indexflag
+       type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+       character (len=*), intent(in), optional         :: name
+       integer, intent(out), optional                  :: rc
+
+   DESCRIPTION:
+
+   Allocates memory for a new ESMF_LocStream object, constructs its
+   internal derived types. The ESMF_DistGrid is set up, indicating how the
+   LocStream is distributed. The assumed layout is one DE per PET.
+
+   The arguments are:
+
+   localCount
+          Number of grid cells to be distributed to this DE/PET.
+
+   [indexflag]
+          Flag that indicates how the DE-local indices are to be defined.
+          Defaults to ESMF_INDEX_DELOCAL, which indicates that the index
+          range on each DE starts at 1. See Section [1441]54.27 for the
+          full range of options.
+
+   [coordSys]
+          The coordinate system of the location stream coordinate data.
+          For a full list of options, please see Section [1442]54.11. If
+          not specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [name]
+          Name of the location stream
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.12 ESMF_LocStreamCreate - Create a new LocStream from an old one and a
+  distgrid
+
+   INTERFACE:
+       ! Private name: call using ESMF_LocStreamCreate()
+       function ESMF_LocStreamCreateFromNewDG(locstream, distgrid, &
+            name, rc)
+
+   RETURN VALUE:
+       type(ESMF_LocStream) :: ESMF_LocStreamCreateFromNewDG
+
+   ARGUMENTS:
+       type(ESMF_LocStream), intent(in)                :: locstream
+       type(ESMF_DistGrid),  intent(in)                :: distgrid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character (len=*),    intent(in), optional      :: name
+       integer,              intent(out), optional     :: rc
+
+   DESCRIPTION:
+
+   Create a new location stream that is a copy of an old one, but with a
+   new distribution. The new distribution is given by a distgrid passed
+   into the call. Key and other class information is copied from the old
+   locstream to the new one. Information contained in Fields build on the
+   location streams can be copied over by using the Field redistribution
+   calls (e.g. ESMF_FieldRedistStore() and ESMF_FieldRedist()).
+
+   The arguments are:
+
+   locstream
+          Location stream from which the new location stream is to be
+          created
+
+   distgrid
+          Distgrid for new distgrid
+
+   [name]
+          Name of the resulting location stream
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.13 ESMF_LocStreamCreate - Create a new LocStream using a regular
+  distribution
+
+   INTERFACE:
+       ! Private name: call using ESMF_LocStreamCreate()
+       function ESMF_LocStreamCreateReg(regDecomp, decompFlag, &
+                     minIndex, maxIndex, &
+                     coordSys, indexflag, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_LocStream) :: ESMF_LocStreamCreateReg
+
+   ARGUMENTS:
+       integer,                  intent(in),  optional  :: regDecomp
+       type(ESMF_Decomp_Flag),   intent(in),  optional  :: decompflag
+       integer,                  intent(in),  optional  :: minIndex
+       integer,                  intent(in)             :: maxIndex
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_CoordSys_Flag), intent(in),  optional  :: coordSys
+       type(ESMF_Index_Flag),    intent(in),  optional  :: indexflag
+       character (len=*),        intent(in),  optional  :: name
+       integer,                  intent(out), optional  :: rc
+
+   DESCRIPTION:
+
+   Allocates memory for a new ESMF_LocStream object, constructs its
+   internal derived types. The ESMF_DistGrid is set up, indicating how the
+   LocStream is distributed.
+
+   The arguments are:
+
+   [regDecomp]
+          Specify into how many chunks to divide the locations. If not
+          specified, defaults to the number of PETs.
+
+   [decompFlag]
+          Specify what to do with leftover locations after division. If
+          not specified, defaults to ESMF_DECOMP_BALANCED. Please see
+          Section [1443]54.13 for a full description of the possible
+          options.
+
+   [minIndex]
+          If indexflag=ESMF_INDEX_DELOCAL, this setting is used to
+          indicate the number to start the index ranges at. If not
+          present, defaults to 1.
+
+   maxIndex
+          The maximum index across all PETs.
+
+   [coordSys]
+          The coordinate system of the location stream coordinate data.
+          For a full list of options, please see Section [1444]54.11. If
+          not specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [indexflag]
+          Flag that indicates how the DE-local indices are to be defined.
+          Defaults to ESMF_INDEX_DELOCAL, which indicates that the index
+          range on each DE starts at 1. See Section [1445]54.27 for the
+          full range of options.
+
+   [name]
+          Name of the location stream
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.14 ESMF_LocStreamCreate - Create a new LocStream from a grid file
+
+   INTERFACE:
+       ! Private name: call using ESMF_LocStreamCreate()
+       function ESMF_LocStreamCreateFromFile(filename, &
+            fileformat, varname, indexflag, centerflag, name, rc)
+
+   RETURN VALUE:
+       type(ESMF_LocStream) :: ESMF_LocStreamCreateFromFile
+
+   ARGUMENTS:
+       character (len=*),          intent(in)           :: filename
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_FileFormat_Flag), intent(in), optional :: fileformat
+       character(len=*),           intent(in), optional :: varname
+       type(ESMF_Index_Flag),      intent(in), optional :: indexflag
+       logical,                    intent(in), optional :: centerflag
+       character (len=*),          intent(in), optional :: name
+       integer,                    intent(out),optional :: rc
+
+   DESCRIPTION:
+
+   Create a new ESMF_LocStream object and add the coordinate keys and mask
+   key to the LocStream using the coordinates defined in a grid file.
+   Currently, it supports the SCRIP format, the ESMF unstructured grid
+   format and the UGRID format. For a 2D or 3D grid in ESMF or UGRID
+   format, it can construct the LocStream using either the center
+   coordinates or the corner coordinates. For a SCRIP format grid file,
+   the LocStream can only be constructed using the center coordinates. In
+   addition, it supports 1D network topology in UGRID format. When
+   construction a LocStream using a 1D UGRID, it always uses node
+   coordinates (i.e., corner coordinates).
+
+   The arguments are:
+
+   filename
+          Name of grid file to be used to create the location stream.
+
+   [fileformat]
+          The file format. The valid options are ESMF_FILEFORMAT_SCRIP,
+          ESMF_FILEFORMAT_ESMFMESH, and ESMF_FILEFORMAT_UGRID. Please see
+          section [1446]54.19 for a detailed description of the options.
+          If not specified, the default is ESMF_FILEFORMAT_SCRIP.
+
+   [varname]
+          An optional variable name stored in the UGRID file to be used to
+          generate the mask using the missing value of the data value of
+          this variable. The first two dimensions of the variable has to
+          be the the longitude and the latitude dimension and the mask is
+          derived from the first 2D values of this variable even if this
+          data is 3D, or 4D array. If not specified, no mask is used for a
+          UGRID file.
+
+   [indexflag]
+          Flag that indicates how the DE-local indices are to be defined.
+          Defaults to ESMF_INDEX_DELOCAL, which indicates that the index
+          range on each DE starts at 1. See Section [1447]54.27 for the
+          full range of options.
+
+   [centerflag]
+          Flag that indicates whether to use the center coordinates to
+          construct the location stream. If true, use center coordinates,
+          otherwise, use the corner coordinates. If not specified, use
+          center coordinates as default. For SCRIP files, only center
+          coordinate is supported.
+
+   [name]
+          Name of the location stream
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

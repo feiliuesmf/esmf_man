@@ -1,0 +1,29 @@
+  43.4.18 ESMF_TimeValidate - Validate a Time
+
+   INTERFACE:
+       subroutine ESMF_TimeValidate(time, options, rc)
+
+   ARGUMENTS:
+       type(ESMF_Time),   intent(in)            :: time
+       character (len=*), intent(in),  optional :: options
+       integer,           intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Checks whether an ESMF_Time is valid. Must be a valid date/time on a
+   valid calendar. The options control the type of validation.
+
+   The arguments are:
+
+   time
+          ESMF_Time instant to be validated.
+
+   [options]
+          Validation options. If none specified, validates all time
+          property values.
+          "calendar" - validate only the time's calendar.
+          "timezone" - validate only the time's timezone.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

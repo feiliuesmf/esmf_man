@@ -1,0 +1,50 @@
+  31.6.54 ESMF_GridSetCoord - Set coordinates using Arrays
+
+   INTERFACE:
+       subroutine ESMF_GridSetCoordFromArray(grid, coordDim, staggerloc, &
+         array, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       integer,                intent(in)            :: coordDim
+       type (ESMF_StaggerLoc), intent(in),  optional :: staggerloc
+       type(ESMF_Array),       intent(in)            :: array
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method sets the passed in Array as the holder of the coordinate
+   data for stagger location staggerloc and coordinate coord. This method
+   can be used in place of ESMF_GridAddCoord(). In fact, if the Grid
+   location already contains an Array for this coordinate, then this one
+   replaces it. For this method to replace ESMF_GridAddCoord() and produce
+   a valid set of coordinates, then this method must be used to set an
+   Array for each coordDim ranging from 1 to the dimCount of the passed in
+   Grid.
+
+   The arguments are:
+
+   grid
+          The grid to set the coord in.
+
+   coordDim
+          The coordinate dimension to put the data in (e.g. 1=x).
+
+   [staggerloc]
+          The stagger location into which to copy the arrays. Please see
+          Section [1426]31.2.6 for a list of predefined stagger locations.
+          If not present, defaults to ESMF_STAGGERLOC_CENTER.
+
+   array
+          An array to set the grid coordinate information from.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

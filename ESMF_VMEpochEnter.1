@@ -1,0 +1,43 @@
+  51.6.14 ESMF_VMEpochEnter - Enter an ESMF epoch
+
+   INTERFACE:
+   subroutine ESMF_VMEpochEnter(vm, epoch, keepAlloc, throttle, rc)
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_VM),            intent(in),  optional :: vm
+     type(ESMF_VMEpoch_Flag),  intent(in),  optional :: epoch
+     logical,                  intent(in),  optional :: keepAlloc
+     integer,                  intent(in),  optional :: throttle
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Enter a specific VM epoch. VM epochs change low level communication
+   behavior which can have significant performance implications. It is an
+   error to call ESMF_VMEpochEnter() again before exiting a previous epoch
+   with ESMF_VMEpochExit().
+
+   The arguments are:
+
+   [vm]
+          ESMF_VM object. Defaults to the current VM.
+
+   [epoch]
+          The epoch to be entered. See section [618]51.2.1 for a complete
+          list of options. Defaults to ESMF_VMEPOCH_NONE.
+
+   [keepAlloc]
+          For .true., keep internal allocations to be reused by
+          consecutive epoch phases. For .false., deallocate all internal
+          buffers not actively used. The flag only affects the local PET.
+          Defaults to .true..
+
+   [throttle]
+          Maximum number of outstanding communication calls beween any two
+          PETs. Lower numbers reduce memory pressure at the expense of the
+          level of asynchronizity achievable. Defaults to 10.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

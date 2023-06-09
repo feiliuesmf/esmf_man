@@ -1,0 +1,63 @@
+  21.7.17 ESMF_StateReplace - Replace a list of items within a State
+
+   INTERFACE:
+   subroutine ESMF_StateReplace(state, <itemList>, relaxedflag, rc)
+
+   ARGUMENTS:
+   type(ESMF_State), intent(inout) :: state
+   <itemList>, see below for supported values
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   logical, intent(in), optional :: relaxedflag
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Replace a list of items with a ESMF_State. If an item in <itemList>
+   does not match any items already present in state, an error is
+   returned.
+
+   Supported values for <itemList> are:
+
+          type(ESMF_Array), intent(in) :: arrayList(:)
+
+          type(ESMF_ArrayBundle), intent(in) :: arraybundleList(:)
+
+          type(ESMF_Field), intent(in) :: fieldList(:)
+
+          type(ESMF_FieldBundle), intent(in) :: fieldbundleList(:)
+
+          type(ESMF_RouteHandle), intent(in) :: routehandleList(:)
+
+          type(ESMF_State), intent(in) :: nestedStateList(:)
+
+   The arguments are:
+
+   state
+          An ESMF_State within which the <itemList> items will be
+          replaced.
+
+   <itemList>
+          The list of items to be replaced. This is a reference only; when
+          the ESMF_State is destroyed the <itemList> contained in it will
+          not be destroyed. Also, the items in the <itemList> cannot be
+          safely destroyed before the ESMF_State is destroyed. Since
+          <itemList> items can be added to multiple containers, it remains
+          the responsibility of the user to manage their destruction when
+          they are no longer in use.
+
+   [relaxedflag]
+          A setting of .true. indicates a relaxed definition of "replace",
+          where it is not an error if <itemList> contains items with names
+          that are not found in state. The State is left unchanged for
+          these items. For .false. this is treated as an error condition.
+          The default setting is .false..
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

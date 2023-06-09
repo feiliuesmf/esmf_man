@@ -1,0 +1,42 @@
+  47.3.21 ESMF_ConfigValidate - Validate a Config object
+
+   INTERFACE:
+     subroutine ESMF_ConfigValidate(config, &
+       options, rc)
+
+   ARGUMENTS:
+       type(ESMF_Config), intent(inout)          :: config
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character (len=*), intent(in),   optional :: options
+       integer,           intent(out),  optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Checks whether a config object is valid.
+
+   The arguments are:
+
+   config
+          ESMF_Config object to be validated.
+
+   [options]
+          If none specified: simply check that the buffer is not full and
+          the pointers are within range. "unusedAttributes" - Report to
+          the default logfile all attributes not retrieved via a call to
+          ESMF_ConfigGetAttribute() or ESMF_ConfigGetChar(). The attribute
+          name (label) will be logged via ESMF_LogErr with the WARNING log
+          message type. For an array-valued attribute, retrieving at least
+          one value via ESMF_ConfigGetAttribute() or ESMF_ConfigGetChar()
+          constitutes being "used."
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors. Equals
+          ESMF_RC_ATTR_UNUSED if any unused attributes are found with
+          option "unusedAttributes" above.
+

@@ -1,0 +1,43 @@
+  40.4.30 ESMF_InfoUpdate - Update the contents of an Info object
+
+   INTERFACE:
+ subroutine ESMF_InfoUpdate(lhs, rhs, recursive, overwrite, rc)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(inout) :: lhs
+   type(ESMF_Info), intent(in) :: rhs
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   logical, intent(in), optional :: recursive
+   logical, intent(in), optional :: overwrite
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Update the contents of lhs using the contents of rhs. The operation
+   inserts or overwrites any key in lhs if it exists in rhs. Otherwise,
+   the contents of lhs is left unaltered. See the JSON documentation for
+   implementation details [[511]10]. If recursive is .true. (default is
+   .false.), nested objects will be updated by their component key/values.
+   Otherwise, the first instance or top-level key is replaced without the
+   child contents being updated element-by-element.
+
+   The arguments are:
+
+   lhs
+          The ESMF_Info object to update.
+
+   rhs
+          The ESMF_Info object whose contents are used to update lhs.
+
+   [recursive]
+          Default is .false.. If .true., descend into nested objects and
+          recursively update the contents.
+
+   [overwrite]
+          Default is .false.. If .true., key-values that exist in lhs will
+          be overwritten by key-values in rhs. Flag is only applicable
+          when recursive is .true..
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

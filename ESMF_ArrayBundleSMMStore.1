@@ -1,0 +1,262 @@
+  27.5.25 ESMF_ArrayBundleSMMStore - Precompute an ArrayBundle sparse matrix
+  multiplication with local factors
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArrayBundleSMMStore()
+   subroutine ESMF_ArrayBundleSMMStore<type><kind>(srcArrayBundle, &
+     dstArrayBundle, routehandle, factorList, factorIndexList, &
+     ignoreUnmatchedIndicesFlag, srcTermProcessing, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle),           intent(in)    :: srcArrayBundle
+     type(ESMF_ArrayBundle),           intent(inout) :: dstArrayBundle
+     type(ESMF_RouteHandle),           intent(inout) :: routehandle
+     <type>(ESMF_KIND_<kind>), target, intent(in)    :: factorList(:)
+     integer,                          intent(in)    :: factorIndexList(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                intent(in),    optional :: ignoreUnmatchedIndicesFl
+ag(:)
+     integer,                intent(inout), optional :: srcTermProcessing(:)
+     integer,                intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added argument srcTermProcessing. The new argument gives
+                the user access to the tuning parameter affecting the
+                sparse matrix execution and bit-wise reproducibility.
+
+        8.1.0
+                Added argument ignoreUnmatchedIndicesFlag to support cases
+                where the sparse matrix includes terms with source or
+                destination sequence indices not present in the source or
+                destination array.
+
+   DESCRIPTION:
+
+   Store an ArrayBundle sparse matrix multiplication operation from
+   srcArrayBundle to dstArrayBundle. The sparse matrix multiplication
+   between ArrayBundles is defined as the sequence of individual Array
+   sparse matrix multiplications over all source and destination Array
+   pairs in sequence. The method requires that srcArrayBundle and
+   dstArrayBundle reference an identical number of ESMF_Array objects.
+
+   The effect of this method on ArrayBundles that contain aliased members
+   is undefined.
+
+   PETs that specify non-zero matrix coefficients must use the
+   <type><kind> overloaded interface and provide the factorList and
+   factorIndexList arguments. Providing factorList and factorIndexList
+   arguments with size(factorList) = (/0/) and size(factorIndexList) =
+   (/2,0/) or (/4,0/) indicates that a PET does not provide matrix
+   elements. Alternatively, PETs that do not provide matrix elements may
+   also call into the overloaded interface without factorList and
+   factorIndexList arguments.
+
+   See the description of method ESMF_ArraySMMStore() for the definition
+   of the Array based operation.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArrayBundleSMM() on any pair of ArrayBundles that matches
+   srcArrayBundle and dstArrayBundle in type, kind, and memory layout of
+   the distributed dimensions. However, the size, number, and index order
+   of undistributed dimensions may be different. See section [1052]37.2.5
+   for a more detailed discussion of RouteHandle reusability.
+
+   This method is overloaded for:
+   ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   This call is collective across the current VM.
+
+   srcArrayBundle
+          ESMF_ArrayBundle with source data.
+
+   dstArrayBundle
+          ESMF_ArrayBundle with destination data. The data in these Arrays
+          may be destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   factorList
+          List of non-zero coefficients.
+
+   factorIndexList
+          Pairs of sequence indices for the factors stored in factorList.
+
+          The second dimension of factorIndexList steps through the list
+          of pairs, i.e. size(factorIndexList,2) == size(factorList). The
+          first dimension of factorIndexList is either of size 2 or size
+          4.
+
+          In the size 2 format factorIndexList(1,:) specifies the sequence
+          index of the source element in the source Array while
+          factorIndexList(2,:) specifies the sequence index of the
+          destination element in the destination Array. For this format to
+          be a valid option source and destination Arrays must have
+          matching number of tensor elements (the product of the sizes of
+          all Array tensor dimensions). Under this condition an identity
+          matrix can be applied within the space of tensor elements for
+          each sparse matrix factor.
+
+          The size 4 format is more general and does not require a
+          matching tensor element count. Here the factorIndexList(1,:)
+          specifies the sequence index while factorIndexList(2,:)
+          specifies the tensor sequence index of the source element in the
+          source Array. Further factorIndexList(3,:) specifies the
+          sequence index and factorIndexList(4,:) specifies the tensor
+          sequence index of the destination element in the destination
+          Array.
+
+          See section [1053]28.2.18 for details on the definition of Array
+          sequence indices and tensor sequence indices.
+
+   [ignoreUnmatchedIndicesFlag]
+          If set to .false., the default, source and destination side must
+          cover all of the squence indices defined in the sparse matrix.
+          An error will be returned if a sequence index in the sparse
+          matrix does not match on either the source or destination side.
+          If set to .true., mismatching sequence indices are silently
+          ignored. The size of this array argument must either be 1 or
+          equal the number of Arrays in the srcArrayBundle and
+          dstArrayBundle arguments. In the latter case, the handling of
+          unmatched indices is specified for each Array pair separately.
+          If only one element is specified, it is used for all Array
+          pairs.
+
+   [srcTermProcessing]
+          Source term summing options for route handle creation. See
+          ESMF_ArraySMMStore documentation for a full parameter
+          description. Two forms may be provided. If a single element list
+          is provided, this integer value is applied across all bundle
+          members. Otherwise, the list must contain as many elements as
+          there are bundle members. For the special case of accessing the
+          auto-tuned parameter (providing a negative integer value), the
+          list length must equal the bundle member count.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  27.5.26 ESMF_ArrayBundleSMMStore - Precompute an ArrayBundle sparse matrix
+  multiplication without local factors
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArrayBundleSMMStore()
+   subroutine ESMF_ArrayBundleSMMStoreNF(srcArrayBundle, dstArrayBundle, &
+     routehandle, ignoreUnmatchedIndicesFlag, srcTermProcessing, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle),  intent(in)              :: srcArrayBundle
+     type(ESMF_ArrayBundle),  intent(inout)           :: dstArrayBundle
+     type(ESMF_RouteHandle),  intent(inout)           :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                 intent(in),    optional :: ignoreUnmatchedIndicesF
+lag(:)
+     integer,                 intent(inout), optional :: srcTermProcessing(:)
+     integer,                 intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added argument srcTermProcessing. The new argument gives
+                the user access to the tuning parameter affecting the
+                sparse matrix execution and bit-wise reproducibility.
+
+        8.1.0
+                Added argument ignoreUnmatchedIndicesFlag to support cases
+                where the sparse matrix includes terms with source or
+                destination sequence indices not present in the source or
+                destination array.
+
+   DESCRIPTION:
+
+   Store an ArrayBundle sparse matrix multiplication operation from
+   srcArrayBundle to dstArrayBundle. The sparse matrix multiplication
+   between ArrayBundles is defined as the sequence of individual Array
+   sparse matrix multiplications over all source and destination Array
+   pairs in sequence. The method requires that srcArrayBundle and
+   dstArrayBundle reference an identical number of ESMF_Array objects.
+
+   The effect of this method on ArrayBundles that contain aliased members
+   is undefined.
+
+   PETs that specify non-zero matrix coefficients must use the
+   <type><kind> overloaded interface and provide the factorList and
+   factorIndexList arguments. Providing factorList and factorIndexList
+   arguments with size(factorList) = (/0/) and size(factorIndexList) =
+   (/2,0/) or (/4,0/) indicates that a PET does not provide matrix
+   elements. Alternatively, PETs that do not provide matrix elements may
+   also call into the overloaded interface without factorList and
+   factorIndexList arguments.
+
+   See the description of method ESMF_ArraySMMStore() for the definition
+   of the Array based operation.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArrayBundleSMM() on any pair of ArrayBundles that matches
+   srcArrayBundle and dstArrayBundle in type, kind, and memory layout of
+   the distributed dimensions. However, the size, number, and index order
+   of undistributed dimensions may be different. See section [1054]37.2.5
+   for a more detailed discussion of RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   srcArrayBundle
+          ESMF_ArrayBundle with source data.
+
+   dstArrayBundle
+          ESMF_ArrayBundle with destination data. The data in these Arrays
+          may be destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [ignoreUnmatchedIndicesFlag]
+          If set to .false., the default, source and destination side must
+          cover all of the squence indices defined in the sparse matrix.
+          An error will be returned if a sequence index in the sparse
+          matrix does not match on either the source or destination side.
+          If set to .true., mismatching sequence indices are silently
+          ignored. The size of this array argument must either be 1 or
+          equal the number of Arrays in the srcArrayBundle and
+          dstArrayBundle arguments. In the latter case, the handling of
+          unmatched indices is specified for each Array pair separately.
+          If only one element is specified, it is used for all Array
+          pairs.
+
+   [srcTermProcessing]
+          Source term summing options for route handle creation. See
+          ESMF_ArraySMMStore documentation for a full parameter
+          description. Two forms may be provided. If a single element list
+          is provided, this integer value is applied across all bundle
+          members. Otherwise, the list must contain as many elements as
+          there are bundle members. For the special case of accessing the
+          auto-tuned parameter (providing a negative integer value), the
+          list length must equal the bundle member count.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,931 @@
+  28.5.39 ESMF_ArraySMMStore - Precompute Array sparse matrix multiplication
+  with local factors
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArraySMMStore()
+   subroutine ESMF_ArraySMMStore<type><kind>(srcArray, dstArray, &
+     routehandle, factorList, factorIndexList, &
+     ignoreUnmatchedIndices, srcTermProcessing, pipelineDepth, rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),          intent(in)              :: srcArray
+     type(ESMF_Array),          intent(inout)           :: dstArray
+     type(ESMF_RouteHandle),    intent(inout)           :: routehandle
+     <type>(ESMF_KIND_<kind>), target, intent(in)       :: factorList(:)
+     integer(ESMF_KIND_<kind>), intent(in)              :: factorIndexList(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                   intent(in),    optional :: ignoreUnmatchedIndice
+s
+     integer,                   intent(inout), optional :: srcTermProcessing
+     integer,                   intent(inout), optional :: pipelineDepth
+     integer,                   intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument srcTermProcessing. Added argument
+                pipelineDepth. The new arguments provide access to the
+                tuning parameters affecting the sparse matrix execution.
+
+        7.0.0
+                Added argument transposeRoutehandle to allow a handle to
+                the transposed matrix operation to be returned.
+                Added argument ignoreUnmatchedIndices to support sparse
+                matrices that contain elements with indices that do not
+                have a match within the source or destination Array.
+
+        7.1.0r
+                Removed argument transposeRoutehandle and provide it via
+                interface overloading instead. This allows argument
+                srcArray to stay strictly intent(in) for this entry point.
+
+   DESCRIPTION:
+
+   ESMF_ArraySMMStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_ArraySMMStore() through a
+   different entry point. Restrictions apply as to which combinations are
+   sensible. All other combinations result in ESMF run time errors. The
+   complete semantics of the ESMF_ArraySMMStore() method, as provided
+   through the separate entry points shown in [1140]28.5.39 and
+   [1141]28.5.41, is described in the following paragraphs as a whole.
+
+   Store an Array sparse matrix multiplication operation from srcArray to
+   dstArray. PETs that specify non-zero matrix coefficients must use the
+   <type><kind> overloaded interface and provide the factorList and
+   factorIndexList arguments. Providing factorList and factorIndexList
+   arguments with size(factorList) = (/0/) and size(factorIndexList) =
+   (/2,0/) or (/4,0/) indicates that a PET does not provide matrix
+   elements. Alternatively, PETs that do not provide matrix elements may
+   also call into the overloaded interface without factorList and
+   factorIndexList arguments.
+
+   Both srcArray and dstArray are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [1142]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source and destination Arrays, as well as the supplied factorList
+   argument, may be of different <type><kind>. Further source and
+   destination Arrays may differ in shape and number of elements.
+
+   It is erroneous to specify the identical Array object for srcArray and
+   dstArray arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArraySMM() on any pair of Arrays that matches srcArray and
+   dstArray in type, kind, and memory layout of the distributed
+   dimensions. However, the size, number, and index order of undistributed
+   dimensions may be different. See section [1143]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   This method is overloaded for:
+   ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   This call is collective across the current VM.
+
+   srcArray
+          ESMF_Array with source data.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   factorList
+          List of non-zero coefficients.
+
+   factorIndexList
+          Pairs of sequence indices for the factors stored in factorList.
+
+          The second dimension of factorIndexList steps through the list
+          of pairs, i.e. size(factorIndexList,2) == size(factorList). The
+          first dimension of factorIndexList is either of size 2 or size
+          4.
+
+          In the size 2 format factorIndexList(1,:) specifies the sequence
+          index of the source element in the srcArray while
+          factorIndexList(2,:) specifies the sequence index of the
+          destination element in dstArray. For this format to be a valid
+          option source and destination Arrays must have matching number
+          of tensor elements (the product of the sizes of all Array tensor
+          dimensions). Under this condition an identity matrix can be
+          applied within the space of tensor elements for each sparse
+          matrix factor.
+
+          The size 4 format is more general and does not require a
+          matching tensor element count. Here the factorIndexList(1,:)
+          specifies the sequence index while factorIndexList(2,:)
+          specifies the tensor sequence index of the source element in the
+          srcArray. Further factorIndexList(3,:) specifies the sequence
+          index and factorIndexList(4,:) specifies the tensor sequence
+          index of the destination element in the dstArray.
+
+          See section [1144]28.2.18 for details on the definition of Array
+          sequence indices and tensor sequence indices.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when sequence
+          indices in the sparse matrix are encountered that do not have a
+          match on the srcArray or dstArray side. The default setting is
+          .false., indicating that it is an error when such a situation is
+          encountered. Setting ignoreUnmatchedIndices to .true. ignores
+          entries with unmatched indices.
+
+   [srcTermProcessing]
+          The srcTermProcessing parameter controls how many source terms,
+          located on the same PET and summing into the same destination
+          element, are summed into partial sums on the source PET before
+          being transferred to the destination PET. A value of 0 indicates
+          that the entire arithmetic is done on the destination PET;
+          source elements are neither multiplied by their factors nor
+          added into partial sums before being sent off by the source PET.
+          A value of 1 indicates that source elements are multiplied by
+          their factors on the source side before being sent to the
+          destination PET. Larger values of srcTermProcessing indicate the
+          maximum number of terms in the partial sums on the source side.
+
+          Note that partial sums may lead to bit-for-bit differences in
+          the results. See section [1145]37.2.1 for an in-depth discussion
+          of all bit-for-bit reproducibility aspects related to
+          route-based communication methods.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the srcTermProcessing parameter. The intent on the
+          srcTermProcessing argument is "inout" in order to support both
+          overriding and accessing the auto-tuning parameter. If an
+          argument $>= 0$ is specified, it is used for the
+          srcTermProcessing parameter, and the auto-tuning phase is
+          skipped. In this case the srcTermProcessing argument is not
+          modified on return. If the provided argument is $< 0$ , the
+          srcTermProcessing parameter is determined internally using the
+          auto-tuning scheme. In this case the srcTermProcessing argument
+          is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional srcTermProcessing
+          argument is omitted.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a sparse matrix exchange. Larger values
+          of pipelineDepth typically lead to better performance. However,
+          on some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  28.5.40 ESMF_ArraySMMStore - Precompute Array sparse matrix multiplication and
+  transpose with local factors
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArraySMMStore()
+   subroutine ESMF_ArraySMMStore<type><kind>TP(srcArray, dstArray, &
+     routehandle, transposeRoutehandle, factorList, factorIndexList, &
+     ignoreUnmatchedIndices, srcTermProcessing, pipelineDepth, &
+     rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),          intent(inout)           :: srcArray
+     type(ESMF_Array),          intent(inout)           :: dstArray
+     type(ESMF_RouteHandle),    intent(inout)           :: routehandle
+     type(ESMF_RouteHandle),    intent(inout)           :: transposeRoutehandle
+     <type>(ESMF_KIND_<kind>), target, intent(in)       :: factorList(:)
+     integer(ESMF_KIND_<kind>), intent(in)              :: factorIndexList(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                   intent(in),    optional :: ignoreUnmatchedIndice
+s
+     integer,                   intent(inout), optional :: srcTermProcessing
+     integer,                   intent(inout), optional :: pipelineDepth
+     integer,                   intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   ESMF_ArraySMMStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_ArraySMMStore() through a
+   different entry point. Restrictions apply as to which combinations are
+   sensible. All other combinations result in ESMF run time errors. The
+   complete semantics of the ESMF_ArraySMMStore() method, as provided
+   through the separate entry points shown in [1146]28.5.40 and
+   [1147]28.5.42, is described in the following paragraphs as a whole.
+
+   Store an Array sparse matrix multiplication operation from srcArray to
+   dstArray. PETs that specify non-zero matrix coefficients must use the
+   <type><kind> overloaded interface and provide the factorList and
+   factorIndexList arguments. Providing factorList and factorIndexList
+   arguments with size(factorList) = (/0/) and size(factorIndexList) =
+   (/2,0/) or (/4,0/) indicates that a PET does not provide matrix
+   elements. Alternatively, PETs that do not provide matrix elements may
+   also call into the overloaded interface without factorList and
+   factorIndexList arguments.
+
+   Both srcArray and dstArray are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [1148]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source and destination Arrays, as well as the supplied factorList
+   argument, may be of different <type><kind>. Further source and
+   destination Arrays may differ in shape and number of elements.
+
+   It is erroneous to specify the identical Array object for srcArray and
+   dstArray arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArraySMM() on any pair of Arrays that matches srcArray and
+   dstArray in type, kind, and memory layout of the distributed
+   dimensions. However, the size, number, and index order of undistributed
+   dimensions may be different. See section [1149]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   This method is overloaded for:
+   ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   This call is collective across the current VM.
+
+   srcArray
+          ESMF_Array with source data. The data in this Array may be
+          destroyed by this call.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [transposeRoutehandle]
+          Handle to the transposed matrix operation. The transposed
+          operation goes from dstArray to srcArray.
+
+   factorList
+          List of non-zero coefficients.
+
+   factorIndexList
+          Pairs of sequence indices for the factors stored in factorList.
+
+          The second dimension of factorIndexList steps through the list
+          of pairs, i.e. size(factorIndexList,2) == size(factorList). The
+          first dimension of factorIndexList is either of size 2 or size
+          4.
+
+          In the size 2 format factorIndexList(1,:) specifies the sequence
+          index of the source element in the srcArray while
+          factorIndexList(2,:) specifies the sequence index of the
+          destination element in dstArray. For this format to be a valid
+          option source and destination Arrays must have matching number
+          of tensor elements (the product of the sizes of all Array tensor
+          dimensions). Under this condition an identity matrix can be
+          applied within the space of tensor elements for each sparse
+          matrix factor.
+
+          The size 4 format is more general and does not require a
+          matching tensor element count. Here the factorIndexList(1,:)
+          specifies the sequence index while factorIndexList(2,:)
+          specifies the tensor sequence index of the source element in the
+          srcArray. Further factorIndexList(3,:) specifies the sequence
+          index and factorIndexList(4,:) specifies the tensor sequence
+          index of the destination element in the dstArray.
+
+          See section [1150]28.2.18 for details on the definition of Array
+          sequence indices and tensor sequence indices.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when sequence
+          indices in the sparse matrix are encountered that do not have a
+          match on the srcArray or dstArray side. The default setting is
+          .false., indicating that it is an error when such a situation is
+          encountered. Setting ignoreUnmatchedIndices to .true. ignores
+          entries with unmatched indices.
+
+   [srcTermProcessing]
+          The srcTermProcessing parameter controls how many source terms,
+          located on the same PET and summing into the same destination
+          element, are summed into partial sums on the source PET before
+          being transferred to the destination PET. A value of 0 indicates
+          that the entire arithmetic is done on the destination PET;
+          source elements are neither multiplied by their factors nor
+          added into partial sums before being sent off by the source PET.
+          A value of 1 indicates that source elements are multiplied by
+          their factors on the source side before being sent to the
+          destination PET. Larger values of srcTermProcessing indicate the
+          maximum number of terms in the partial sums on the source side.
+
+          Note that partial sums may lead to bit-for-bit differences in
+          the results. See section [1151]37.2.1 for an in-depth discussion
+          of all bit-for-bit reproducibility aspects related to
+          route-based communication methods.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the srcTermProcessing parameter. The intent on the
+          srcTermProcessing argument is "inout" in order to support both
+          overriding and accessing the auto-tuning parameter. If an
+          argument $>= 0$ is specified, it is used for the
+          srcTermProcessing parameter, and the auto-tuning phase is
+          skipped. In this case the srcTermProcessing argument is not
+          modified on return. If the provided argument is $< 0$ , the
+          srcTermProcessing parameter is determined internally using the
+          auto-tuning scheme. In this case the srcTermProcessing argument
+          is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional srcTermProcessing
+          argument is omitted.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a sparse matrix exchange. Larger values
+          of pipelineDepth typically lead to better performance. However,
+          on some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  28.5.41 ESMF_ArraySMMStore - Precompute Array sparse matrix multiplication
+  without local factors
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArraySMMStore()
+   subroutine ESMF_ArraySMMStoreNF(srcArray, dstArray, routehandle, &
+     ignoreUnmatchedIndices, srcTermProcessing, pipelineDepth, &
+     rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),       intent(in)              :: srcArray
+     type(ESMF_Array),       intent(inout)           :: dstArray
+     type(ESMF_RouteHandle), intent(inout)           :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                intent(in),    optional :: ignoreUnmatchedIndices
+     integer,                intent(inout), optional :: srcTermProcessing
+     integer,                intent(inout), optional :: pipelineDepth
+     integer,                intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument srcTermProcessing. Added argument
+                pipelineDepth. The new arguments provide access to the
+                tuning parameters affecting the sparse matrix execution.
+
+        7.0.0
+                Added argument transposeRoutehandle to allow a handle to
+                the transposed matrix operation to be returned.
+                Added argument ignoreUnmatchedIndices to support sparse
+                matrices that contain elements with indices that do not
+                have a match within the source or destination Array.
+
+        7.1.0r
+                Removed argument transposeRoutehandle and provide it via
+                interface overloading instead. This allows argument
+                srcArray to stay strictly intent(in) for this entry point.
+
+   DESCRIPTION:
+
+   ESMF_ArraySMMStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_ArraySMMStore() through a
+   different entry point. Restrictions apply as to which combinations are
+   sensible. All other combinations result in ESMF run time errors. The
+   complete semantics of the ESMF_ArraySMMStore() method, as provided
+   through the separate entry points shown in [1152]28.5.39 and
+   [1153]28.5.41, is described in the following paragraphs as a whole.
+
+   Store an Array sparse matrix multiplication operation from srcArray to
+   dstArray. PETs that specify non-zero matrix coefficients must use the
+   <type><kind> overloaded interface and provide the factorList and
+   factorIndexList arguments. Providing factorList and factorIndexList
+   arguments with size(factorList) = (/0/) and size(factorIndexList) =
+   (/2,0/) or (/4,0/) indicates that a PET does not provide matrix
+   elements. Alternatively, PETs that do not provide matrix elements may
+   also call into the overloaded interface without factorList and
+   factorIndexList arguments.
+
+   Both srcArray and dstArray are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [1154]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source and destination Arrays, as well as the supplied factorList
+   argument, may be of different <type><kind>. Further source and
+   destination Arrays may differ in shape and number of elements.
+
+   It is erroneous to specify the identical Array object for srcArray and
+   dstArray arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArraySMM() on any pair of Arrays that matches srcArray and
+   dstArray in type, kind, and memory layout of the distributed
+   dimensions. However, the size, number, and index order of undistributed
+   dimensions may be different. See section [1155]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   srcArray
+          ESMF_Array with source data.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when sequence
+          indices in the sparse matrix are encountered that do not have a
+          match on the srcArray or dstArray side. The default setting is
+          .false., indicating that it is an error when such a situation is
+          encountered. Setting ignoreUnmatchedIndices to .true. ignores
+          entries with unmatched indices.
+
+   [srcTermProcessing]
+          The srcTermProcessing parameter controls how many source terms,
+          located on the same PET and summing into the same destination
+          element, are summed into partial sums on the source PET before
+          being transferred to the destination PET. A value of 0 indicates
+          that the entire arithmetic is done on the destination PET;
+          source elements are neither multiplied by their factors nor
+          added into partial sums before being sent off by the source PET.
+          A value of 1 indicates that source elements are multiplied by
+          their factors on the source side before being sent to the
+          destination PET. Larger values of srcTermProcessing indicate the
+          maximum number of terms in the partial sums on the source side.
+
+          Note that partial sums may lead to bit-for-bit differences in
+          the results. See section [1156]37.2.1 for an in-depth discussion
+          of all bit-for-bit reproducibility aspects related to
+          route-based communication methods.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the srcTermProcessing parameter. The intent on the
+          srcTermProcessing argument is "inout" in order to support both
+          overriding and accessing the auto-tuning parameter. If an
+          argument $>= 0$ is specified, it is used for the
+          srcTermProcessing parameter, and the auto-tuning phase is
+          skipped. In this case the srcTermProcessing argument is not
+          modified on return. If the provided argument is $< 0$ , the
+          srcTermProcessing parameter is determined internally using the
+          auto-tuning scheme. In this case the srcTermProcessing argument
+          is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional srcTermProcessing
+          argument is omitted.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a sparse matrix exchange. Larger values
+          of pipelineDepth typically lead to better performance. However,
+          on some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  28.5.42 ESMF_ArraySMMStore - Precompute Array sparse matrix multiplication and
+  transpose without local factors
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArraySMMStore()
+   subroutine ESMF_ArraySMMStoreNFTP(srcArray, dstArray, routehandle, &
+     transposeRoutehandle, ignoreUnmatchedIndices, &
+     srcTermProcessing, pipelineDepth, rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),       intent(inout)           :: srcArray
+     type(ESMF_Array),       intent(inout)           :: dstArray
+     type(ESMF_RouteHandle), intent(inout)           :: routehandle
+     type(ESMF_RouteHandle), intent(inout)           :: transposeRoutehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                intent(in),    optional :: ignoreUnmatchedIndices
+     integer,                intent(inout), optional :: srcTermProcessing
+     integer,                intent(inout), optional :: pipelineDepth
+     integer,                intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   ESMF_ArraySMMStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_ArraySMMStore() through a
+   different entry point. Restrictions apply as to which combinations are
+   sensible. All other combinations result in ESMF run time errors. The
+   complete semantics of the ESMF_ArraySMMStore() method, as provided
+   through the separate entry points shown in [1157]28.5.40 and
+   [1158]28.5.42, is described in the following paragraphs as a whole.
+
+   Store an Array sparse matrix multiplication operation from srcArray to
+   dstArray. PETs that specify non-zero matrix coefficients must use the
+   <type><kind> overloaded interface and provide the factorList and
+   factorIndexList arguments. Providing factorList and factorIndexList
+   arguments with size(factorList) = (/0/) and size(factorIndexList) =
+   (/2,0/) or (/4,0/) indicates that a PET does not provide matrix
+   elements. Alternatively, PETs that do not provide matrix elements may
+   also call into the overloaded interface without factorList and
+   factorIndexList arguments.
+
+   Both srcArray and dstArray are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [1159]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source and destination Arrays, as well as the supplied factorList
+   argument, may be of different <type><kind>. Further source and
+   destination Arrays may differ in shape and number of elements.
+
+   It is erroneous to specify the identical Array object for srcArray and
+   dstArray arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArraySMM() on any pair of Arrays that matches srcArray and
+   dstArray in type, kind, and memory layout of the distributed
+   dimensions. However, the size, number, and index order of undistributed
+   dimensions may be different. See section [1160]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   srcArray
+          ESMF_Array with source data. The data in this Array may be
+          destroyed by this call.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [transposeRoutehandle]
+          Handle to the transposed matrix operation. The transposed
+          operation goes from dstArray to srcArray.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when sequence
+          indices in the sparse matrix are encountered that do not have a
+          match on the srcArray or dstArray side. The default setting is
+          .false., indicating that it is an error when such a situation is
+          encountered. Setting ignoreUnmatchedIndices to .true. ignores
+          entries with unmatched indices.
+
+   [srcTermProcessing]
+          The srcTermProcessing parameter controls how many source terms,
+          located on the same PET and summing into the same destination
+          element, are summed into partial sums on the source PET before
+          being transferred to the destination PET. A value of 0 indicates
+          that the entire arithmetic is done on the destination PET;
+          source elements are neither multiplied by their factors nor
+          added into partial sums before being sent off by the source PET.
+          A value of 1 indicates that source elements are multiplied by
+          their factors on the source side before being sent to the
+          destination PET. Larger values of srcTermProcessing indicate the
+          maximum number of terms in the partial sums on the source side.
+
+          Note that partial sums may lead to bit-for-bit differences in
+          the results. See section [1161]37.2.1 for an in-depth discussion
+          of all bit-for-bit reproducibility aspects related to
+          route-based communication methods.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the srcTermProcessing parameter. The intent on the
+          srcTermProcessing argument is "inout" in order to support both
+          overriding and accessing the auto-tuning parameter. If an
+          argument $>= 0$ is specified, it is used for the
+          srcTermProcessing parameter, and the auto-tuning phase is
+          skipped. In this case the srcTermProcessing argument is not
+          modified on return. If the provided argument is $< 0$ , the
+          srcTermProcessing parameter is determined internally using the
+          auto-tuning scheme. In this case the srcTermProcessing argument
+          is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional srcTermProcessing
+          argument is omitted.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a sparse matrix exchange. Larger values
+          of pipelineDepth typically lead to better performance. However,
+          on some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  28.5.43 ESMF_ArraySMMStore - Precompute sparse matrix multiplication using
+  factors read from file.
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArraySMMStore()
+   subroutine ESMF_ArraySMMStoreFromFile(srcArray, dstArray, filename, &
+     routehandle, ignoreUnmatchedIndices, &
+     srcTermProcessing, pipelineDepth, rc)
+
+   ! ARGUMENTS:
+     type(ESMF_Array),       intent(in)              :: srcArray
+     type(ESMF_Array),       intent(inout)           :: dstArray
+     character(len=*),       intent(in)              :: filename
+     type(ESMF_RouteHandle), intent(inout)           :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                intent(in),    optional :: ignoreUnmatchedIndices
+     integer,                intent(inout), optional :: srcTermProcessing
+     integer,                intent(inout), optional :: pipeLineDepth
+     integer,                intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   Compute an ESMF_RouteHandle using factors read from file.
+
+   The arguments are:
+
+   srcArray
+          ESMF_Array with source data.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   filename
+          Path to the file containing weights for creating an
+          ESMF_RouteHandle. See ([1162]12.9) for a description of the
+          SCRIP weight file format. Only "row", "col", and "S" variables
+          are required. They must be one-dimensionsal with dimension
+          "n_s".
+
+   routehandle
+          Handle to the ESMF_RouteHandle.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when sequence
+          indices in the sparse matrix are encountered that do not have a
+          match on the srcArray or dstArray side. The default setting is
+          .false., indicating that it is an error when such a situation is
+          encountered. Setting ignoreUnmatchedIndices to .true. ignores
+          entries with unmatched indices.
+
+   [srcTermProcessing]
+          The srcTermProcessing parameter controls how many source terms,
+          located on the same PET and summing into the same destination
+          element, are summed into partial sums on the source PET before
+          being transferred to the destination PET. A value of 0 indicates
+          that the entire arithmetic is done on the destination PET;
+          source elements are neither multiplied by their factors nor
+          added into partial sums before being sent off by the source PET.
+          A value of 1 indicates that source elements are multiplied by
+          their factors on the source side before being sent to the
+          destination PET. Larger values of srcTermProcessing indicate the
+          maximum number of terms in the partial sums on the source side.
+
+          Note that partial sums may lead to bit-for-bit differences in
+          the results. See section [1163]37.2.1 for an in-depth discussion
+          of all bit-for-bit reproducibility aspects related to
+          route-based communication methods.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the srcTermProcessing parameter. The intent on the
+          srcTermProcessing argument is "inout" in order to support both
+          overriding and accessing the auto-tuning parameter. If an
+          argument $>= 0$ is specified, it is used for the
+          srcTermProcessing parameter, and the auto-tuning phase is
+          skipped. In this case the srcTermProcessing argument is not
+          modified on return. If the provided argument is $< 0$ , the
+          srcTermProcessing parameter is determined internally using the
+          auto-tuning scheme. In this case the srcTermProcessing argument
+          is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional srcTermProcessing
+          argument is omitted.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a sparse matrix exchange. Larger values
+          of pipelineDepth typically lead to better performance. However,
+          on some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange. The
+          ESMF_ArraySMMStore() method implements an auto-tuning scheme for
+          the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  28.5.44 ESMF_ArraySMMStore - Precompute sparse matrix multiplication and
+  transpose using factors read from file.
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArraySMMStore()
+   subroutine ESMF_ArraySMMStoreFromFileTP(srcArray, dstArray, filename, &
+     routehandle, transposeRoutehandle, ignoreUnmatchedIndices,&
+     srcTermProcessing, pipelineDepth, rc)
+
+   ! ARGUMENTS:
+     type(ESMF_Array),       intent(inout)           :: srcArray
+     type(ESMF_Array),       intent(inout)           :: dstArray
+     character(len=*),       intent(in)              :: filename
+     type(ESMF_RouteHandle), intent(inout)           :: routehandle
+     type(ESMF_RouteHandle), intent(inout)           :: transposeRoutehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                intent(in),    optional :: ignoreUnmatchedIndices
+     integer,                intent(inout), optional :: srcTermProcessing
+     integer,                intent(inout), optional :: pipeLineDepth
+     integer,                intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   Compute an ESMF_RouteHandle using factors read from file.
+
+   The arguments are:
+
+   srcArray
+          ESMF_Array with source data. The data in this Array may be
+          destroyed by this call.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   filename
+          Path to the file containing weights for creating an
+          ESMF_RouteHandle. See ([1164]12.9) for a description of the
+          SCRIP weight file format. Only "row", "col", and "S" variables
+          are required. They must be one-dimensionsal with dimension
+          "n_s".
+
+   routehandle
+          Handle to the ESMF_RouteHandle.
+
+   [transposeRoutehandle]
+          Handle to the transposed matrix operation. The transposed
+          operation goes from dstArray to srcArray.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when sequence
+          indices in the sparse matrix are encountered that do not have a
+          match on the srcArray or dstArray side. The default setting is
+          .false., indicating that it is an error when such a situation is
+          encountered. Setting ignoreUnmatchedIndices to .true. ignores
+          entries with unmatched indices.
+
+   [srcTermProcessing]
+          The srcTermProcessing parameter controls how many source terms,
+          located on the same PET and summing into the same destination
+          element, are summed into partial sums on the source PET before
+          being transferred to the destination PET. A value of 0 indicates
+          that the entire arithmetic is done on the destination PET;
+          source elements are neither multiplied by their factors nor
+          added into partial sums before being sent off by the source PET.
+          A value of 1 indicates that source elements are multiplied by
+          their factors on the source side before being sent to the
+          destination PET. Larger values of srcTermProcessing indicate the
+          maximum number of terms in the partial sums on the source side.
+
+          Note that partial sums may lead to bit-for-bit differences in
+          the results. See section [1165]37.2.1 for an in-depth discussion
+          of all bit-for-bit reproducibility aspects related to
+          route-based communication methods.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the srcTermProcessing parameter. The intent on the
+          srcTermProcessing argument is "inout" in order to support both
+          overriding and accessing the auto-tuning parameter. If an
+          argument $>= 0$ is specified, it is used for the
+          srcTermProcessing parameter, and the auto-tuning phase is
+          skipped. In this case the srcTermProcessing argument is not
+          modified on return. If the provided argument is $< 0$ , the
+          srcTermProcessing parameter is determined internally using the
+          auto-tuning scheme. In this case the srcTermProcessing argument
+          is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional srcTermProcessing
+          argument is omitted.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a sparse matrix exchange. Larger values
+          of pipelineDepth typically lead to better performance. However,
+          on some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange. The
+          ESMF_ArraySMMStore() method implements an auto-tuning scheme for
+          the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

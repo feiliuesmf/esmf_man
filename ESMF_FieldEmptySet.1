@@ -1,0 +1,246 @@
+  26.6.45 ESMF_FieldEmptySet - Set a Geom in an empty Field
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptySet()
+   subroutine ESMF_FieldEmptySetGeom(field, geom, vm, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_Geom), intent(in) :: geom
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_VM), intent(in), optional :: vm
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set a geom in a non-completed ESMF_Field. The ESMF_Field must not be
+   completed for this to succeed. After this operation, the ESMF_Field
+   contains the ESMF_Geom internally but holds no data. The status of the
+   field changes from ESMF_FIELDSTATUS_EMPTY to ESMF_FIELDSTATUS_GRIDSET
+   or stays ESMF_FIELDSTATUS_GRIDSET.
+
+   For an example and associated documentation using this method see
+   section [919]26.3.7.
+
+   The arguments are:
+
+   field
+          Empty ESMF_Field. After this operation, the ESMF_Field contains
+          the ESMF_Grid internally but holds no data. The status of the
+          field changes from ESMF_FIELDSTATUS_EMPTY to
+          ESMF_FIELDSTATUS_GRIDSET.
+
+   geom
+          ESMF_Geom to be set in the ESMF_Field.
+
+   [vm]
+          If present, the Field object will only be accessed, and the Grid
+          object set, on those PETs contained in the specified ESMF_VM
+          object. The default is to assume the VM of the current context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.46 ESMF_FieldEmptySet - Set a Grid in an empty Field
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptySet()
+   subroutine ESMF_FieldEmptySetGrid(field, grid, StaggerLoc, &
+     vm, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_Grid), intent(in) :: grid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_STAGGERLOC), intent(in), optional :: StaggerLoc
+   type(ESMF_VM), intent(in), optional :: vm
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added argument vm to support object creation on a
+                different VM than that of the current context.
+
+   DESCRIPTION:
+
+   Set a grid and an optional staggerloc (default to center stagger
+   ESMF_STAGGERLOC_CENTER) in a non-completed ESMF_Field. The ESMF_Field
+   must not be completed for this to succeed. After this operation, the
+   ESMF_Field contains the ESMF_Grid internally but holds no data. The
+   status of the field changes from ESMF_FIELDSTATUS_EMPTY to
+   ESMF_FIELDSTATUS_GRIDSET or stays ESMF_FIELDSTATUS_GRIDSET.
+
+   For an example and associated documentation using this method see
+   section [920]26.3.7.
+
+   The arguments are:
+
+   field
+          Empty ESMF_Field. After this operation, the ESMF_Field contains
+          the ESMF_Grid internally but holds no data. The status of the
+          field changes from ESMF_FIELDSTATUS_EMPTY to
+          ESMF_FIELDSTATUS_GRIDSET.
+
+   grid
+          ESMF_Grid to be set in the ESMF_Field.
+
+   [StaggerLoc]
+          Stagger location of data in grid cells. For valid predefined
+          values see section [921]31.2.6. To create a custom stagger
+          location see section [922]31.3.25. The default value is
+          ESMF_STAGGERLOC_CENTER.
+
+   [vm]
+          If present, the Field object will only be accessed, and the Grid
+          object set, on those PETs contained in the specified ESMF_VM
+          object. The default is to assume the VM of the current context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.47 ESMF_FieldEmptySet - Set a Mesh in an empty Field
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptySet()
+   subroutine ESMF_FieldEmptySetMesh(field, mesh, indexflag, meshloc, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_Mesh), intent(in) :: mesh
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_Index_Flag),intent(in), optional :: indexflag
+   type(ESMF_MeshLoc), intent(in), optional :: meshloc
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set a mesh and an optional meshloc (default to center stagger
+   ESMF_MESHLOC_NODE) in a non-completed ESMF_Field. The ESMF_Field must
+   not be completed for this to succeed. After this operation, the
+   ESMF_Field contains the ESMF_Mesh internally but holds no data. The
+   status of the field changes from ESMF_FIELDSTATUS_EMPTY to
+   ESMF_FIELDSTATUS_GRIDSET or stays ESMF_FIELDSTATUS_GRIDSET.
+
+   The arguments are:
+
+   field
+          Empty ESMF_Field. After this operation, the ESMF_Field contains
+          the ESMF_Mesh internally but holds no data. The status of the
+          field changes from ESMF_FIELDSTATUS_EMPTY to
+          ESMF_FIELDSTATUS_GRIDSET.
+
+   mesh
+          ESMF_Mesh to be set in the ESMF_Field.
+
+   [indexflag]
+          Indicate how DE-local indices are defined. See section
+          [923]54.27 for a list of valid indexflag options.
+
+   [meshloc]
+          Which part of the mesh to build the Field on. Can be set to
+          either ESMF_MESHLOC_NODE or ESMF_MESHLOC_ELEMENT. If not set,
+          defaults to ESMF_MESHLOC_NODE.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.48 ESMF_FieldEmptySet - Set a LocStream in an empty Field
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptySet()
+   subroutine ESMF_FieldEmptySetLocStream(field, locstream, &
+     vm, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_LocStream), intent(in) :: locstream
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_VM), intent(in), optional :: vm
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set a ESMF_LocStream in a non-completed ESMF_Field. The ESMF_Field must
+   not be completed for this to succeed. After this operation, the
+   ESMF_Field contains the ESMF_LocStream internally but holds no data.
+   The status of the field changes from ESMF_FIELDSTATUS_EMPTY to
+   ESMF_FIELDSTATUS_GRIDSET or stays ESMF_FIELDSTATUS_GRIDSET.
+
+   The arguments are:
+
+   field
+          Empty ESMF_Field. After this operation, the ESMF_Field contains
+          the ESMF_LocStream internally but holds no data. The status of
+          the field changes from ESMF_FIELDSTATUS_EMPTY to
+          ESMF_FIELDSTATUS_GRIDSET.
+
+   locstream
+          ESMF_LocStream to be set in the ESMF_Field.
+
+   [vm]
+          If present, the Field object will only be accessed, and the Grid
+          object set, on those PETs contained in the specified ESMF_VM
+          object. The default is to assume the VM of the current context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.49 ESMF_FieldEmptySet - Set an XGrid in an empty Field
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldEmptySet()
+   subroutine ESMF_FieldEmptySetXGrid(field, xgrid, xgridside, gridindex, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(inout) :: field
+   type(ESMF_XGrid), intent(in) :: xgrid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_XGridSide_Flag), intent(in), optional :: xgridside
+   integer, intent(in), optional :: gridindex
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set a xgrid and optional xgridside (default to balanced side
+   ESMF_XGRIDSIDE_Balanced) and gridindex (default to 1) in a non-complete
+   ESMF_Field. The ESMF_Field must not be completed for this to succeed.
+   After this operation, the ESMF_Field contains the ESMF_XGrid internally
+   but holds no data. The status of the field changes from
+   ESMF_FIELDSTATUS_EMPTY to ESMF_FIELDSTATUS_GRIDSET or stays
+   ESMF_FIELDSTATUS_GRIDSET.
+
+   The arguments are:
+
+   field
+          Empty ESMF_Field. After this operation, the ESMF_Field contains
+          the ESMF_XGrid internally but holds no data. The status of the
+          field changes from ESMF_FIELDSTATUS_EMPTY to
+          ESMF_FIELDSTATUS_GRIDSET.
+
+   xgrid
+          ESMF_XGrid to be set in the ESMF_Field.
+
+   [xgridside]
+          Side of XGrid to retrieve a DistGrid. For valid predefined
+          values see section [924]34.2.1. The default value is
+          ESMF_XGRIDSIDE_BALANCED.
+
+   [gridindex]
+          Index to specify which DistGrid when on side A or side B. The
+          default value is 1.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

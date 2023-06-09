@@ -1,0 +1,471 @@
+          + [14]40 Info Class (Object Attributes)
+               o [15]40.1 Migrating from Attribute
+                    # [16]40.1.1 Setting an Attribute
+                    # [17]40.1.2 Getting an Attribute
+               o [18]40.2 Key Format Overview
+               o [19]40.3 Usage and Examples
+                    # [20]40.3.1 Retrieve an Info Handle
+                    # [21]40.3.2 General Usage Examples
+               o [22]40.4 Class API
+                    # [23]40.4.1 ESMF_InfoAssignment(=)
+                    # [24]40.4.2 ESMF_InfoOperator(==)
+                    # [25]40.4.3 ESMF_InfoOperator(/=)
+                    # [26]40.4.4 ESMF_InfoBroadcast
+                    # [27]40.4.5 ESMF_InfoCreate
+                    # [28]40.4.6 ESMF_InfoCreate
+                    # [29]40.4.7 ESMF_InfoCreate
+                    # [30]40.4.8 ESMF_InfoCreate
+                    # [31]40.4.9 ESMF_InfoDestroy
+                    # [32]40.4.10 ESMF_InfoDump
+                    # [33]40.4.11 ESMF_InfoGet
+                    # [34]40.4.12 ESMF_InfoGetCharAlloc
+                    # [35]40.4.13 ESMF_InfoGet
+                    # [36]40.4.14 ESMF_InfoGetAlloc
+                    # [37]40.4.15 ESMF_InfoGet
+                    # [38]40.4.16 ESMF_InfoGetFromHost
+                    # [39]40.4.17 ESMF_InfoGetTK
+                    # [40]40.4.18 ESMF_InfoGetArrayMeta
+                    # [41]40.4.19 ESMF_InfoIsPresent
+                    # [42]40.4.20 ESMF_InfoIsSet
+                    # [43]40.4.21 ESMF_InfoPrint
+                    # [44]40.4.22 ESMF_InfoReadJSON
+                    # [45]40.4.23 ESMF_InfoRemove
+                    # [46]40.4.24 ESMF_InfoSet
+                    # [47]40.4.25 ESMF_InfoSet
+                    # [48]40.4.26 ESMF_InfoSet
+                    # [49]40.4.27 ESMF_InfoSet
+                    # [50]40.4.28 ESMF_InfoSetNULL
+                    # [51]40.4.29 ESMF_InfoSync
+                    # [52]40.4.30 ESMF_InfoUpdate
+                    # [53]40.4.31 ESMF_InfoWriteJSON
+          + [54]41 Time Manager Utility
+               o [55]41.1 Time Manager Classes
+               o [56]41.2 Calendar
+               o [57]41.3 Time Instants and TimeIntervals
+               o [58]41.4 Clocks and Alarms
+               o [59]41.5 Design and Implementation Notes
+               o [60]41.6 Object Model
+                       40 Info Class (Object Attributes)
+
+   All ESMF base objects (i.e. Array, ArrayBundle, Field, FieldBundle,
+   Grid, Mesh, DistGrid) contain a key-value attribute storage object
+   called ESMF_Info. ESMF_Info objects may also be created independent of
+   a base object. ESMF_Info supports setting and getting key-value pairs
+   where the key is a string and the value is a scalar or a list of common
+   data types. An ESMF_Info object may have a flat or nested data
+   structure. The purpose of ESMF_Info is to support I/O-compatible
+   metadata structures (i.e. netCDF), internal record-keeping for model
+   execution (NUOPC), and provide a mechanism for custom user metadata
+   attributes.
+
+   ESMF_Info is designed for interoperability. To achieve this goal,
+   ESMF_Info adopted the JSON (Javascript Object Notation) specification.
+   Internally, ESMF_Info uses JSON for Modern C++ [[474]1] to manage its
+   storage map. There are numerous resources for JSON on the web
+   [[475]11]. Quoting from the json.org site [[476]11] when it introduces
+   the format:
+
+     JSON (JavaScript Object Notation) is a lightweight data-interchange
+     format. It is easy for humans to read and write. It is easy for
+     machines to parse and generate. It is based on a subset of the
+     JavaScript Programming Language Standard ECMA-262 3rd Edition -
+     December 1999. JSON is a text format that is completely language
+     independent but uses conventions that are familiar to programmers of
+     the C-family of languages, including C, C++, C#, Java, JavaScript,
+     Perl, Python, and many others. These properties make JSON an ideal
+     data-interchange language. JSON is built on two structures:
+
+     * A collection of name/value pairs. In various languages, this is
+       realized as an object, record, struct, dictionary, hash table,
+       keyed list, or associative array.
+     * An ordered list of values. In most languages, this is realized as
+       an array, vector, list, or sequence.
+
+     These are universal data structures. Virtually all modern
+     programming languages support them in one form or another. It makes
+     sense that a data format that is interchangeable with programming
+     languages also be based on these structures.
+
+   By adopting JSON compliance for ESMF_Info, ESMF made its core metadata
+   capabilities explicitly interoperable with a widely used data
+   structure. If data may be represented with JSON, then it is compatible
+   with ESMF_Info.
+
+   There are some aspects of the ESMF_Info implementation related to JSON
+   and JSON for Modern C++ that should be noted:
+    1. JSON supports 64-bit data types for integers and reals ([[477]3],
+       [[478]2]). I4/R4 is converted to I8/R8 and vice versa. ESMF_Info
+       internally tracks 32-bit sets to ensure the data type may be
+       appropriately queried.
+    2. The memory overhead per JSON object (e.g. a key-value pair)
+       requires an additional allocator pointer for type generalization
+       [[479]6]. Hence, the JSON map is not suited for big data storage,
+       offering flexibility in exchange.
+    3. Keys are stored in an unordered map sorted in lexicographical
+       order.
+
+40.1 Migrating from Attribute
+
+   The ESMF_Info class is a replacement for the ESMF_Attribute class and
+   is the preferred way of managing metadata attributes in ESMF moving
+   forward. It is recommended that users migrate existing ESMF_Attribute
+   calls to the new ESMF_Info API. The ESMF_Info class provides the
+   backend for ESMF_Attribute since ESMF version 8.1. The ESMF_Attribute
+   docs are located in appendix [480]57. In practice, users should
+   experience no friction when migrating client code. Please email ESMF
+   support in the case of a migration issue. Some structural changes to
+   ESMF_Attribute did occur:
+     * Changed behavior when getting fixed-size lists. List size in
+       storage must match the size of the outgoing list.
+     * Removed ability to use a default value with list gets.
+     * Removed attPackInstanceName from all interfaces.
+     * Removed attcopyFlag from all interfaces.
+     * Removed ESMF_Attribute-managed object linking.
+     * Modified ESMF_AttributeAdd to set the target key to a null JSON
+       value.
+     * Modified ESMF_AttributeSet to not require an attribute added to an
+       ESMF_AttPack be added through ESMF_AttributeAdd before setting.
+     * Removed support for attribute XML I/O.
+     * Removed ability to add multiple nested Attribute packages.
+     * Removed retrieval of "internal" ESMF object Attributes.
+
+   Below are examples for setting and getting an attribute using ESMF_Info
+   and the legacy ESMF_Attribute. The ESMF_Info interfaces are not
+   overloaded for ESMF object types but rather work off a handle retrieved
+   via a get call.
+
+  40.1.1 Setting an Attribute
+
+   With ESMF_Attribute:
+call ESMF_AttributeSet(array, "aKey", 15, rc=rc)
+
+   With ESMF_Info:
+call ESMF_InfoGetFromHost(array, info, rc=rc)
+call ESMF_InfoSet(info, "aKey", 15, rc=rc)
+
+   Notice that the legacy ESMF_Attribute API expects the usage of what was
+   called an "Attribute Package". This essentially corresponds to a
+   namespace similar to what ESMF_Info provides for keys via the JSON
+   Pointer syntax (see [481]40.2). In the above ESMF_AttributeSet() call,
+   without specification of convention and purpose arguments, the
+   resulting JSON pointer of the key is "/ESMF/General/aKey". This is
+   important to account for when mixing deprecated ESMF_Attribute calls
+   with the ESMF_Info API.
+
+  40.1.2 Getting an Attribute
+
+   With ESMF_Attribute:
+call ESMF_AttributeGet(array, "aKey", aKeyValue, rc=rc)
+
+   With ESMF_Info:
+call ESMF_InfoGetFromHost(array, info, rc=rc)
+call ESMF_InfoGet(info, "aKey", aKeyValue, rc=rc)
+
+   Notice again that the ESMF_Attribute API automatically prepends
+   "/ESMF/General/" to the JSON pointer used for key in the absence of
+   convention and purpose arguments.
+
+40.2 Key Format Overview
+
+   A key in the ESMF_Info interface provides the location of a value to
+   retrieve from the key-value storage. Keys in the ESMF_Info class use
+   the JSON Pointer syntax [[482]5]. A forward slash is prepended to
+   string keys if it does not exist. Hence, "aKey" and "/aKey" are
+   equivalent. Note the indexing aspect of the JSON Pointer syntax is not
+   supported.
+
+   Every "key" argument in the ESMF_Info class uses pathing following the
+   JSON Pointer syntax [6]. A forward slash is prepended to string keys if
+   it does not exist. Hence, "aKey" and "/aKey" are equivalent. Note the
+   indexing aspect of the JSON Pointer syntax is not supported (i.e.
+   "/my_list 1").
+
+   Some examples for valid "key" arguments:
+     * altitude :: A simple key argument with no nesting.
+     * /altitude :: A simple key argument with no nesting with the
+       prepended pointer forward slash.
+     * /altitude/height_above_mean_sea_level :: A key for an attribute
+       "height_above_mean_sea_level" nested in a map identified with key
+       "altitude".
+
+40.3 Usage and Examples
+
+  40.3.1 Retrieve an Info Handle
+
+   This example demonstrates how to retrieve an ESMF_Info object handle
+   from an ESMF object. ESMF_Info handles are a view into the object's
+   ESMF_Info storage and should not be created/destroyed as the
+   ESMF_Info's lifetime is determined by its host object's lifetime.
+   Destroying the host object will leave a handle in an undefined state.
+
+   Variable declarations:
+
+    type(ESMF_DistGrid) :: distgrid
+    type(ESMF_Array) :: array
+    type(ESMF_Info) :: infoh
+    real(ESMF_KIND_R8), dimension(10,10) :: farray
+    integer :: rc
+
+   Create an ESMF Array.
+
+    distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/10,10/), rc=rc)
+
+    array = ESMF_ArrayCreate(distgrid, farray, indexflag=ESMF_INDEX_DELOCAL, rc=
+rc)
+
+   Get the ESMF_Info handle from the object. See example [483]40.3.2 for
+   additional usage examples.
+
+    call ESMF_InfoGetFromHost(array, infoh, rc=rc)
+
+
+   Destroy everything except the ESMF_Info object. Attempting to destroy
+   the ESMF_Info handle will result in an error.
+
+    call ESMF_ArrayDestroy(array, rc=rc)
+
+    call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+  40.3.2 General Usage Examples
+
+   General usage examples for the ESMF_Info class. The demonstrated
+   capabilities are:
+     * Creating an ESMF_Info object.
+     * Setting/getting a key-value pair.
+     * Setting/getting a list value and a list value by index.
+     * Printing and dumping ESMF_Info contents.
+     * Checking for key presence and set state (null value check).
+     * Setting/getting with nesting (hierarchies).
+     * Inquiring the ESMF_Info object for general item metadata and
+       iteration purposes.
+     * Copying ESMF_Info contents.
+     * Removing a key-value pair from the ESMF_Info storage.
+     * Destroying the ESMF_Info object.
+
+   Variable declarations:
+
+    type(ESMF_Info) :: info, infoCopy, infoFromCh
+    type(ESMF_TypeKind_Flag) :: typekind
+    character(len=ESMF_MAXSTR) :: ikey
+    character(:), allocatable :: output, getCh
+    real(ESMF_KIND_R8), dimension(4) :: realList
+    real(ESMF_KIND_R8), dimension(:), allocatable :: realListAlloc
+    integer(ESMF_KIND_I4) :: getInt
+    real(ESMF_KIND_R8) :: getReal
+    integer :: rc, infoSize, ii
+    logical :: isPresent, isSet
+
+   Create an ESMF_Info object. This object contains an empty key-value
+   store called a JSON object [[484]8].
+
+   An ESMF_Info handle may also be retrieved from an ESMF object as
+   opposed to creating a standalone ESMF_Info object. See example
+   [485]40.3.1.
+
+    info = ESMF_InfoCreate(rc=rc)
+
+   Add an integer value.
+
+    call ESMF_InfoSet(info, "myIntegerKey", 54, rc=rc)
+
+   Get the integer value we just set.
+
+    call ESMF_InfoGet(info, "myIntegerKey", getInt, rc=rc)
+
+   Set a list of reals.
+
+    call ESMF_InfoSet(info, "myListOfReals", (/ 33.3, 44.4, 0.0, 99.0 /), rc=rc)
+
+   Set an index in the new list then retrieve the value.
+
+    call ESMF_InfoSet(info, "myListOfReals", 1234.0, idx=3, rc=rc)
+
+    call ESMF_InfoGet(info, "myListOfReals", getReal, idx=3, rc=rc)
+
+   Get the values from a list.
+
+    call ESMF_InfoGet(info, "myListOfReals", realList, rc=rc)
+
+   Allocatable lists may be used through a specific interface.
+
+    call ESMF_InfoGetAlloc(info, "myListOfReals", realListAlloc, rc=rc)
+
+   The storage contents may be printed directly or dumped to a character.
+
+    call ESMF_InfoPrint(info, indent=4, rc=rc)
+
+    output = ESMF_InfoDump(info, rc=rc)
+
+    print *, "the Info dump: "//output
+
+   Check if a key is present.
+
+    isPresent = ESMF_InfoIsPresent(info, "myIntegerKey", rc=rc)
+
+    if (.not. isPresent) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Add a null value and check if it is set (has a non-null value).
+
+    call ESMF_InfoSetNULL(info, "aNullKey", rc=rc)
+
+    isSet = ESMF_InfoIsSet(info, "aNullKey", rc=rc)
+
+    if (isSet) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+    isSet = ESMF_InfoIsSet(info, "myIntegerKey", rc=rc)
+
+    if (.not. isSet) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   The force flag, when set to false, will cause an error if the key
+   exists in the map. The force flag is set to true by default.
+
+    call ESMF_InfoSet(info, "myIntegerKey", 33, force=.false., rc=rc)
+    if (rc .ne. ESMC_RC_CANNOT_SET) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Nesting uses the JSON Pointer [486]40.2 syntax. All key arguments in
+   ESMF_Info may use this syntax unless noted otherwise. When creating a
+   nested object, objects are created if they do not exist. Hence, it is
+   not necessary to create the individual nested elements for deep
+   hierarchies.
+
+    call ESMF_InfoSet(info, "/Universe/Galaxy/Star/Planet", "Venus", rc=rc)
+
+   Using the get interface, it is possible to iterate over the storage
+   contents. In the call below, we are retrieving the number of elements
+   (key-value pairs) that exist in our root storage object. We then select
+   the target element in root using an index and retrieve some additional
+   metadata for the target object.
+
+    call ESMF_InfoGet(info, size=infoSize, rc=rc)
+
+    do ii=1,infoSize
+      call ESMF_InfoGet(info, idx=ii, ikey=ikey, typekind=typekind, rc=rc)
+
+      if (localPet == 0) then
+        print *, "ESMF_Info inquire loop: "
+        print *, "       idx= ", ii
+        print *, "      ikey= ", trim(ikey)
+        print *, "  typekind= ", typekind
+      endif
+    enddo
+
+   Copying the ESMF_Info object requires the copy to be
+   destroyed/deallocated.
+
+    infoCopy = ESMF_InfoCreate(info, rc=rc)
+
+   Comparison operators = and /= are implemented for ESMF_Info objects.
+
+    if (infoCopy /= info) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   After removing a key from the copied ESMF_Info object, the two objects
+   will no longer be equal.
+
+    call ESMF_InfoRemove(infoCopy, "myIntegerKey", rc=rc)
+
+    if (infoCopy == info) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Destroy the copied object.
+
+    call ESMF_InfoDestroy(infoCopy, rc=rc)
+
+   An ESMF_Info object may be created from a JSON string. Note the usage
+   of quotes is required as below.
+
+    infoFromCh = ESMF_InfoCreate('{"hello":"world"}', rc=rc)
+
+   The contents of an ESMF_Info object may be set in another ESMF_Info
+   object.
+
+    call ESMF_InfoSet(info, "infoFromCh", infoFromCh, rc=rc)
+
+    call ESMF_InfoDestroy(infoFromCh, rc=rc)
+
+   An allocatable character get interface is available.
+
+    call ESMF_InfoGetCharAlloc(info, "/infoFromCh/hello", getCh, rc=rc)
+
+   Destroy the ESMF_Info object.
+
+    call ESMF_InfoDestroy(info, rc=rc)
+
+40.4 Class API
+
+  40.4.1 ESMF_InfoAssignment(=) - Info assignment
+
+   INTERFACE:
+     interface assignment(=)
+     info1 = info2
+
+   ARGUMENTS:
+     type(ESMF_Info) :: info1
+     type(ESMF_Info) :: info2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign info1 as an alias to the same ESMF Info object in memory as
+   info2. If info2 is invalid, then info1 will be equally invalid after
+   the assignment.
+
+   The arguments are:
+
+   info1
+          The ESMF_Info object on the left hand side of the assignment.
+
+   info2
+          The ESMF_Info object on the right hand side of the assignment.
+
+  40.4.2 ESMF_InfoOperator(==) - Info equality operator
+
+   INTERFACE:
+ interface operator(==)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+      type(ESMF_Info), intent(in) :: info1
+      type(ESMF_Info), intent(in) :: info2
+
+   DESCRIPTION:
+
+   Test if the contents of two ESMF_Info objects are equal.
+
+   The arguments are:
+
+   info1
+          The ESMF_Info object on the left hand side of the operation.
+
+   info1
+          The ESMF_Info object on the right hand side of the operation.
+
+  40.4.3 ESMF_InfoOperator(/=) - Info not equal operator
+
+   INTERFACE:
+ interface operator(/=)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+      type(ESMF_Info), intent(in) :: info1
+      type(ESMF_Info), intent(in) :: info2
+
+   DESCRIPTION:
+
+   Test if the contents of two ESMF_Info objects are not equal.
+
+   The arguments are:
+
+   info1
+          The ESMF_Info object on the left hand side of the operation.
+
+   info1
+          The ESMF_Info object on the right hand side of the operation.
+

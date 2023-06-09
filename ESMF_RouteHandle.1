@@ -1,0 +1,2748 @@
+          + [635]37 RouteHandle Class
+               o [636]37.1 Description
+               o [637]37.2 Use and Examples
+                    # [638]37.2.1 Bit-for-bit reproducibility
+                    # [639]37.2.2 Asynchronous RouteHandle communication
+                      with VMEpoch
+                    # [640]37.2.3 Creating a RouteHandle from an existing
+                      RouteHandle - Transfer to a different set of PETs
+                    # [641]37.2.4 Write a RouteHandle to file and creating
+                      a RouteHandle from file
+                    # [642]37.2.5 Reusablity of RouteHandles and
+                      interleaved distributed and undistributed dimensions
+                    # [643]37.2.6 Dynamic Masking
+               o [644]37.3 Restrictions and Future Work
+               o [645]37.4 Design and Implementation Notes
+               o [646]37.5 Class API
+                    # [647]37.5.1 ESMF_RouteHandleCreate
+                    # [648]37.5.2 ESMF_RouteHandleCreate
+                    # [649]37.5.3 ESMF_RouteHandleDestroy
+                    # [650]37.5.4 ESMF_RouteHandleGet
+                    # [651]37.5.5 ESMF_RouteHandleIsCreated
+                    # [652]37.5.6 ESMF_RouteHandlePrint
+                    # [653]37.5.7 ESMF_RouteHandleSet
+                    # [654]37.5.8 ESMF_RouteHandleWrite
+          + [655]38 I/O Capability
+               o [656]38.1 Description
+               o [657]38.2 Data I/O
+               o [658]38.3 Data formats
+               o [659]38.4 Restrictions and Future Work
+               o [660]38.5 Design and Implementation Notes
+     __________________________________________________________________
+
+                       4 Infrastructure: Fields and Grids
+
+                          24 Overview of Data Classes
+
+   The ESMF infrastructure data classes are part of the framework's
+   hierarchy of structures for handling Earth system model data and
+   metadata on parallel platforms. The hierarchy is in complexity; the
+   simplest data class in the infrastructure represents a distributed data
+   array and the most complex data class represents a bundle of physical
+   fields that are discretized on the same grid. Data class methods are
+   called both from user-written code and from other classes internal to
+   the framework.
+
+   Data classes are distributed over DEs, or Decomposition Elements. A DE
+   represents a piece of a decomposition. A DELayout is a collection of
+   DEs with some associated connectivity that describes a specific
+   distribution. For example, the distribution of a grid divided into four
+   segments in the x-dimension would be expressed in ESMF as a DELayout
+   with four DEs lying along an x-axis. This abstract concept enables a
+   data decomposition to be defined in terms of threads, MPI processes,
+   virtual decomposition elements, or combinations of these without
+   changes to user code. This is a primary strategy for ensuring optimal
+   performance and portability for codes using ESMF for communications.
+
+   ESMF data classes provide a standard, convenient way for developers to
+   collect together information related to model or observational data.
+   The information assembled in a data class includes a data pointer, a
+   set of attributes (e.g. units, although attributes can also be
+   user-defined), and a description of an associated grid. The same set of
+   information within an ESMF data object can be used by the framework to
+   arrange intercomponent data transfers, to perform I/O, for
+   communications such as gathers and scatters, for simplification of
+   interfaces within user code, for debugging, and for other functions.
+   This unifies and organizes codes overall so that the user need not
+   define different representations of metadata for the same field for I/O
+   and for component coupling.
+
+   Since it is critical that users be able to introduce ESMF into their
+   codes easily and incrementally, ESMF data classes can be created based
+   on native Fortran pointers. Likewise, there are methods for retrieving
+   native Fortran pointers from within ESMF data objects. This allows the
+   user to perform allocations using ESMF, and to retrieve Fortran arrays
+   later for optimized model calculations. The ESMF data classes do not
+   have associated differential operators or other mathematical methods.
+
+   For flexibility, it is not necessary to build an ESMF data object all
+   at once. For example, it's possible to create a field but to defer
+   allocation of the associated field data until a later time.
+
+   Key Features
+   Hierarchy of data structures designed specifically for the Earth system
+   domain and high performance, parallel computing.
+   Multi-use ESMF structures simplify user code overall.
+   Data objects support incremental construction and deferred allocation.
+   Native Fortran arrays can be associated with or retrieved from ESMF
+   data objects, for ease of adoption, convenience, and performance.
+   A variety of operations are provided for manipulating data in data
+   objects such as regridding, redistribution, halo communication, and
+   sparse matrix multiply.
+
+   The main classes that are used for model and observational data
+   manipulation are as follows:
+
+     * Array An ESMF Array contains a data pointer, information about its
+       associated datatype, precision, and dimension.
+       Data elements in Arrays are partitioned into categories defined by
+       the role the data element plays in distributed halo operations.
+       Haloing - sometimes called ghosting - is the practice of copying
+       portions of array data to multiple memory locations to ensure that
+       data dependencies can be satisfied quickly when performing a
+       calculation. ESMF Arrays contain an exclusive domain, which
+       contains data elements updated exclusively and definitively by a
+       given DE; a computational domain, which contains all data elements
+       with values that are updated by the DE in computations; and a total
+       domain, which includes both the computational domain and data
+       elements from other DEs which may be read but are not updated in
+       computations.
+     * ArrayBundle ArrayBundles are collections of Arrays that are stored
+       in a single object. Unlike FieldBundles, they don't need to be
+       distributed the same way across PETs. The motivation for
+       ArrayBundles is both convenience and performance.
+     * Field A Field holds model and/or observational data together with
+       its underlying grid or set of spatial locations. It provides
+       methods for configuration, initialization, setting and retrieving
+       data values, data I/O, data regridding, and manipulation of
+       attributes.
+     * FieldBundle Groups of Fields on the same underlying physical grid
+       can be collected into a single object called a FieldBundle. A
+       FieldBundle provides two major functions: it allows groups of
+       Fields to be manipulated using a single identifier, for example
+       during export or import of data between Components; and it allows
+       data from multiple Fields to be packed together in memory for
+       higher locality of reference and ease in subsetting operations.
+       Packing a set of Fields into a single FieldBundle before performing
+       a data communication allows the set to be transferred at once
+       rather than as a Field at a time. This can improve performance on
+       high-latency platforms.
+       FieldBundle objects contain methods for setting and retrieving
+       constituent fields, regridding, data I/O, and reordering of data in
+       memory.
+
+24.1 Bit-for-Bit Considerations
+
+   Bit-for-bit reproducibility is at the core of the regression testing
+   schemes of many scientific model codes. The bit-for-bit requirement
+   makes it easy to compare the numerical results of simulation runs using
+   standard binary diff tools.
+
+   For the most part, ESMF methods do not modify user data numerically,
+   and thus have no effect on the bit-for-bit characteristics of the model
+   code. The exceptions are the regrid weight generation and the sparse
+   matrix multiplication.
+
+   In the case of the regrid weight generation, user data is used to
+   produce interpolation weights following specific numerical schemes. The
+   bit-for-bit reproducibility of the generated weights depends on the
+   implementation details. Section [661]24.2 provides more details about
+   the bit-for-bit considerations with respect to the regrid weights
+   generated by ESMF.
+
+   In the case of the sparse matrix multiplication, which is the typical
+   method that is used to apply the regrid weights, user data is directly
+   manipulated by ESMF. In order to help users with the implementation of
+   their bit-for-bit requirements, while also considering the associated
+   performance impact, the ESMF sparse matrix implementation provides
+   three levels of bit-for-bit support. The strictest level ensures that
+   the numerical results are bit-for-bit identical, even when executing
+   across different numbers of PETs. In the relaxed level, bit-for-bit
+   reproducibility is guaranteed when running across an unchanged number
+   of PETs. The lowest level makes no guarantees about bit-for-bit
+   reproducibility, however, it provides the greatest performance
+   potential for those cases where numerical round-off differences are
+   acceptable. An in-depth discussion of bit-for-bit reproducibility, and
+   the performance aspects of route-based communication methods, such the
+   sparse matrix multiplication, is given in section [662]37.2.1.
+
+24.2 Regrid
+
+   This section describes the regridding methods provided by ESMF.
+   Regridding, also called remapping or interpolation, is the process of
+   changing the grid that underlies data values while preserving qualities
+   of the original data. Different kinds of transformations are
+   appropriate for different problems. Regridding may be needed when
+   communicating data between Earth system model components such as land
+   and atmosphere, or between different data sets to support operations
+   such as visualization.
+
+   Regridding can be broken into two stages. The first stage is generation
+   of an interpolation weight matrix that describes how points in the
+   source grid contribute to points in the destination grid. The second
+   stage is the multiplication of values on the source grid by the
+   interpolation weight matrix to produce values on the destination grid.
+   This is implemented as a parallel sparse matrix multiplication.
+
+   There are two options for accessing ESMF regridding functionality:
+   offline and integrated. Offline regridding is a process whereby
+   interpolation weights are generated by a separate ESMF command line
+   tool, not within the user code. The ESMF offline regridding tool also
+   only generates the interpolation matrix, the user is responsible for
+   reading in this matrix and doing the actual interpolation
+   (multiplication by the sparse matrix) in their code. Please see
+   Section [663]12 for a description of the offline regridding command
+   line tool and the options it supports. For user convenience, there is
+   also a method interface to the offline regrid tool functionality which
+   is described in Section [664]24.3.1. In contrast to offline regridding,
+   integrated regridding is a process whereby interpolation weights are
+   generated via subroutine calls during the execution of the user's code.
+   In addition to generating the weights, integrated regridding can also
+   produce a RouteHandle (described in Section [665]37.1) which allows the
+   user to perform the parallel sparse matrix multiplication using ESMF
+   methods. In other words, ESMF integrated regridding allows a user to
+   perform the whole process of interpolation within their code.
+
+   To see what types of grids and other options are supported in the two
+   types of regridding and their testing status, please see the [666]ESMF
+   Regridding Status webpage for this version of ESMF. Figure [667]24.2
+   shows a comparison of different regrid interfaces and where they can be
+   found in the documentation.
+
+   The rest of this section further describes the various options
+   available in ESMF regridding.
+
+   CAPTION: Table 1: Regrid Interfaces
+
+   Name Access via Inputs Outputs Description
+         Weights RouteHandle
+   ESMF_FieldRegridStore() Subroutine call Field object yes yes
+   Sec. [668]26.6.67
+   ESMF_FieldBundleRegridStore() Subroutine call Fieldbundle obj. no yes
+   Sec. [669]25.5.26
+   ESMF_RegridWeightGen() Subroutine call Grid files yes no
+   Sec. [670]24.3.1
+   ESMF_RegridWeightGen Command Line Tool Grid files yes no Sec. [671]12
+
+  24.2.1 Interpolation methods: bilinear
+
+   Bilinear interpolation calculates the value for the destination point
+   as a combination of multiple linear interpolations, one for each
+   dimension of the Grid. Note that for ease of use, the term bilinear
+   interpolation is used for 3D interpolation in ESMF as well, although it
+   should more properly be referred to as trilinear interpolation.
+
+   In 2D, ESMF supports bilinear regridding between any combination of the
+   following:
+     * Structured grids (ESMF_Grid) composed of any number of logically
+       rectangular tiles
+     * Unstructured meshes (ESMF_Mesh) composed of polygons with any
+       number of sides
+     * A set of disconnected points (ESMF_LocStream) may be the
+       destination of the regridding
+     * An exchange grid (ESMF_XGrid)
+
+   In 3D, ESMF supports bilinear regridding between any combination of the
+   following:
+     * Structured grids (ESMF_Grid) composed of a single logically
+       rectangular tile
+     * Unstructured meshes (ESMF_Mesh) composed of hexahedrons
+     * A set of disconnected points (ESMF_LocStream) may be the
+       destination of the regridding
+
+   Restrictions:
+     * Cells which contain enough identical corners to collapse to a line
+       or point are currently ignored
+     * Self-intersecting cells (e.g. a cell twisted into a bow tie) are
+       not supported
+     * On a spherical grid, cells which contain an edge which extends more
+       than half way around the sphere are not supported
+     * Source Fields built on a Grid which contains a DE of width less
+       than 2 elements are not supported
+
+   To use the bilinear method the user may create their Fields on any
+   stagger location (e.g. ESMF_STAGGERLOC_CENTER) for a Grid, or any Mesh
+   location (e.g. ESMF_MESHLOC_NODE) for a Mesh. For either a Grid or a
+   Mesh, the location upon which the Field is built must contain
+   coordinates. This method will also work with a destination Field built
+   on a LocStream that contains coordinates, or with a source or
+   destination Field built on an XGrid.
+
+  24.2.2 Interpolation methods: higher-order patch
+
+   Patch (or higher-order) interpolation is the ESMF version of a
+   technique called “patch recovery” commonly used in finite element
+   modeling [[672]28] [[673]24]. It typically results in better
+   approximations to values and derivatives when compared to bilinear
+   interpolation. Patch interpolation works by constructing multiple
+   polynomial patches to represent the data in a source cell. For 2D
+   grids, these polynomials are currently 2nd degree 2D polynomials. One
+   patch is constructed for each corner of the source cell, and the patch
+   is constructed by doing a least squares fit through the data in the
+   cells surrounding the corner. The interpolated value at the destination
+   point is then a weighted average of the values of the patches at that
+   point.
+
+   The patch method has a larger stencil than the bilinear, for this
+   reason the patch weight matrix can be correspondingly larger than the
+   bilinear matrix (e.g. for a quadrilateral grid the patch matrix is
+   around 4x the size of the bilinear matrix). This can be an issue when
+   performing a regrid operation close to the memory limit on a machine.
+
+   The patch method does not guarantee that after regridding the range of
+   values in the destination field is within the range of values in the
+   source field. For example, if the mininum value in the source field is
+   0.0, then it's possible that after regridding with the patch method,
+   the destination field will contain values less than 0.0.
+
+   In 2D, ESMF supports patch regridding between any combination of the
+   following:
+     * Structured Grids (ESMF_Grid) composed of a single logically
+       rectangular tile
+     * Unstructured meshes (ESMF_Mesh) composed of polygons with any
+       number of sides
+     * A set of disconnected points (ESMF_LocStream) may be the
+       destination of the regridding
+     * An exchange grid (ESMF_XGrid)
+
+   In 3D, ESMF supports patch regridding between any combination of the
+   following:
+     * NONE
+
+   Restrictions:
+     * Cells which contain enough identical corners to collapse to a line
+       or point are currently ignored
+     * Self-intersecting cells (e.g. a cell twisted into a bow tie) are
+       not supported
+     * On a spherical grid, cells which contain an edge which extends more
+       than half way around the sphere are not supported
+     * Source Fields built on a Grid which contains a DE of width less
+       than 2 elements are not supported
+
+   To use the patch method the user may create their Fields on any stagger
+   location (e.g. ESMF_STAGGERLOC_CENTER) for a Grid, or any Mesh location
+   (e.g. ESMF_MESHLOC_NODE) for a Mesh. For either a Grid or a Mesh, the
+   location upon which the Field is built must contain coordinates. This
+   method will also work with a destination Field built on a LocStream
+   that contains coordinates, or with a source or destination Field built
+   on an XGrid.
+
+  24.2.3 Interpolation methods: nearest source to destination
+
+   In nearest source to destination interpolation
+   (ESMF_REGRIDMETHOD_NEAREST_STOD) each destination point is mapped to
+   the closest source point. A given source point may map to multiple
+   destination points, but no destination point will receive input from
+   more than one source point. If two points are equally close, then the
+   point with the smallest sequence index is arbitrarily used (i.e. the
+   point which would have the smallest index in the weight matrix).
+
+   In 2D, ESMF supports nearest source to destination regridding between
+   any combination of the following:
+     * Structured Grids (ESMF_Grid) composed of any number of logically
+       rectangular tiles
+     * Unstructured meshes (ESMF_Mesh) composed of polygons with any
+       number of sides
+     * A set of disconnected points (ESMF_LocStream)
+     * An exchange grid (ESMF_XGrid)
+
+   In 3D, ESMF supports nearest source to destination regridding between
+   any combination of the following:
+     * Structured Grids (ESMF_Grid) composed of any number of logically
+       rectangular tiles
+     * Unstructured Meshes (ESMF_Mesh) composed of hexahedrons (e.g.
+       cubes) and tetrahedrons
+     * A set of disconnected points (ESMF_LocStream)
+
+   Restrictions:
+   NONE
+
+   To use the nearest source to destination method the user may create
+   their Fields on any stagger location (e.g. ESMF_STAGGERLOC_CENTER) for
+   a Grid, or any Mesh location (e.g. ESMF_MESHLOC_NODE) for a Mesh. For
+   either a Grid or a Mesh, the location upon which the Field is built
+   must contain coordinates. This method will also work with a source or
+   destination Field built on a LocStream that contains coordinates, or
+   when the source or destination Field is built on an XGrid.
+
+  24.2.4 Interpolation methods: nearest destination to source
+
+   In nearest destination to source interpolation
+   (ESMF_REGRIDMETHOD_NEAREST_DTOS) each source point is mapped to the
+   closest destination point. A given destination point may receive input
+   from multiple source points, but no source point will map to more than
+   one destination point. If two points are equally close, then the point
+   with the smallest sequence index is arbitrarily used (i.e. the point
+   which would have the smallest index in the weight matrix). Note that
+   with this method the unmapped destination point detection currently
+   doesn't work, so no error will be returned even if there are
+   destination points that don't map to any source point.
+
+   In 2D, ESMF supports nearest destination to source regridding between
+   any combination of the following:
+     * Structured Grids (ESMF_Grid) composed of any number of logically
+       rectangular tiles
+     * Unstructured meshes (ESMF_Mesh) composed of polygons with any
+       number of sides
+     * A set of disconnected points (ESMF_LocStream)
+     * An exchange grid (ESMF_XGrid)
+
+   In 3D, ESMF supports nearest destination to source regridding between
+   any combination of the following:
+     * Structured Grids (ESMF_Grid) composed of any number of logically
+       rectangular tiles
+     * Unstructured Meshes (ESMF_Mesh) composed of hexahedrons (e.g.
+       cubes) and tetrahedrons
+     * A set of disconnected points (ESMF_LocStream)
+
+   Restrictions:
+     * The unmapped destination point detection doesn't currently work for
+       this method. Even if there are unmapped points, no error will be
+       returned.
+
+   To use the nearest destination to source method the user may create
+   their Fields on any stagger location (e.g. ESMF_STAGGERLOC_CENTER) for
+   a Grid, or any Mesh location (e.g. ESMF_MESHLOC_NODE) for a Mesh. For
+   either a Grid or a Mesh, the location upon which the Field is built
+   must contain coordinates. This method will also work with a source or
+   destination Field built on a LocStream that contains coordinates, or
+   when the source or destination Field is built on an XGrid.
+
+  24.2.5 Interpolation methods: first-order conservative
+
+   The goal of this method is to preserve the integral of the field across
+   the interpolation from source to destination. (For a more in-depth
+   description of what this preservation of the integral (i.e.
+   conservation) means please see section [674]24.2.7.) In this method the
+   value across each source cell is treated as a constant, so it will
+   typically have a larger interpolation error than the bilinear or patch
+   methods. The first-order method used here is similar to that described
+   in the following paper [[675]31].
+
+   In the first-order method, the values for a particular destination cell
+   are a calculated as a combination of the values of the intersecting
+   source cells. The weight of a given source cell's contribution to the
+   total being the amount that that source cell overlaps with the
+   destination cell. In particular, the weight is the ratio of the area of
+   intersection of the source and destination cells to the area of the
+   whole destination cell.
+
+   To see a description of how the different normalization options affect
+   the values and integrals produced by the conservative methods see
+   section [676]24.2.8. For Grids, Meshes, or XGrids on a sphere this
+   method uses great circle cells, for a description of potential problems
+   with these see [677]24.2.9.
+
+   In 2D, ESMF supports conservative regridding between any combination of
+   the following:
+     * Structured Grids (ESMF_Grid) composed of any number of logically
+       rectangular tiles
+     * Unstructured meshes (ESMF_Mesh) composed of polygons with any
+       number of sides
+     * An exchange grid (ESMF_XGrid)
+
+   In 3D, ESMF supports conservative regridding between any combination of
+   the following:
+     * Structured Grids (ESMF_Grid) composed of a single logically
+       rectangular tile
+     * Unstructured Meshes (ESMF_Mesh) composed of hexahedrons (e.g.
+       cubes) and tetrahedrons
+
+   Restrictions:
+     * Cells which contain enough identical corners to collapse to a line
+       or point are optionally (via a flag) either ignored or return an
+       error
+     * Self-intersecting cells (e.g. a cell twisted into a bow tie) are
+       not supported
+     * On a spherical grid, cells which contain an edge which extends more
+       than half way around the sphere are not supported
+     * Source or destination Fields built on a Grid which contains a DE of
+       width less than 2 elements are not supported
+
+   To use the conservative method the user should create their Fields on
+   the center stagger location (ESMF_STAGGERLOC_CENTER in 2D or
+   ESMF_STAGGERLOC_CENTER_VCENTER in 3D) for Grids or the element location
+   (ESMF_MESHLOC_ELEMENT) for Meshes. For Grids, the corner stagger
+   location (ESMF_STAGGERLOC_CORNER in 2D or ESMF_STAGGERLOC_CORNER_VFACE
+   in 3D) must contain coordinates describing the outer perimeter of the
+   Grid cells. This method will also work when the source or destination
+   Field is built on an XGrid.
+
+  24.2.6 Interpolation methods: second-order conservative
+
+   Like the first-order conservative method, this method's goal is to
+   preserve the integral of the field across the interpolation from source
+   to destination. (For a more in-depth description of what this
+   preservation of the integral (i.e. conservation) means please see
+   section [678]24.2.7.) The difference between the first and second-order
+   conservative methods is that the second-order takes the source gradient
+   into account, so it yields a smoother destination field that typically
+   better matches the source field. This difference between the first and
+   second-order methods is particularly apparent when going from a coarse
+   source grid to a finer destination grid. Another difference is that the
+   second-order method does not guarantee that after regridding the range
+   of values in the destination field is within the range of values in the
+   source field. For example, if the mininum value in the source field is
+   0.0, then it's possible that after regridding with the second-order
+   method, the destination field will contain values less than 0.0. The
+   implementation of this method is based on the one described in this
+   paper [[679]19].
+
+   Like the first-order method, the values for a particular destination
+   cell with the second-order method are a combination of the values of
+   the intersecting source cells with the weight of a given source cell's
+   contribution to the total being the amount that that source cell
+   overlaps with the destination cell. However, with the second-order
+   conservative interpolation there are additional terms that take into
+   account the gradient of the field across the source cell. In
+   particular, the value $d$ for a given destination cell is calculated
+   as:
+
+   $d=\sum^{intersecting-source-cells}_{i}(s_{i}+\nabla s_{i} \cdot
+   (c_{si}-c_{d}))$
+
+   Where:
+
+   $s_{i}$
+          is the intersecting source cell value.
+
+   $\nabla s_{i}$
+          is the intersecting source cell gradient.
+
+   $c_{si}$
+          is the intersecting source cell centroid.
+
+   $c_{d}$
+          is the destination cell centroid.
+
+   To see a description of how the different normalization options affect
+   the values and integrals produced by the conservative methods see
+   section [680]24.2.8. For Grids, Meshes, or XGrids on a sphere this
+   method uses great circle cells, for a description of potential problems
+   with these see [681]24.2.9.
+
+   In 2D, ESMF supports second-order conservative regridding between any
+   combination of the following:
+     * Structured Grids (ESMF_Grid) composed of any number of logically
+       rectangular tiles
+     * Unstructured meshes (ESMF_Mesh) composed of polygons with any
+       number of sides
+     * An exchange grid (ESMF_XGrid)
+
+   In 3D, ESMF supports second-order conservative regridding between any
+   combination of the following:
+     * NONE
+
+   Restrictions:
+     * Cells which contain enough identical corners to collapse to a line
+       or point are optionally (via a flag) either ignored or return an
+       error
+     * Self-intersecting cells (e.g. a cell twisted into a bow tie) are
+       not supported
+     * On a spherical grid, cells which contain an edge which extends more
+       than half way around the sphere are not supported
+     * Source or destination Fields built on a Grid which contains a DE of
+       width less than 2 elements are not supported
+
+   To use the second-order conservative method the user should create
+   their Fields on the center stagger location (ESMF_STAGGERLOC_CENTER for
+   Grids or the element location (ESMF_MESHLOC_ELEMENT) for Meshes. For
+   Grids, the corner stagger location (ESMF_STAGGERLOC_CORNER in 2D must
+   contain coordinates describing the outer perimeter of the Grid cells.
+   This method will also work when the source or destination Field is
+   built on an XGrid.
+
+  24.2.7 Conservation
+
+   Conservation means that the following equation will hold:
+   $\sum^{all-source-cells}(V_{si}*A_{si}) =
+   \sum^{all-destination-cells}(V_{dj}*A_{dj})$ , where V is the variable
+   being regridded and A is the area of a cell. The subscripts s and d
+   refer to source and destination values, and the i and j are the source
+   and destination grid cell indices (flattening the arrays to 1
+   dimension).
+
+   If the user doesn't specify a cell areas in the involved Grids or
+   Meshes, then the areas (A) in the above equation are calculated by
+   ESMF. For Cartesian grids, the area of a grid cell calculated by ESMF
+   is the typical Cartesian area. For grids on a sphere, cell areas are
+   calculated by connecting the corner coordinates of each grid cell with
+   great circles. If the user does specify the areas in the Grid or Mesh,
+   then the conservation will be adjusted to work for the areas provided
+   by the user. This means that the above equation will hold, but with the
+   areas (A) being the ones specified by the user.
+
+   The user should be aware that because of the conservation relationship
+   between the source and destination fields, the more the total source
+   area differs from the total destination area the more the values of the
+   source field will differ from the corresponding values of the
+   destination field, likely giving a higher interpolation error. It is
+   best to have the total source and destination areas the same (this will
+   automatically be true if no user areas are specified). For source and
+   destination grids that only partially overlap, the overlapping regions
+   of the source and destination should be the same.
+
+  24.2.8 The effect of normalization options on integrals and values produced by
+  conservative methods
+
+   It is important to note that by default (i.e. using destination area
+   normalization) conservative regridding doesn't normalize the
+   interpolation weights by the destination fraction. This means that for
+   a destination grid which only partially overlaps the source grid the
+   destination field that is output from the regrid operation should be
+   divided by the corresponding destination fraction to yield the true
+   interpolated values for cells which are only partially covered by the
+   source grid. The fraction also needs to be included when computing the
+   total source and destination integrals. (To include the fraction in the
+   conservative weights, the user can specify the fraction area
+   normalization type. This can be done by specifying
+   normType=ESMF_NORMTYPE_FRACAREA when invoking ESMF_FieldRegridStore().)
+
+   For weights generated using destination area normalization (either by
+   not specifying any normalization type or by specifying
+   normType=ESMF_NORMTYPE_DSTAREA), if a destination field extends outside
+   the unmasked source field, then the values of the cells which extend
+   partway outside the unmasked source field are decreased by the fraction
+   they extend outside. To correct these values, the destination field
+   (dst_field) resulting from the ESMF_FieldRegrid() call can be divided
+   by the destination fraction dst_frac from the ESMF_FieldRegridStore()
+   call. The following pseudocode demonstrates how to do this:
+
+
+ for each destination element i
+    if (dst_frac(i) not equal to 0.0) then
+       dst_field(i)=dst_field(i)/dst_frac(i)
+    end if
+ end for
+
+   For weights generated using destination area normalization (either by
+   not specifying any normalization type or by specifying
+   normType=ESMF_NORMTYPE_DSTAREA), the following pseudo-code shows how to
+   compute the total destination integral (dst_total) given the
+   destination field values (dst_field) resulting from the
+   ESMF_FieldRegrid() call, the destination area (dst_area) from the
+   ESMF_FieldRegridGetArea() call, and the destination fraction (dst_frac)
+   from the ESMF_FieldRegridStore() call. As shown in the previous
+   paragraph, it also shows how to adjust the destination field
+   (dst_field) resulting from the ESMF_FieldRegrid() call by the fraction
+   (dst_frac) from the ESMF_FieldRegridStore() call:
+
+
+ dst_total=0.0
+ for each destination element i
+    if (dst_frac(i) not equal to 0.0) then
+       dst_total=dst_total+dst_field(i)*dst_area(i)
+       dst_field(i)=dst_field(i)/dst_frac(i)
+       ! If mass computed here after dst_field adjust, would need to be:
+       ! dst_total=dst_total+dst_field(i)*dst_area(i)*dst_frac(i)
+    end if
+ end for
+
+   For weights generated using fraction area normalization (by specifying
+   normType=ESMF_NORMTYPE_FRACAREA), no adjustment of the destination
+   field is necessary. The following pseudo-code shows how to compute the
+   total destination integral (dst_total) given the destination field
+   values (dst_field) resulting from the ESMF_FieldRegrid() call, the
+   destination area (dst_area) from the ESMF_FieldRegridGetArea() call,
+   and the destination fraction (dst_frac) from the
+   ESMF_FieldRegridStore() call:
+
+ dst_total=0.0
+ for each destination element i
+      dst_total=dst_total+dst_field(i)*dst_area(i)*dst_frac(i)
+ end for
+
+   For both normalization types, the following pseudo-code shows how to
+   compute the total source integral (src_total) given the source field
+   values (src_field), the source area (src_area) from the
+   ESMF_FieldRegridGetArea() call, and the source fraction (src_frac) from
+   the ESMF_FieldRegridStore() call:
+
+ src_total=0.0
+ for each source element i
+    src_total=src_total+src_field(i)*src_area(i)*src_frac(i)
+ end for
+
+  24.2.9 Great circle cells
+
+   For Grids, Meshes, or XGrids on a sphere some combinations of
+   interpolation options (e.g. first and second-order conservative
+   methods) use cells whose edges are great circles. This section
+   describes some behavior that the user may not expect from these cells
+   and some potential solutions.
+
+   A great circle edge isn't necessarily the same as a straight line in
+   latitude longitude space. For small edges, this difference will be
+   small, but for long edges it could be significant. This means if the
+   user expects cell edges as straight lines in latitude longitude space,
+   they should avoid using one large cell with long edges to compute an
+   average over a region (e.g. over an ocean basin).
+
+   Also, the user should also avoid using cells that contain one edge that
+   runs half way or more around the earth, because the regrid weight
+   calculation assumes the edge follows the shorter great circle path.
+   There isn't a unique great circle edge defined between points on the
+   exact opposite side of the earth from one another (antipodal points).
+   However, the user can work around both of these problem by breaking the
+   long edge into two smaller edges by inserting an extra node, or by
+   breaking the large target grid cells into two or more smaller grid
+   cells. This allows the application to resolve the ambiguity in edge
+   direction.
+
+  24.2.10 Masking
+
+   Masking is the process whereby parts of a Grid, Mesh, or LocStream can
+   be marked to be ignored during an operation, such as when they are used
+   in regridding. Masking can be used on a Field created from a regridding
+   source to indicate that certain portions should not be used to generate
+   regridded data. This is useful, for example, if a portion of the source
+   contains unusable values. Masking can also be used on a Field created
+   from a regridding destination to indicate that a certain portion should
+   not receive regridded data. This is useful, for example, when part of
+   the destination isn't being used (e.g. the land portion of an ocean
+   grid).
+
+   The user may mask out points in the source Field or destination Field
+   or both. To do masking the user sets mask information in the Grid (see
+   [682]31.3.17), Mesh (see [683]33.3.11), or LocStream (see [684]32.2.2)
+   upon which the Fields passed into the ESMF_FieldRegridStore() call are
+   built. The srcMaskValues and dstMaskValues arguments to that call can
+   then be used to specify which values in that mask information indicate
+   that a location should be masked out. For example, if dstMaskValues is
+   set to (/1,2/), then any location that has a value of 1 or 2 in the
+   mask information of the Grid, Mesh or LocStream upon which the
+   destination Field is built will be masked out.
+
+   Masking behavior differs slightly between regridding methods. For
+   non-conservative regridding methods (e.g. bilinear or high-order
+   patch), masking is done on points. For these methods, masking a
+   destination point means that that point won't participate in regridding
+   (e.g. won't be interpolated to). For these methods, masking a source
+   point means that the entire source cell using that point is masked out.
+   In other words, if any corner point making up a source cell is masked
+   then the cell is masked. For conservative regridding methods (e.g.
+   first-order conservative) masking is done on cells. Masking a
+   destination cell means that the cell won't participate in regridding
+   (e.g. won't be interpolated to). Similarly, masking a source cell means
+   that the cell won't participate in regridding (e.g. won't be
+   interpolated from). For any type of interpolation method (conservative
+   or non-conservative) the masking is set on the location upon which the
+   Fields passed into the regridding call are built. For example, if
+   Fields built on ESMF_STAGGERLOC_CENTER are passed into the
+   ESMF_FieldRegridStore() call then the masking should also be set on
+   ESMF_STAGGERLOC_CENTER.
+
+  24.2.11 Extrapolation methods: overview
+
+   Extrapolation in the ESMF regridding system is a way to automatically
+   fill some or all of the destination points left unmapped by a
+   regridding method. Weights generated by the extrapolation method are
+   merged into the regridding weights to yield one set of weights or
+   routehandle. Currently extrapolation is not supported with conservative
+   regridding methods, because doing so would result in non-conservative
+   weights.
+
+  24.2.12 Extrapolation methods: nearest source to destination
+
+   In nearest source to destination extrapolation
+   (ESMF_EXTRAPMETHOD_NEAREST_STOD) each unmapped destination point is
+   mapped to the closest source point. A given source point may map to
+   multiple destination points, but no destination point will receive
+   input from more than one source point. If two points are equally close,
+   then the point with the smallest sequence index is arbitrarily used
+   (i.e. the point which would have the smallest index in the weight
+   matrix).
+
+   If there is at least one unmasked source point, then this method is
+   expected to fill all unmapped points.
+
+  24.2.13 Extrapolation methods: inverse distance weighted average
+
+   In inverse distance weighted average extrapolation
+   (ESMF_EXTRAPMETHOD_NEAREST_IDAVG) each unmapped destination point is
+   the weighted average of the closest N source points. The weight is the
+   reciprocal of the distance of the source point from the destination
+   point raised to a power P. All the weights contributing to one
+   destination point are normalized so that they sum to 1.0. The user can
+   choose N and P when using this method, but defaults are also provided.
+   For example, when calling ESMF_FieldRegridStore() N is specified via
+   the argument extrapNumSrcPnts and P is specified via the argument
+   extrapDistExponent.
+
+   If there is at least one unmasked source point, then this method is
+   expected to fill all unmapped points.
+
+  24.2.14 Extrapolation methods: creep fill
+
+   In creep fill extrapolation (ESMF_EXTRAPMETHOD_CREEP) unmapped
+   destination points are filled by repeatedly moving data from mapped
+   locations to neighboring unmapped locations for a user specified number
+   of levels. More precisely, for each creeped point, its value is the
+   average of the values of the point's immediate neighbors in the
+   previous level. For the first level, the values are the average of the
+   point's immediate neighbors in the destination points mapped by the
+   regridding method. The number of creep levels is specified by the user.
+   For example, in ESMF_FieldRegridStore() this number of levels is
+   specified via the extrapNumLevels argument.
+
+   Unlike some extrapolation methods, creep fill does not necessarily fill
+   all unmapped destination points. Unfilled destination points are still
+   unmapped with the usual consequences (e.g. they won't be in the
+   resulting regridding matrix, and won't be set by the application of the
+   regridding weights).
+
+   Because it depends on the connections in the destination grid, creep
+   fill extrapolation is not supported when the destination Field is built
+   on a Location Stream (ESMF_LocStream). Also, creep fill is currently
+   only supported for 2D Grids, Meshes, or XGrids
+
+  24.2.15 Unmapped destination points
+
+   If a destination point can't be mapped to a location in the source grid
+   by the combination of regrid method and optional follow on
+   extrapolation method, then the user has two choices. The user may
+   ignore those destination points that can't be mapped by setting the
+   unmappedaction argument to ESMF_UNMAPPEDACTION_IGNORE (Ignored points
+   won't be included in the sparse matrix or routeHandle). If the user
+   needs the unmapped points, the ESMF_FieldRegridStore() method has the
+   capability to return a list of them using the unmappedDstList argument.
+   In addition to ignoring them, the user also has the option to return an
+   error if unmapped destination points exist. This is the default
+   behavior, so the user can either not set the unmappedaction argument or
+   the user can set it to ESMF_UNMAPPEDACTION_ERROR. Currently, the
+   unmapped destination error detection doesn't work with the nearest
+   destination to source regrid method (ESMF_REGRIDMETHOD_NEAREST_DTOS),
+   so with this method the regridding behaves as if
+   ESMF_UNMAPPEDACTION_IGNORE is always on.
+
+  24.2.16 Spherical grids and poles
+
+   In the case that the Grid is on a sphere
+   (coordSys=ESMF_COORDSYS_SPH_DEG or ESMF_COORDSYS_SPH_RAD) then the
+   coordinates given in the Grid are interpreted as latitude and longitude
+   values. The coordinates can either be in degrees or radians as
+   indicated by the coordSys flag set during Grid creation. As is true
+   with many global models, this application currently assumes the
+   latitude and longitude refer to positions on a perfect sphere, as
+   opposed to a more complex and accurate representation of the Earth's
+   true shape such as would be used in a GIS system. (ESMF's current user
+   base doesn't require this level of detail in representing the Earth's
+   shape, but it could be added in the future if necessary.)
+
+   For Grids on a sphere, the regridding occurs in 3D Cartesian to avoid
+   problems with periodicity and with the pole singularity. This library
+   supports four options for handling the pole region (i.e. the empty area
+   above the top row of the source grid or below the bottom row of the
+   source grid). Note that all of these pole options currently only work
+   for the Fields build on the Grid class.
+
+   The first option is to leave the pole region empty
+   (polemethod=ESMF_POLEMETHOD_NONE), in this case if a destination point
+   lies above or below the top row of the source grid, it will fail to
+   map, yielding an error (unless
+   unmappedaction=ESMF_UNMAPPEDACTION_IGNORE is specified).
+
+   With the next two options (ESMF_POLEMETHOD_ALLAVG and
+   ESMF_POLEMETHOD_NPNTAVG), the pole region is handled by constructing an
+   artificial pole in the center of the top and bottom row of grid points
+   and then filling in the region from this pole to the edges of the
+   source grid with triangles. The pole is located at the average of the
+   position of the points surrounding it, but moved outward to be at the
+   same radius as the rest of the points in the grid. The difference
+   between the two artificial pole options is what value is used at the
+   pole. The option (polemethod=ESMF_POLEMETHOD_ALLAVG) sets the value at
+   the pole to be the average of the values of all of the grid points
+   surrounding the pole. The option (polemethod=ESMF_POLEMETHOD_NPNTAVG)
+   allows the user to choose a number N from 1 to the number of source
+   grid points around the pole. The value N is set via the argument
+   regridPoleNPnts. For each destination point, the value at the pole is
+   then the average of the N source points surrounding that destination
+   point.
+
+   The last option (polemethod=ESMF_POLEMETHOD_TEETH) does not construct
+   an artificial pole, instead the pole region is covered by connecting
+   points across the top and bottom row of the source Grid into triangles.
+   As this makes the top and bottom of the source sphere flat, for a big
+   enough difference between the size of the source and destination pole
+   regions, this can still result in unmapped destination points. Only
+   pole option ESMF_POLEMETHOD_NONE is currently supported with the
+   conservative interpolation methods (e.g.
+   regridmethod=ESMF_REGRIDMETHOD_CONSERVE) and with the nearest neighbor
+   interpolation options (e.g.
+   regridmethod=ESMF_REGRIDMETHOD_NEAREST_STOD).
+
+   CAPTION: Table 2: Line Type Support by Regrid Method (* indicates the
+   default)
+
+   Regrid Method                                   Line Type
+                                  ESMF_LINETYPE_CART ESMF_LINETYPE_GREAT_CIRCLE
+   ESMF_REGRIDMETHOD_BILINEAR             Y*                     Y
+   ESMF_REGRIDMETHOD_PATCH                Y*                     Y
+   ESMF_REGRIDMETHOD_NEAREST_STOD         Y*                     N
+   ESMF_REGRIDMETHOD_NEAREST_DTOS         Y*                     N
+   ESMF_REGRIDMETHOD_CONSERVE            N/A                     Y*
+   ESMF_REGRIDMETHOD_CONSERVE_2ND        N/A                     Y*
+
+   Another variation in the regridding supported with spherical grids is
+   line type. This is controlled in the ESMF_FieldRegridStore() method by
+   the lineType argument. This argument allows the user to select the path
+   of the line which connects two points on a sphere surface. This in turn
+   controls the path along which distances are calculated and the shape of
+   the edges that make up a cell. Both of these quantities can influence
+   how interpolation weights are calculated, for example in bilinear
+   interpolation the distances are used to calculate the weights and the
+   cell edges are used to determine to which source cell a destination
+   point should be mapped.
+
+   ESMF currently supports two line types: ESMF_LINETYPE_CART and
+   ESMF_LINETYPE_GREAT_CIRCLE. The ESMF_LINETYPE_CART option specifies
+   that the line between two points follows a straight path through the 3D
+   Cartesian space in which the sphere is embedded. Distances are measured
+   along this 3D Cartesian line. Under this option cells are approximated
+   by planes in 3D space, and their boundaries are 3D Cartesian lines
+   between their corner points. The ESMF_LINETYPE_GREAT_CIRCLE option
+   specifies that the line between two points follows a great circle path
+   along the sphere surface. (A great circle is the shortest path between
+   two points on a sphere.) Distances are measured along the great circle
+   path. Under this option cells are on the sphere surface, and their
+   boundaries are great circle paths between their corner points.
+
+   Figure [685]24.2.16 shows which line types are supported for each
+   regrid method as well as the defaults (indicated by *).
+
+  24.2.17 Troubleshooting guide
+
+   The below is a list of problems users commonly encounter with
+   regridding and potential solutions. This is by no means an exhaustive
+   list, so if none of these problems fit your case, or if the solutions
+   don't fix your problem, please feel free to email esmf support
+   (esmf_support@ucar.edu).
+
+   Problem: Regridding is too slow.
+
+   Possible Cause: The ESMF_FieldRegridStore() method is called more than
+   is necessary.
+   The ESMF_FieldRegridStore() operation is a complex one and can be
+   relatively slow for some cases (large Grids, 3D grids, etc.)
+
+   Solution: Reduce the number of ESMF_FieldRegridStore() calls to the
+   minimum necessary. The routeHandle generated by the
+   ESMF_FieldRegridStore() call depends on only four factors: the stagger
+   locations that the input Fields are created on, the coordinates in the
+   Grids the input Fields are built on at those stagger locations, the
+   padding of the input Fields (specified by the totalWidth arguments in
+   FieldCreate) and the size of the tensor dimensions in the input Fields
+   (specified by the ungridded arguments in FieldCreate). For any pair of
+   Fields which share these attributes with the Fields used in the
+   ESMF_FieldRegridStore call the same routeHandle can be used. Note that
+   the data in the Fields does NOT matter, the same routeHandle can be
+   used no matter how the data in the Fields changes.
+
+   In particular:
+     * If Grid coordinates do not change during a run, then the
+       ESMF_FieldRegridStore() call can be done once between a pair of
+       Fields at the beginning and the resulting routeHandle used for each
+       timestep during the run.
+     * If a pair of Fields was created with exactly the same arguments to
+       ESMF_FieldCreate() as the pair of Fields used during an
+       ESMF_FieldRegridStore() call, then the resulting routeHandle can
+       also be used between that pair of Fields.
+
+   Problem: Distortions in destination Field at periodic boundary.
+
+   Possible Cause: The Grid overlaps itself. With a periodic Grid, the
+   regrid system expects the first point to not be a repeat of the last
+   point. In other words, regrid constructs its own connection and overlap
+   between the first and last points of the periodic dimension and so the
+   Grid doesn't need to contain these. If the Grid does, then this can
+   cause problems.
+
+   Solution: Define the Grid so that it doesn't contain the overlap point.
+   This typically means simply making the Grid one point smaller in the
+   periodic dimension. If a Field constructed on the Grid needs to contain
+   these overlap points then the user can use the totalWidth arguments to
+   include this extra padding in the Field. Note, however, that the regrid
+   won't update these extra points, so the user will have to do a copy to
+   fill the points in the overlap region in the Field.
+
+  24.2.18 Restrictions and Future Work
+
+   This section contains restrictions that apply to the entire regridding
+   system. For restrictions that apply to just one interpolation method,
+   see the section corresponding to that method above.
+
+     * Regridding doesn't work on a Field created on a Grid with an
+       arbitrary distribution: Using a Field built on a Grid with an
+       arbitrary distribution will cause the regridding to stop with an
+       error.
+
+  24.2.19 Design and implementation notes
+
+   The ESMF regrid weight calculation functionality has been designed to
+   enable it to support a wide range of grid and interpolation types
+   without needing to support each individual combination of source grid
+   type, destination grid type, and interpolation method. To avoid the
+   quadratic growth of the number of pairs of grid types, all grids are
+   converted to a common internal format and the regrid weight calculation
+   is performed on that format. This vastly reduces the variety of grids
+   that need to be supported in the weight calculations for each
+   interpolation method. It also has the added benefit of making it
+   straightforward to add new grid types and to allow them to work with
+   all the existing grid types. To hook into the existing weight
+   calculation code, the new type just needs to be converted to the
+   internal format.
+
+   The internal grid format used by the ESMF regrid weight calculation is
+   a finite element unstructured mesh. This was chosen because it was the
+   most general format and all the others could be converted to it. The
+   ESMF finite element unstructured mesh (ESMF FEM) is similar in some
+   respects to the SIERRA [[686]20] package developed at Sandia National
+   Laboratory. The ESMF code relies on some of the same underlying
+   toolkits (e.g. Zoltan [[687]18] library for calculating mesh
+   partitions) and adds a layer on top that allows the calculation of
+   regrid weights and some mesh operations (e.g. mesh redistribution) that
+   ESMF needs. The ESMF FEM has similar notions to SIERRA about the basic
+   structure of the mesh entities, fields, iteration and a similar notion
+   of parallel distribution.
+
+   Currently we use the ESMF FEM internal mesh to hold the structure of
+   our Mesh class and in our regrid weight calculation. The parts of the
+   internal FEM code that are used/tested by ESMF are the following:
+     * The creation of a mesh composed of triangles and quadrilaterals or
+       hexahedrons and tetrahedrons.
+     * The object relations data base to store the connections between
+       objects (e.g. which element contains which nodes).
+     * The fields to hold data (e.g. coordinates). We currently only build
+       fields on nodes and elements (2D and 3D).
+     * Iteration to move through mesh entities.
+     * The parallel code to maintain information about the distribution of
+       the mesh across processors and to communicate data between parts of
+       the mesh on different processors (i.e. halos).
+
+24.3 File-based Regrid API
+
+
+
+                              37 RouteHandle Class
+
+37.1 Description
+
+   The ESMF RouteHandle class provides a unified interface for all
+   route-based communication methods across the Field, FieldBundle, Array,
+   and ArrayBundle classes. All route-based communication methods
+   implement a pre-computation step, returning a RouteHandle, an execution
+   step, and a release step. Typically the pre-computation, or Store()
+   step will be a lot more expensive (both in memory and time) than the
+   execution step. The idea is that once precomputed, a RouteHandle will
+   be executed many times over during a model run, making the execution
+   time a very performance critical piece of code. In ESMF, Regridding,
+   Redisting, and Haloing are implemented as route-based communication
+   methods. The following sections discuss the RouteHandle concepts that
+   apply uniformly to all route-based communication methods, across all of
+   the above mentioned classes.
+
+37.2 Use and Examples
+
+   The user interacts with the RouteHandle class through the route-based
+   communication methods of Field, FieldBundle, Array, and ArrayBundle.
+   The usage of these methods are described in detail under their
+   respective class documentation section. The following examples focus on
+   the RouteHandle aspects common across classes and methods.
+
+  37.2.1 Bit-for-bit reproducibility
+
+   Bit-for-bit (bfb) reproducibility is at the core of the regression
+   testing schemes of many scientific model codes. The bfb requirement
+   makes it possible to easily compare the numerical results of simulation
+   runs using standard binary diff tools.
+
+   While bfb reproducibility is desirable (and often required) for
+   regression testing, it does limit the available performance
+   optimization opportunities. Especially in highly parallelized code,
+   best performance is often achieved by allowing operations to occur in a
+   flexible order. Under some conditions, however, a change in the order
+   of numerical operations leads to small numerical differences in the
+   results, breaking bfb reproducibility.
+
+   ESMF provides the following three levels of bfb reproducibility
+   support, with the associated performance optimization implications:
+
+     * Strict bit-for-bit reproducibility: Results are guaranteed to be
+       bit-for-bit identical even when executing across different numbers
+       of PETs. The optimization options are limited to memory layout and
+       message aggregation.
+     * Relaxed bit-for-bit reproducibility: Results are only guaranteed to
+       be bit-for-bit identical when running across an unchanged number of
+       PETs. The optimization options include partial sums, allowing
+       computational load to be balanced between source and destination
+       PETs, and message sizes to be reduced.
+     * No guarantee for bit-for-bit reproducibility: Results may differ by
+       numerical round-off. The optimization options include dynamic
+       out-of-order summation of partial sums.
+
+   The following discussion uses very simple numerical examples to
+   demonstrate how the order of terms in a sum can lead to results that
+   are not bit-for-bit identical. The examples use single precision,
+   ESMF_KIND_R4 numbers, but the concepts apply the same to double
+   precision, ESMF_KIND_R8; only that the decimals, for which bfb
+   differences in the sums occur, are different ones.
+
+   With sumA, sumB, sumC, sumD, and sumE all of type real(ESMF_KIND_R4),
+   one finds the following bfb differences:
+
+  sumA = (0.5 + 0.1) + 0.1        ! results in 0.700000048
+  sumB = 0.5 + (0.1 + 0.1)        ! results in 0.699999988
+
+  sumC = 0.5 +  0.2 + 0.1  + 0.1  ! results in 0.900000036
+  sumD = 0.5 + (0.2 + 0.1) + 0.1  ! results in 0.900000036
+  sumE = 0.5 + (0.2 + 0.1 + 0.1)  ! results in 0.899999976
+
+   These differences result from the fact that many decimals (even very
+   simple ones like 0.1 or 0.2) lead to periodic binary floating point
+   numbers. Periodic floating point numbers must be truncated when
+   represented by a finite number of bits, leading to small rounding
+   errors. Further truncation occurs when the radix point of two numbers
+   must be aligned during floating point arithmetic, resulting in bit
+   shifts for one of the numbers. The resulting truncation error depends
+   on the precise numbers that need alignment. As a result, executing the
+   "same" sum in a different order can lead to different truncation steps
+   and consequently in results that are not bit-for-bit identical.
+
+   In order to help users with the implementation of their bfb
+   requirement, ESMF provides different levels of control over the term
+   order in sparse matrix multiplications, while at the same time offering
+   performance optimization options. In all there are three arguments that
+   will be introduced in the following paragraphs: srcTermProcessing,
+   termorderflag, and pipelineDepth.
+
+   For the purpose of demonstration, a one-dimensional, arbitrarily
+   distributed source Array is constructed. There are three Array elements
+   on each of the four PETs. Their local storage indices, sequence
+   indices, and data values are as follows:
+
+
+           +-----+-------+----------------+------------+
+           | PET | index | sequence index | data value |
+           +-----+-------+----------------+------------+
+           |  0  |   1   |          1     |     0.5    |
+           |  0  |   2   |          6     |     0.1    |
+           |  0  |   3   |          9     |     0.1    |
+           +-----+-------+----------------+------------+
+           |  1  |   1   |          4     |     0.5    |
+           |  1  |   2   |          3     |     0.1    |
+           |  1  |   3   |         10     |     0.1    |
+           +-----+-------+----------------+------------+
+           |  2  |   1   |         11     |     0.5    |
+           |  2  |   2   |          7     |     0.1    |
+           |  2  |   3   |          5     |     0.1    |
+           +-----+-------+----------------+------------+
+           |  3  |   1   |          8     |     0.1    |
+           |  3  |   2   |          2     |     0.2    |
+           |  3  |   3   |         12     |     0.1    |
+           +-----+-------+----------------+------------+
+
+   The destination Array consists of only a single element, located on PET
+   0:
+
+
+           +-----+-------+----------------+------------+
+           | PET | index | sequence index | data value |
+           +-----+-------+----------------+------------+
+           |  0  |   1   |          1     |     n/a    |
+           +-----+-------+----------------+------------+
+
+   As a first example consider the following sparse matrix with three
+   entries:
+
+    factorIndexList(1,1) = 1  ! src seq index
+    factorIndexList(2,1) = 1  ! dst seq index
+    factorList(1) = 1.
+    factorIndexList(1,2) = 6  ! src seq index
+    factorIndexList(2,2) = 1  ! dst seq index
+    factorList(2) = 1.
+    factorIndexList(1,3) = 9  ! src seq index
+    factorIndexList(2,3) = 1  ! dst seq index
+    factorList(3) = 1.
+
+   In ESMF, the order in which the sparse matrix entries are specified in
+   factorIndexList and factorList, or on which PET they are provided, is
+   completely irrelevant. The term order in the resulting sparse matrix
+   sums is not affected by it.
+
+   There is one aspect of the sparse matrix format, however, that is
+   relevant to the bfb considerations: When multiple entries for the same
+   (src, dst) pair are present in a sparse matrix definition, the entries
+   are summed into a single (src, dst) entry. Therefore, even if there are
+   multiple sparse matrix entries for the same (src, dst) pair, there will
+   only be a single term for it in the resulting expression.
+
+   Going back to the three term sparse matrix definition above, the
+   canonical term order is defined by the source sequence indices in
+   ascending order. With (src,dst) denoting the sparse matrix factors, and
+   s(src) and d(dst) denoting source and destination Array elements,
+   respectively, for src and dst sequence indices, the sum in canonical
+   order is:
+
+   d(1) = (1,1)*s(1) + (6,1)*s(6) + (9,1)*s(9)
+
+   For simplicity, the factors in all of the examples are set to 1.0,
+   allowing us to drop them in the expressions. This helps focus on the
+   critical issue - term order:
+
+   d(1) = s(1) + s(6) + s(9)
+
+   There are two parameters that affect term order in the ESMF sparse
+   matrix multiplication (SMM), and therefore must be considered in the
+   context of bfb reproducibility. First there is the srcTermProcessing
+   parameter which controls grouping of source terms located on the same
+   PET. The value of the srcTermProcessing parameter indicates the maximum
+   number of terms that may be grouped into partial sums on the source
+   PET. Setting srcTermProcessing to 1 means that no partial sums are
+   formed on the source side, however, the source terms are multiplied
+   with their respective sparse matrix factor before being sent to the
+   destination PET. Setting srcTermProcessing to 0 prevents these products
+   from being carried out on the source side, and the source Array
+   elements are sent unmodified. Depending on the distribution of the
+   source Array, values greater than 1 for srcTermProcessing can lead to
+   partial sums and thus may have impact on the bfb reproducibility of the
+   SMM.
+
+   The second parameter that may have bfb effects comes into play at
+   execution-time of a precomputed RouteHandle. It is accessible via the
+   termorderflag argument; a typed flag with the following values:
+     * ESMF_TERMORDER_SRCSEQ - Strictly enforces the canonical order of
+       the source terms according to the source sequence index. However,
+       terms that are grouped together in the RouteHandle at store-time,
+       as a consequence of srcTermProcessing, are treated as single
+       entities with a sequence index equal to the lowest original
+       sequence index in the group. Use ESMF_TERMORDER_SRCSEQ together
+       with srcTermProcessing=0 or srcTermProcessing=1 when strict bfb
+       reproducibility is required independent of the source Array
+       distribution, e.g. for different number of PETs.
+     * ESMF_TERMORDER_SRCPET - The source terms in the sum are first
+       arranged according to the relative position of the PET on which
+       they reside with respect to the destination PET. Second, all the
+       terms coming from the same PET are sorted in canonical sequence
+       index order and summed into partial sums. Again, terms that are
+       grouped together in the RouteHandle at store-time are treated as
+       single entities with a sequence index equal to the lowest original
+       sequence index in the group. The final result for each destination
+       element is determined by adding the partial sums in an order that
+       is fixed by the position of the partial sums' source PETs relative
+       to the destination PET. This ensures bfb reproducibility of the
+       result as long as the number of PETs remains unchanged.
+     * ESMF_TERMORDER_FREE - For this option there are no restrictions on
+       the term order. Terms can be summed in any order, and the order may
+       change each time the RouteHandle is executed. This option grants
+       greatest flexibility to the RouteHandle execution implementation.
+       It is available for all the methods that take the termorderflag
+       argument. Without a guaranteed source term order, the
+       ESMF_TERMORDER_FREE option is not suitable for situations that
+       require bfb reproducibility.
+
+   ESMF_TERMORDER_SRCSEQ
+
+   First using srcTermProcessing=0 at store time and
+   termorderflag=ESMF_TERMORDER_SRCSEQ at execution time, the canonical
+   term order is expected:
+
+   d(1) = s(1) + s(6) + s(9) = 0.5 + 0.1 + 0.1 = sumA
+
+  ! forced srcTermProcessing
+  srcTermProcessing = 0
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCSEQ, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCSEQ#1 = ", farrayPtr(1), " expect: ", sumA
+    if (farrayPtr(1) /= sumA) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   The order of source terms across PETs is expected to have no effect on
+   the bfb reproducibility of the result for ESMF_TERMORDER_SRCSEQ. To
+   test this, a sparse matrix is used where the source terms originate
+   from different PETs.
+
+    factorIndexList(1,1) = 4  ! src seq index
+    factorIndexList(2,1) = 1  ! dst seq index
+    factorList(1) = 1.
+    factorIndexList(1,2) = 5  ! src seq index
+    factorIndexList(2,2) = 1  ! dst seq index
+    factorList(2) = 1.
+    factorIndexList(1,3) = 12 ! src seq index
+    factorIndexList(2,3) = 1  ! dst seq index
+    factorList(3) = 1.
+
+   Again the srcTermProcessing argument is kept at 0, ensuring that none
+   of the source terms are grouped into partial sums.
+
+  ! forced srcTermProcessing
+  srcTermProcessing = 0
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCSEQ, rc=rc)
+
+   Under ESMF_TERMORDER_SRCSEQ it does not matter on which PET a source
+   term is located, the order of source terms is strictly defined by the
+   order of source sequence indices:
+
+   d(1) = s(4) + s(5) + s(12) = 0.5 + 0.1 + 0.1 = sumA
+
+  if (localPet == 0) then
+    print *, "result SRCSEQ#2 = ", farrayPtr(1), " expect: ", sumA
+    if (farrayPtr(1) /= sumA) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   The same sparse matrix leads to bfb differences in the result when
+   executed with the ESMF_TERMORDER_SRCPET option. This is demonstrated
+   further down in result SRCPET#4.
+
+   ESMF_TERMORDER_SRCPET
+
+   All source terms coming from the same PET
+
+   In the following examples the srcTermProcessing argument at store-time
+   is first set to 0, forcing all of the source terms to be sent to the
+   destination PET unmodified. We start by going back to the initial
+   sparse matrix where all of the source terms are located on the same
+   PET.
+
+    factorIndexList(1,1) = 1  ! src seq index
+    factorIndexList(2,1) = 1  ! dst seq index
+    factorList(1) = 1.
+    factorIndexList(1,2) = 6  ! src seq index
+    factorIndexList(2,2) = 1  ! dst seq index
+    factorList(2) = 1.
+    factorIndexList(1,3) = 9  ! src seq index
+    factorIndexList(2,3) = 1  ! dst seq index
+    factorList(3) = 1.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=0
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+   Then, at execution time, the ESMF_TERMORDER_SRCPET option is used.
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+   Here all of the source elements originate from the same PET (PET 0).
+   This fact, together with the ESMF_TERMORDER_SRCPET execution-time
+   option, results in the following canonical term order:
+
+   d(1) = s(1) + s(6) + s(9) = 0.5 + 0.1 + 0.1 = sumA
+
+   This is exactly the same term order that was used above to produce the
+   result stored in sumA.
+
+  if (localPet == 0) then
+    print *, "result SRCPET#1 = ", farrayPtr(1), " expect: ", sumA
+    if (farrayPtr(1) /= sumA) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   The sequence indices of the source terms are the only relevant aspect
+   in determining the source term order. Consider, for example, the
+   following sparse matrix, where again all source terms are located on
+   the same PET (PET 2):
+
+    factorIndexList(1,1) = 11 ! src seq index
+    factorIndexList(2,1) = 1  ! dst seq index
+    factorList(1) = 1.
+    factorIndexList(1,2) = 5  ! src seq index
+    factorIndexList(2,2) = 1  ! dst seq index
+    factorList(2) = 1.
+    factorIndexList(1,3) = 7  ! src seq index
+    factorIndexList(2,3) = 1  ! dst seq index
+    factorList(3) = 1.
+
+   This time the source term order in memory is not the same as their
+   sequence index order. Specifically, the sequence indices of the source
+   terms, in the order they are stored in memory, is 11, 7, 5 (see the
+   source Array diagram above for reference). Further, as mentioned
+   already, the order of entries in the sparse matrix also have not
+   bearing on the term order in the SMM sums. Then, for the
+   ESMF_TERMORDER_SRCPET option, and because all source terms are located
+   on the same PET, the resulting source term order is the canonical one
+   determined by the source term sequence indices alone:
+
+   d(1) = s(5) + s(7) + s(11)
+
+   Filling in the source element data, we find
+
+   d(1) = 0.1 + 0.1 + 0.5,
+
+   which is expected to be bfb equivalent to the result stored in sumB
+   from above.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=0
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#2 = ", farrayPtr(1), " expect: ", sumB
+    if (farrayPtr(1) /= sumB) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   Source terms coming from different PETs
+
+   When the source terms are distributed across multiple PETs, the
+   ESMF_TERMORDER_SRCPET option first bundles the terms according to the
+   PET on which they are stored. These source term "bundles" are then
+   arranged in an order that depends on the source PET position relative
+   to the destination PET: starting with the bundle for which the source
+   PET is the same as the destination PET, the source term bundles are
+   placed in descending order with respect to their source PET, modulo
+   petCount. The terms within each source term bundle are further sorted
+   in the canonical order according to their sequence index.
+
+   The following sparse matrix demonstrates the effect of the
+   ESMF_TERMORDER_SRCPET option.
+
+    factorIndexList(1,1) = 1  ! src seq index
+    factorIndexList(2,1) = 1  ! dst seq index
+    factorList(1) = 1.
+    factorIndexList(1,2) = 3  ! src seq index
+    factorIndexList(2,2) = 1  ! dst seq index
+    factorList(2) = 1.
+    factorIndexList(1,3) = 7  ! src seq index
+    factorIndexList(2,3) = 1  ! dst seq index
+    factorList(3) = 1.
+
+   Here the source terms are located on PETs 0, 1, and 2. Using a []
+   notion to indicate the source PET of each term, the term order under
+   ESMF_TERMORDER_SRCPET is given by:
+
+   d(1) = s(1)[0] + s(7)[2] + s(3)[1] = 0.5 + 0.1 + 0.1
+
+   This is again the same order of terms that was used to produce the
+   result stored in sumA above.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=0
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#3 = ", farrayPtr(1), " expect: ", sumA
+    if (farrayPtr(1) /= sumA) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   In the above example, the fact that the terms were ordered by source
+   PET first, did not lead to numerical bfb differences compared to the
+   canonical source term order. However, this was purely coincidental in
+   the way the numbers worked out for this example. The following case
+   looks at a situation where the source PET order does lead to a result
+   that shows bfb differences compared to the canonical term order.
+
+    factorIndexList(1,1) = 4  ! src seq index
+    factorIndexList(2,1) = 1  ! dst seq index
+    factorList(1) = 1.
+    factorIndexList(1,2) = 5  ! src seq index
+    factorIndexList(2,2) = 1  ! dst seq index
+    factorList(2) = 1.
+    factorIndexList(1,3) = 12 ! src seq index
+    factorIndexList(2,3) = 1  ! dst seq index
+    factorList(3) = 1.
+
+   The canonical source term order of this SMM sum, determined by the
+   source sequence indices alone, is:
+
+   d(1) = s(4) + s(5) + s(12) = 0.5 + 0.1 + 0.1,
+
+   which again would lead to a result that is bfb identical to sumA.
+   However, this is not the term order resulting from the
+   ESMF_TERMORDER_SRCPET option. The actual order for this option is:
+
+   d(1) = s(12)[3] + s(5)[2] + s(4)[1] = 0.1 + 0.1 + 0.5,
+
+   resulting in a sum that is bfb identical to sumB instead.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=0
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#4 = ", farrayPtr(1), " expect: ", sumB
+    if (farrayPtr(1) /= sumB) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   Grouping of source terms coming from the same PET
+
+   So far the srcTermProcessing argument was kept at 0, and therefore
+   source term grouping had not to be considered. Source term grouping is
+   only possible for terms that originate from the same PET. In
+   preparation for a closer look at the bfb effects of source term
+   grouping, consider a sparse matrix where two of the source terms are
+   located on the same PET.
+
+    factorIndexList(1,1) = 1  ! src seq index
+    factorIndexList(2,1) = 1  ! dst seq index
+    factorList(1) = 1.
+    factorIndexList(1,2) = 5  ! src seq index
+    factorIndexList(2,2) = 1  ! dst seq index
+    factorList(2) = 1.
+    factorIndexList(1,3) = 7  ! src seq index
+    factorIndexList(2,3) = 1  ! dst seq index
+    factorList(3) = 1.
+
+   Here one of the source terms is located on PET 0 while the other two
+   source terms are originating on PET 2. Keeping the srcTermProcessing
+   argument at 0 first, the term order under ESMF_TERMORDER_SRCPET is
+   given by:
+
+   d(1) = s(1)[0] + s(5)[2] + s(7)[2] = 0.5 + 0.1 + 0.1
+
+   And again the result is expected to be bfb identical to the number
+   stored in sumA.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=0
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#5 = ", farrayPtr(1), " expect: ", sumA
+    if (farrayPtr(1) /= sumA) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   The same result is also expected with srcTermProcessing set to 1. A
+   value of 1 indicates that the multiplication of the source term with
+   its sparse matrix factor is carried out on the source side before being
+   sent to the destination PET. The final sum is still carried out in the
+   same order on the destination PET, essentially resulting in the exact
+   same bfb identical sum as for srcTermProcessing set to 0.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=1
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#6 = ", farrayPtr(1), " expect: ", sumA
+    if (farrayPtr(1) /= sumA) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   Increasing the srcTermProcessing argument to 2 (or higher) results in
+   source term grouping of the terms (up to the number specified in
+   srcTermProcessing) that are on the same source PET.
+
+   d(1) = s(1)[0] + ( s(5)[2] + s(7)[2] ) = 0.5 + (0.1 + 0.1)
+
+   This result is bfb identical to first adding 0.1 and 0.1 into a partial
+   sum, and then adding this sum to 0.5. This is the exact grouping of
+   terms that was used to obtain the result stored in sumB from above.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=2
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#7 = ", farrayPtr(1), " expect: ", sumB
+    if (farrayPtr(1) /= sumB) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   In order to explore the effects of the srcTermProcessing argument
+   further, more terms on the same source PET are needed in the SMM sum.
+   The following sparse matrix has four entries, three of which originate
+   from the same PET (PET 3).
+
+    factorIndexList(1,1) = 1  ! src seq index
+    factorIndexList(2,1) = 1  ! dst seq index
+    factorList(1) = 1.
+    factorIndexList(1,2) = 2  ! src seq index
+    factorIndexList(2,2) = 1  ! dst seq index
+    factorList(2) = 1.
+    factorIndexList(1,3) = 8  ! src seq index
+    factorIndexList(2,3) = 1  ! dst seq index
+    factorList(3) = 1.
+    factorIndexList(1,4) = 12 ! src seq index
+    factorIndexList(2,4) = 1  ! dst seq index
+    factorList(4) = 1.
+
+   Setting the srcTermProcessing argument back to 0 puts the terms in PET
+   order, and canonical order for each PET bundle.
+
+   d(1) = s(1)[0] + s(2)[3] + s(8)[3] + s(12)[3] = 0.5 + 0.2 + 0.1 + 0.1
+
+   The bfb identical result for this sum was calculated and stored in
+   variable sumC above.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=0
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#8 = ", farrayPtr(1), " expect: ", sumC
+    if (farrayPtr(1) /= sumC) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   Setting the srcTermProcessing argument to a value of 2 results in the
+   following source term grouping:
+
+   d(1) = s(1)[0] + ( s(2)[3] + s(8)[3] ) + s(12)[3] = 0.5 + ( 0.2 + 0.1 )
+   + 0.1,
+
+   where the (0.2 + 0.1) partial sum is carried out on source PET 3, and
+   then sent to the destination PET (PET 0), together with the unmodified
+   data from source element 8 (0.1). The final sum is performed on PET 0.
+   The result is identical to the precomputed value stored in sumD. The
+   numbers work out in a way where this result is bfb identical to the
+   previous result, i.e. sumC. However, this bfb match is purely
+   coincidental.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=2
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#9 = ", farrayPtr(1), " expect: ", sumD
+    if (farrayPtr(1) /= sumD) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   Increasing the srcTermProcessing argument up to 3 results in a three
+   term partial sum on PET 3:
+
+   d(1) = s(1)[0] + ( s(2)[3] + s(8)[3] + s(12)[3] ) = 0.5 + ( 0.2 + 0.1 +
+   0.1 ).
+
+   Again the final sum is performed on PET 0. The result is bfb identical
+   to the number stored in sumE, which, for the chosen numbers, works out
+   to have a bfb difference compared to sumC and sumD.
+
+  ! forced srcTermProcessing
+  srcTermProcessing=3
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if (localPet == 0) then
+    print *, "result SRCPET#10 = ", farrayPtr(1), " expect: ", sumE
+    if (farrayPtr(1) /= sumE) &
+      finalrc = ESMF_FAILURE
+  endif
+
+   Reproducibility and Performance
+
+   The above examples show how bit-for-bit (bfb) reproducibility is a
+   result of controlling the term order. ESMF offers several options to
+   control the term order in the sparse matrix multiplication (SMM)
+   implementation:
+     * To guarantee bfb reproducibility between consecutive executions of
+       the same RouteHandle object, the ESMF_TERMORDER_SRCPET
+       execution-time option suffices.
+     * If bfb reproducibility is required between different RouteHandles,
+       e.g. a RouteHandle that is precomputed each time the application
+       starts, then it must be further ensured that the same value of
+       srcTermProcessing is specified during the store call. Under these
+       conditions the ESMF SMM implementation guarantees bfb identical
+       results between runs, as long as the number of PETs does not
+       change.
+     * To guarantee bfb reproducibility between different runs, even when
+       the number of PETs, and therefore the data distribution changes,
+       the execution option ESMF_TERMORDER_SRCSEQ must be chosen together
+       with srcTermProcessing equal to 0 or 1 (in order to prevent partial
+       sums).
+
+   The term order in a SMM operation does not only affect the bfb
+   reproducibility of the result, but also affects the SMM performance.
+   The precise performance implications of a specific term order are
+   complicated and strongly depend on the exact problem structure, as well
+   as on the details of the compute hardware. ESMF implements an
+   auto-tuning mechanism that can be used to conveniently determine a
+   close to optimal set of SMM performance parameters.
+
+   There are two SMM performance parameters in ESMF that are encoded into
+   a RouteHandle during store-time: srcTermProcessing and pipelineDepth.
+   The first one affects the term order in the SMM sums and has been
+   discussed in detail above. The second parameter, pipelineDepth,
+   determines how many in- and out-bound messages may be outstanding on
+   each PET. It has no effect on the term order and does not lead to bfb
+   differences in the SMM results. However, in order to achieve good
+   performance reproducibility, the user has the option to pass in a fixed
+   value of the pipelineDepth argument when precomputing RouteHandles.
+
+   Store calls that take the srcTermProcessing and/or pipelineDepth
+   argument specify them as optional with intent(inout). Omitting the
+   argument when calling, or passing a variable that is set to a negative
+   number, indicates that the respective parameter needs to be determined
+   by the library. Further, if a variable with a negative value was passed
+   in, then the variable is overwritten and replaced by the auto-tuned
+   value on return. Through this mechanism a user can leverage the
+   built-in auto-tuning feature of ESMF to obtain the best possible
+   performance for a specific problem on a particular compute hardware,
+   while still ensuring bfb and performance reproducibility between runs.
+   The following example shows code that first checks if previously stored
+   SMM performance parameters are available in a file on disk, and then
+   either reads and uses them, or else uses auto-tuning to determine the
+   parameters before writing them to file. For simplicity the same sparse
+   matrix as in the previous example is used.
+
+  ! precondition the arguments for auto-tuning and overwriting
+  srcTermProcessing = -1  ! init negative value
+  pipelineDepth     = -1  ! init negative value
+
+  ! get a free Fortran i/o unit
+  call ESMF_UtilIOUnitGet(unit=iounit, rc=rc)
+
+  ! try to open the file that holds the SMM parameters
+  open(unit=iounit, file="smmParameters.dat", status="old", action="read", &
+    form="unformatted", iostat=iostat)
+
+  if (iostat == 0) then
+    ! the file was present -> read from it and close it again
+    read(unit=iounit, iostat=iostat) srcTermProcessing, pipelineDepth, &
+      sumCompare
+    close(unit=iounit)
+  endif
+
+  if ((localPet == 0) .and. (iostat == 0)) then
+    print *, "SMM parameters successfully read from file"
+    print *, " srcTermProcessing=", srcTermProcessing, " pipelineDepth=", &
+      pipelineDepth, " ==>> sumCompare=", sumCompare
+  endif
+
+  call ESMF_ArraySMMStore(srcArray, dstArray, &
+    factorIndexList=factorIndexList, factorList=factorList, &
+    routehandle=rh, srcTermProcessing=srcTermProcessing, &
+    pipelineDepth=pipelineDepth, rc=rc)
+
+  call ESMF_ArraySMM(srcArray, dstArray, routehandle=rh, &
+    termorderflag=ESMF_TERMORDER_SRCPET, rc=rc)
+
+  if ((localPet == 0) .and. (iostat /= 0)) then
+    print *, "SMM parameters determined via auto-tuning -> dump to file"
+    open(unit=iounit, file="smmParameters.dat", status="unknown", &
+      action="write", form="unformatted")
+    write(unit=iounit) srcTermProcessing, pipelineDepth, farrayPtr(1)
+    close(unit=iounit)
+  endif
+
+  if (localPet == 0) then
+    if (iostat /= 0) then
+      ! cannot do bfb comparison of the result without reference
+      print *, "result SRCPET#11 = ", farrayPtr(1)
+    else
+      ! do bfb comparison of the result against reference
+      print *, "result SRCPET#11 = ", farrayPtr(1), " expect: ", sumCompare
+      if (farrayPtr(1) /= sumCompare) then
+        finalrc = ESMF_FAILURE
+        write (msg, *) "Numerical difference detected: ", &
+          farrayPtr(1)-sumCompare
+        call ESMF_LogWrite(msg, ESMF_LOGMSG_INFO)
+      endif
+    endif
+  endif
+
+   Running this example for the first time exercises the auto-tuning
+   branch. The auto-tuned srcTermProcessing and pipelineDepth parameters
+   are then used in the SMM execution, as well as written to file. The SMM
+   result variable is also written to the same file for test purposes. Any
+   subsequent execution of the same example branches into the code that
+   reads the previously determined SMM execution parameters from file,
+   re-using them during store-time. This ensures bfb reproducibility of
+   the SMM result, which is tested in this example by comparing to the
+   previously stored value.
+
+  37.2.2 Asynchronous RouteHandle communication with VMEpoch
+
+   The RouteHandle based communication calls of the Array and Field
+   classes provide the routesyncflag argument. This argument allows the
+   user to specify that the initiated call should not block. Additional
+   calls are necessary to wait for a previously initiated communication
+   call to finish. For a detailed discussion see section [1554]28.2.20.
+   Building on these primitives, asynchronous communications patterns can
+   be implemented in user code. However, a more elegant option to achive
+   asynchronous behavior between sending and receiving PETs of RouteHandle
+   based communications is provided by the VMEpoch feature discussed here.
+
+   The VMEpoch is a low level message aggregation and buffering approach.
+   The VM level details are discussed under the ESMF_VM section in
+   [1555]51.3.11.
+
+   There are several advantages of VMEpoch over the direct use of
+   non-blocking RouteHandle based communication calls:
+
+     * Multiple different RouteHandles can be aggregated within the same
+       epoch. This allows mixing of Redist(), Regrid(), and SMM()
+       operations, and the aggregating of all messages.
+     * The same RouteHandle can be used several times within the same
+       epoch. This is not possible under the direct non-blocking
+       execution.
+     * ArrayBundle and FieldBundle communications are supported. This is
+       not available for the direct non-blocking execution.
+
+   The ESMF_VMEpoch API consists of two interfaces: ESMF_VMEpochEnter()
+   and ESMF_VMEpochExit(). Inside an epoch, communication calls are
+   aggregated. Data transfers on the src side are not issued until the
+   epoch is exited. On the dst side, a single data transfer is received
+   from any of the sending PETs, and then divided over the individual
+   receive calls.
+
+   In the following code example, the srcArray has DEs on PET 0 and 1,
+   while dstArray has DEs on PET 2 and 3. Both Arrays are operating on the
+   same global index space. A Redist() RouteHandle rh is created in the
+   usual manner.
+
+  call ESMF_ArrayRedistStore(srcArray, dstArray, routehandle=rh, rc=rc)
+
+   The precomputed rh can be used as usual. Here the use inside an active
+   VMEpoch is demonstrated.
+
+   First enter the VMEpoch using ESMF_VMEpochEnter(), specifying the kind
+   of epoch. Currently only a single VMEpoch kind is available:
+   ESMF_VMEPOCH_BUFFER.
+
+  call ESMF_VMEpochEnter(epoch=ESMF_VMEPOCH_BUFFER, rc=rc)
+
+   SRC side (PET 0 & 1): The sending PETs do not block.
+
+   DST side (PET 2 & 3): The receiving PETs do not block.
+
+   Notice that ESMF implements a throttle on the VMEpoch as to limit the
+   number of queued message between PETs. This is necessary to protect the
+   receiving side in the EAGER regime where MPI implementations send the
+   data from the sending to the receiving side, assuming the receiving
+   side will always be able to buffer. In cases where the sending side
+   runs far ahead of the receiving side, this strategy can lead to
+   increasing memory pressure on the receiving side, ultimatily resulting
+   in out-of-memory conditions. The default throttle in VMEpoch is set to
+   $10$ outstanding message between any two PETs. It can be adjusted by
+   specifying the throttle argument when calling ESMF_VMEpochEnter().
+
+   Next the actual communication method, ESMF_ArrayRedist(), is called in
+   the usual manner.
+
+  call ESMF_ArrayRedist(srcArray, dstArray, routehandle=rh, rc=rc)
+
+   SRC side (PET 0 & 1): The sending PETs block until the locally needed
+   send buffers are available, and all local data manipulations and data
+   movements into the send buffers have completed.
+
+   Waiting for the send buffers comes into play when a VMEpoch is entered
+   and exited multiple times. The same send buffer is reused each time for
+   the same src-dst-PET pairs (and grown automatically if needed). Each
+   send buffer becomes available once the MPI layer has indicated that the
+   associated, previous MPI_Isend() has completed locally.
+
+   Once the send buffer for a specific PET pair is available, the local
+   data movements defined by the rh and message aggregation must complete
+   before returning. For Regrid() and SMM() operations the
+   srcTermProcessing argument specified during Store() determines the
+   amount of local data processing. Once returned, it is safe to modify
+   the srcArray data on the local PET.
+
+   DST side (PET 2 & 3): The receiving PETs block on the aggregated data
+   from the src side for which the local PET has a dependency defined via
+   the rh. Once received, the data is processed locally, and moved into
+   the final location under the dstArray. On return, it is safe to access
+   the data in dstArray on the local PET.
+
+   Notice that any number of RouteHandle based communication calls can be
+   made inside the same active VMEpoch. In fact, aggregating messages from
+   multiple exchanges is the typical use case of the VMEpoch approach.
+   Additional communication calls cam either involve different
+   RouteHandles, or even the same rh for different src/dst Array pairs.
+
+   When using communication calls that allow the specification of the
+   termorderflag, e.g. ESMF_FieldRegrid(), ESMF_ArraySMM(), etc. inside a
+   VMEpoch, it is important to set it to either ESMF_TERMORDER_SRCPET or
+   ESMF_TERMORDER_SRCSEQ. The default value of ESMF_TERMORDER_FREE is not
+   compatible with VMEpoch.
+
+   Finally the active VMEpoch is exited by calling ESMF_VMEpochExit().
+
+  call ESMF_VMEpochExit(rc=rc)
+
+   SRC side (PET 0 & 1): The sending PETs post their local MPI_Isend()
+   calls. This is non-blocking.
+
+   DST side (PET 2 & 3): The receiving PETs do not block.
+
+   As part of the final clean-up the rh is being released as usual.
+
+  call ESMF_ArrayRedistRelease(routehandle=rh, rc=rc)
+
+  37.2.3 Creating a RouteHandle from an existing RouteHandle - Transfer to a
+  different set of PETs
+
+   Typically a RouteHandle object is created indirectly, i.e. without
+   explicitly calling the ESMF_RouteHandleCreate() method. The RouteHandle
+   object is a byproduct of calling communication Store() methods like
+   ESMF_FieldRegridStore().
+
+   One exception to this rule is when creating a duplicate RouteHandle
+   from an existing RouteHandle object. In this case the
+   ESMF_RouteHandleCreate() method is used explicitly. While this method
+   allows to create a duplicate RouteHandle on the exact same set of PETs
+   as the original RouteHandle, the real purpose of duplication is the
+   transfer of a precomputed RouteHandle to a different set of PETs. This
+   is an efficient way to reduce the total time spent in Store() calls,
+   for situations where the same communication pattern repeats for
+   multiple components.
+
+   This example demonstrates the transfer of a RouteHandle from one set of
+   PETs to another by first introducing three components. Component A is
+   defined on the first half of available PETs.
+
+  petCountA = petCount/2  ! component A gets half the PETs
+
+  allocate(petListA(petCountA))
+  do i=1, petCountA
+    petListA(i) = i-1 ! PETs are base 0
+  enddo
+
+  compA = ESMF_GridCompCreate(petList=petListA, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+    line=__LINE__, &
+    file=__FILE__)) &
+    call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   The other two components, B1 and B2, split the remaining PETs evenly.
+
+  petCountR = petCount - petCountA
+  petCountB1 = petCountR / 2
+
+  allocate(petListB1(petCountB1))
+  do i=1, petCountB1
+    petListB1(i) = petCountA + i-1 ! PETs are base 0
+  enddo
+
+  allocate(petListB2(petCountR-petCountB1))
+  do i=1, petCountR-petCountB1
+    petListB2(i) = petCountA + petCountB1 + i-1 ! PETs are base 0
+  enddo
+
+  compB1 = ESMF_GridCompCreate(petList=petListB1, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+    line=__LINE__, &
+    file=__FILE__)) &
+    call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+  compB2 = ESMF_GridCompCreate(petList=petListB2, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+    line=__LINE__, &
+    file=__FILE__)) &
+    call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Skipping all of the standard superstructure code, assume that fieldA
+   has been created by component A, has been reconciled across all PETs
+   via a StateReconcile() call, and accessed via a StateGet(). The same is
+   true for fieldB1 and fieldB2 from components B1 and B2, respectively.
+
+   Now the RouteHandle rh1 for a Redist operation is precomputed between
+   fieldA and fieldB1.
+
+  call ESMF_FieldRedistStore(srcField=fieldA, dstField=fieldB1, &
+    routehandle=rh1, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+    line=__LINE__, &
+    file=__FILE__)) &
+    call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   The communication pattern stored in rh1 is between the PETs associated
+   with component A and those associated with component B1. Now component
+   B2 is simply a second instance of the same component code as B1, but on
+   a different set of PETs. The ESMF_RouteHandleCreate() method can be
+   used to transfer rh1 to the set of PETs that is consistent with fieldA
+   to fieldB2 communication.
+
+   In order to transfer a RouteHandle to a different set of PETs, the
+   originPetList and targetPetList must be constructed. The originPetList
+   is the union of source and destination PETs (in that order) for which
+   rh1 was explicitly computed via the Store() call:
+
+  allocate(originPetList(size(petListA)+size(petListB1)))
+  originPetList(1:size(petListA)) = petListA(:)
+  originPetList(size(petListA)+1:) = petListB1(:)
+
+   The targetPetList is the union of source and destination PETs (in that
+   order) for which the target RouteHandle (i.e. rh2) will be defined:
+
+  allocate(targetPetList(size(petListA)+size(petListB2)))
+  targetPetList(1:size(petListA)) = petListA(:)
+  targetPetList(size(petListA)+1:) = petListB2(:)
+
+   Now the new RouteHandle rh2 can be created easily from the exising
+   RouteHandle rh1, suppling the origin and target petLists.
+
+  rh2 = ESMF_RouteHandleCreate(rh1, originPetList=originPetList, &
+    targetPetList=targetPetList, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+    line=__LINE__, &
+    file=__FILE__)) &
+    call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   The new RouteHandle rh2 is completely independent of the original
+   RouteHandle. In fact, it is perfectly fine to destroy (or release) rh1
+   while holding on to rh2.
+
+  call ESMF_RouteHandleDestroy(rh1, noGarbage=.true., rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+    line=__LINE__, &
+    file=__FILE__)) &
+    call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   Finally the rh2 object can be used to redistribute data from fieldA to
+   fieldB2.
+
+  call ESMF_FieldRedist(srcField=fieldA, dstField=fieldB2, &
+    routehandle=rh2, rc=rc)
+  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+    line=__LINE__, &
+    file=__FILE__)) &
+    call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+   The communication pattern held by rh2 is idential to what whould have
+   been created by an explicit ESMF_FieldRedistStore() call. However, the
+   ESMF_RouteHandleCreate() call used to create rh2 from rh1 is much
+   faster than the full RedistStore() operation.
+
+  37.2.4 Write a RouteHandle to file and creating a RouteHandle from file
+
+   Communication Store() methods, like ESMF_FieldRegridStore(), are used
+   to create RouteHandles. These methods can be expensive, both with
+   respect to temporary memory requirements as well as the time they
+   require to execute. Often the associated cost is acceptable because
+   Store() calls are typically used during the initialization phase of the
+   application. The cost of RouteHandle generation is therefore armorized
+   over the entire run phase of the application, where the RouteHandle is
+   applied over and over to transfer data according to the same
+   communication pattern.
+
+   However, especially for short production runs, an expensive
+   initialization time can become problematic. In such cases it is useful
+   to write the RouteHandle to file. Subsequent application runs can then
+   re-create the RouteHandle during initialization, simply from file at a
+   fraction of the time of the original Store() call.
+
+   First a RouteHandle must be created using one of the ESMF Store()
+   methods.
+
+  call ESMF_FieldRedistStore(srcField=fieldA, dstField=fieldB, &
+    routehandle=rh1, rc=rc)
+
+   Now the RouteHandle object rh1 can be written to file using the
+   collective ESMF_RouteHandleWrite() method.
+
+  call ESMF_RouteHandleWrite(rh1, fileName="testWrite.RH", rc=rc)
+
+   This creates a single binary file with name testWrite.RH. The
+   information from across all PETs that define rh1 is contained in this
+   file.
+
+   At this point, the original RouteHandle is no longer needed and can be
+   destroyed.
+
+  call ESMF_RouteHandleDestroy(rh1, noGarbage=.true., rc=rc)
+
+   The RouteHandle just deleted can easily be re-created using the
+   ESMF_RouteHandleCreate() method that accepts the file name as an
+   argument. This is a collective method that must be called on exactly
+   the same number of PETs that was used for the original Store() and
+   Write() calls that generated the file.
+
+  rh2 = ESMF_RouteHandleCreate(fileName="testWrite.RH", rc=rc)
+
+   Finally the re-created RouteHandle, rh2, can be used to execute the
+   communication pattern originally computed in rh1.
+
+  call ESMF_FieldRedist(srcField=fieldA, dstField=fieldB, &
+    routehandle=rh2, rc=rc)
+
+   Once done with rh2, the RouteHandle can be destroyed as usual.
+
+  call ESMF_RouteHandleDestroy(rh2, noGarbage=.true., rc=rc)
+
+  37.2.5 Reusablity of RouteHandles and interleaved distributed and
+  undistributed dimensions
+
+   A RouteHandle object is typically created during a communication
+   Store() call, e.g. an ESMF_FieldRegridStore(). Other communication
+   methods with Store() are Halo, Redist, and SMM. The primary input
+   objects of a Store() call are either Fields, Arrays, FieldBundles, or
+   ArrayBundles. There will be an object for the source side, and another
+   object for the destination side. Both objects must be of the same type.
+
+  srcField = ESMF_FieldCreate(srcGrid, ESMF_TYPEKIND_R8, rc=rc)
+
+  dstField = ESMF_FieldCreate(dstGrid, ESMF_TYPEKIND_R8, rc=rc)
+
+  call ESMF_FieldRegridStore(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, rc=rc)
+
+   The purpose of the explicit Store() call is to separate out the
+   expensive part of creating the RouteHandle object for a specific
+   communication patter, from the less expensive part of applying it.
+   Applying the RouteHandle results in data movement between the source
+   and destination objects. Once a RouteHandle is available, it is
+   reusable. This means it can be applied over and over again to
+   communicate data from the source to the destination object.
+
+  do i=1, 10
+    ! repeatedly applying the routehandle
+    call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+      routehandle=routehandle, rc=rc)
+  enddo
+
+   Reusability of a RouteHandle object extends beyond re-applying it to
+   the same source/destination object pair that was used during Store().
+   The same RouteHandle can be applied to a different object pair, as long
+   as these criterial are met:
+     * The new pair matches the original pair with respect to type, and
+       kind.
+     * The memory layout of the distributed (i.e. gridded) dimensions of
+       the new pair is congruent with the original pair. This means the
+       DistGrids must match, as well as any extra padding on the
+       distributed/gridded dimensions.
+     * Size, number, and position (i.e. index order) of potentially
+       present undistributed (i.e. ungridded) dimensions does not affect
+       the reusability of a RouteHandle.
+
+   The following examples will discuss in detail what this means in
+   practice.
+
+   First consider the case where a second pair of source and destination
+   Fields is created identical to the first set. The precomputed
+   RouteHandle is immediatly reusable for this new Field pair to carry out
+   the regrid operation.
+
+  srcField2 = ESMF_FieldCreate(srcGrid, ESMF_TYPEKIND_R8, rc=rc)
+
+  dstField2 = ESMF_FieldCreate(dstGrid, ESMF_TYPEKIND_R8, rc=rc)
+
+  ! applying the same routehandle to a different pair of fields
+  call ESMF_FieldRegrid(srcField=srcField2, dstField=dstField2, &
+    routehandle=routehandle, rc=rc)
+
+   The same RouteHandle stays re-usable even for a Field pair where source
+   and destination have one or more additional undistributed dimensions.
+   Here a single undistributed dimension is added. By default all
+   undistributed dimensions will be ordered after the distributed
+   dimensions provided by the Grid object.
+
+  srcField3 = ESMF_FieldCreate(srcGrid, ESMF_TYPEKIND_R8, &
+    ungriddedLBound=(/1/), ungriddedUBound=(/10/), &  ! undistributed dim last
+    rc=rc)
+
+  dstField3 = ESMF_FieldCreate(dstGrid, ESMF_TYPEKIND_R8, &
+    ungriddedLBound=(/1/), ungriddedUBound=(/10/), & ! undistributed dim last
+    rc=rc)
+
+  ! applying the same routehandle to a different pair of fields
+  call ESMF_FieldRegrid(srcField=srcField3, dstField=dstField3, &
+    routehandle=routehandle, rc=rc)
+
+   The undistributed dimension can also be moved into the first position,
+   and the same RouteHandle can still be re-used. Specifying the order of
+   dimensions in a Field is accomplished by providing the gridToFieldMap.
+   Here the Grid dimensions are mapped to 2nd and 3rd Field dimensions,
+   moving the undistributed dimension into the leading position.
+
+  srcField4 = ESMF_FieldCreate(srcGrid, ESMF_TYPEKIND_R8, &
+    ungriddedLBound=(/1/), ungriddedUBound=(/10/), &
+    gridToFieldMap=(/2,3/), rc=rc)  ! undistributed dim 1st
+
+  dstField4 = ESMF_FieldCreate(dstGrid, ESMF_TYPEKIND_R8, &
+    ungriddedLBound=(/1/), ungriddedUBound=(/10/), &
+    gridToFieldMap=(/2,3/), rc=rc)  ! undistributed dim 1st
+
+  ! applying the same routehandle to a different pair of fields
+  call ESMF_FieldRegrid(srcField=srcField4, dstField=dstField4, &
+    routehandle=routehandle, rc=rc)
+
+   It is not necessary that the undistributed dimension is in the same
+   position on the source and destination Field. The only criteria that
+   needs to be satisfied is that both source and destination have the same
+   number of undistributed elements. Here the RouteHandle is re-used for a
+   Field pair where the destination Field interleaves the undistributed
+   dimension between the two distributed dimensions. At the same time the
+   source Field keeps the undistributed dimension in leading position.
+
+  srcField5 = ESMF_FieldCreate(srcGrid, ESMF_TYPEKIND_R8, &
+    ungriddedLBound=(/1/), ungriddedUBound=(/10/), &
+    gridToFieldMap=(/2,3/), rc=rc)  ! undistributed dim 1st
+
+  dstField5 = ESMF_FieldCreate(dstGrid, ESMF_TYPEKIND_R8, &
+    ungriddedLBound=(/1/), ungriddedUBound=(/10/), &
+    gridToFieldMap=(/1,3/), rc=rc)  ! undistributed dim 2nd
+
+  ! applying the same routehandle to a different pair of fields
+  call ESMF_FieldRegrid(srcField=srcField5, dstField=dstField5, &
+    routehandle=routehandle, rc=rc)
+
+   In the following example the undistributed elements on the source side
+   are spread across two undistributed dimensions. Of course the product
+   of the two dimension sizes must equal the number of undistributed
+   elements on the destination side, in order to fulfil the element count
+   criteria. Here this number is 10. At two undistributed dimension on the
+   source side are placed in first and fourth position using the
+   gridToFieldMap. The same RouteHandle is applied to this Field pair,
+   resulting in the desired regrid operation.
+
+  srcField6 = ESMF_FieldCreate(srcGrid, ESMF_TYPEKIND_R8, &
+    ungriddedLBound=(/1,1/), ungriddedUBound=(/2,5/), &
+    gridToFieldMap=(/2,3/), rc=rc)  ! undistributed dims 1st and 4th
+
+  dstField6 = ESMF_FieldCreate(dstGrid, ESMF_TYPEKIND_R8, &
+    ungriddedLBound=(/1/), ungriddedUBound=(/10/), &
+    gridToFieldMap=(/1,3/), rc=rc)  ! undistributed dim 2nd
+
+  ! applying the same routehandle to a different pair of fields
+  call ESMF_FieldRegrid(srcField=srcField6, dstField=dstField6, &
+    routehandle=routehandle, rc=rc)
+
+   While the RouteHandle was precomputed using a specific
+   source/destination Field pair, we have seen how it can be re-used as
+   long as the memory layout associated with the distributed (i.e.
+   gridded) dimensions does not change. A natural extension of this
+   feature is to allow the same RouteHandle to be re-used when source and
+   destination are FieldBundles instead of Fields. The only requirement
+   here is that both sides contain the same number of elements, and that
+   each pair constructed from the source and destination side is
+   compatible with the original pair used as shown in the examples above.
+   Here this criteria is simply met by constructing the source and
+   destination FieldBundles from the exact Fields used in the previous
+   examples.
+
+  srcFieldBundle = ESMF_FieldBundleCreate(fieldList=(/srcField, &
+    srcField2, srcField3, srcField4, srcField5, srcField6/), rc=rc)
+
+  dstFieldBundle = ESMF_FieldBundleCreate(fieldList=(/dstField, &
+    dstField2, dstField3, dstField4, dstField5, dstField6/), rc=rc)
+
+  ! applying the same routehandle to a pair of FieldBundles
+  call ESMF_FieldBundleRegrid(srcFieldBundle, dstFieldBundle, &
+    routehandle=routehandle, rc=rc)
+
+   On a fundamental level, RouteHandles are re-usable across objects that
+   have the same memory layout for their distributed dimensions. Since
+   ESMF Fields are built on top of ESMF Arrays, it is possible to re-use
+   the same RouteHandle that was precomputed for a Field pair and apply it
+   to a matching Array pair.
+
+   For this example, the easiest way to create Arrays with the same memory
+   layout in the distributed dimensions is to query the source and
+   destination Grid objects for their DistGrids. Then source and
+   destination Arrays can be easily constructed.
+
+  call ESMF_GridGet(srcGrid, distgrid=srcDistGrid, rc=rc)
+
+  call ESMF_GridGet(dstGrid, distgrid=dstDistGrid, rc=rc)
+
+  srcArray = ESMF_ArrayCreate(srcDistGrid, ESMF_TYPEKIND_R8, rc=rc)
+
+  dstArray = ESMF_ArrayCreate(dstDistGrid, ESMF_TYPEKIND_R8, rc=rc)
+
+  ! applying the same routehandle to an Array pair
+  call ESMF_ArraySMM(srcArray=srcArray, dstArray=dstArray, &
+    routehandle=routehandle, rc=rc)
+
+   Finally the resources associated with the RouteHandle object are
+   released. The recommended way to do this is by calling into the
+   Release() method associated with the Store() method used to create the
+   RouteHandle.
+
+  call ESMF_FieldRegridRelease(routehandle, rc=rc)
+
+  37.2.6 Dynamic Masking
+
+   When a RouteHandle object is created during an ESMF_FieldRegridStore()
+   call, masking information can be provided by the user. This type of
+   masking is said to be static, and is described in section
+   [1556]24.2.10. It is static, because the masks set the maximum limits
+   of the regrid operation, which cannot be changed later. All subsequent
+   executions of the same RouteHandle can only use elements - source or
+   destination - that were not masked during the Store() call.
+
+   Once a RouteHandle object is available, whether it was created with or
+   without static masking, the associated regrid operation can further be
+   masking during RouteHandle execution . This is called dynamic masking,
+   because it can dynamically change between subsequent RouteHandle
+   executions. The RouteHandle itself remains unchange during this
+   process. The dynamic masking information is processed on the fly as the
+   RouteHandle is applied.
+
+   The following example demonstrates dynamic masking for a regrid
+   operation between two Field objects. Although it is supported, here the
+   regrid operation between srcField and dstField is computed without
+   static masking.
+
+   Note that since the intention is to later use the generated RouteHandle
+   for dynamic masking, it is important to provide the srcTermProcessing
+   argument, which must be set equal to 0. Doing this ensures that all of
+   the multiplying with interpolation weights, and summing of terms, is
+   carried out on the destination side. This is critical for dynamic
+   masking.
+
+  srcTermProcessing=0
+
+  call ESMF_FieldRegridStore(srcField=srcField, dstField=dstField, &
+    srcTermProcessing=srcTermProcessing, routehandle=routehandle, rc=rc)
+
+   Now that routehandle is available, it can be used to execute the regrid
+   operation over and over during the course of the simualtion run.
+
+  call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, rc=rc)
+
+   Assume that during the course of the simulation the srcField becomes
+   partially masked. This masking may be dynamically changing, as would be
+   the case for the ice cover over the arctic ocean. Then the regrid
+   operation represented by routehandle should dynamically adjust to only
+   use unmasked source elements.
+
+   The dynamic masking behavior can be achieved in ESMF by setting
+   srcField elements to a special value.
+
+  call ESMF_FieldGet(srcField, farrayPtr=farrayPtr, rc=rc)
+
+  ! setting an arbitrary local source element to special value 'srcMaskValue'
+  farrayPtr(lbound(farrayPtr,1)+3,lbound(farrayPtr,2)+3) = srcMaskValue
+
+   Then set up an ESMF_DynamicMask object that holds information about the
+   special mask value. The dynamic mask object further holds a pointer to
+   the routine that will be called in order to handle dynamically masked
+   elements.
+
+  call ESMF_DynamicMaskSetR8R8R8(dynamicMask, &
+    dynamicSrcMaskValue=srcMaskValue, &
+    dynamicMaskRoutine=simpleDynMaskProc, &
+    rc=rc)
+
+   The names of the specific DynamicMaskSet methods all carry a
+   typekind-triplet suffix. Here the suffix is R8R8R8. This indicates that
+   the dynamicMaskRoutine argument provided is expected to deal with
+   real(ESMF_KIND_R8) destination data (first R8 typekind),
+   real(ESMF_KIND_R8) factors (second R8 typekind), and real(ESMF_KIND_R8)
+   source data (third R8 typekind).
+
+   Now when the routehandle is executed, and the dynamicMask object is
+   passed into the ESMF_FieldRegrid() call,
+
+  call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, dynamicMask=dynamicMask, rc=rc)
+
+   ESMF will scan the srcField for elements that have data equal to that
+   set by dynamicSrcMaskValue. If any are found, they are passed into the
+   routine provided via the dynamicMaskRoutine argument.
+
+   The procedure passed through the dynamicMaskRoutine argument must
+   satisfy exactly the following predefined interface:
+
+    interface
+      subroutine ESMF_DynamicMaskRoutineR8R8R8(dynMaskList, &
+        dynamicSrcMaskValue, dynamicDstMaskValue, rc)
+        use ESMF_UtilTypesMod
+        implicit none
+        type(ESMF_DynamicMaskElementR8R8R8), pointer        :: dynMaskList(:)
+        real(ESMF_KIND_R8),            intent(in), optional :: dynamicSrcMaskVal
+ue
+        real(ESMF_KIND_R8),            intent(in), optional :: dynamicDstMaskVal
+ue
+        integer,                       intent(out)  :: rc
+      end subroutine
+    end interface
+
+   The first argument accepted according to this interface is an array of
+   type ESMF_DynamicMaskElement. Each element of this array corresponds to
+   a single element in the dstField that is affected by dynamic masking.
+   For each such dstElement the complete interpolation stencile is
+   provided by the ESMF_DynamicMaskElement derived type:
+
+    type ESMF_DynamicMaskElementR8R8R8
+      real(ESMF_KIND_R8), pointer       :: dstElement
+      real(ESMF_KIND_R8), allocatable   :: factor(:)
+      real(ESMF_KIND_R8), allocatable   :: srcElement(:)
+    end type
+
+   Here the dstElement is a pointer to the actual element in the dstField.
+   Thus, assigning dstElement to a value, immediately results in a value
+   change of the element inside the dstField object. Further, the size of
+   the factor(:) and srcElement(:) arrays is identical to each other and
+   corresponds to the number of source elements in the interpolation
+   stencile. Without dynamic masking, the dstElement would simply be
+   calculated as the scalar product of factor(:) and srcElement(:).
+
+   By providing the dynamicMaskRoutine, the user has full control as to
+   what exactly happens to destination elements that are affected by
+   dynamic masking. For the current example, where some source elements
+   may be marked by a special masking value, a simple scheme could be to
+   only use non-masked source elements to calculate destination elements.
+   The result then needs to be renormalized in order to account for the
+   missing source elements. This could be implemented similar to the
+   following subroutine:
+
+    subroutine simpleDynMaskProc(dynamicMaskList, dynamicSrcMaskValue, &
+      dynamicDstMaskValue, rc)
+      type(ESMF_DynamicMaskElementR8R8R8), pointer        :: dynamicMaskList(:)
+      real(ESMF_KIND_R8),            intent(in), optional :: dynamicSrcMaskValue
+      real(ESMF_KIND_R8),            intent(in), optional :: dynamicDstMaskValue
+      integer,                       intent(out)          :: rc
+      integer :: i, j
+      real(ESMF_KIND_R8)  :: renorm
+      if (associated(dynamicMaskList)) then
+        do i=1, size(dynamicMaskList)
+          dynamicMaskList(i)%dstElement = 0.d0 ! set to zero
+          renorm = 0.d0 ! reset
+          do j=1, size(dynamicMaskList(i)%factor)
+            if (.not. &
+              match(dynamicSrcMaskValue,dynamicMaskList(i)%srcElement(j))) then
+              dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement &
+                + dynamicMaskList(i)%factor(j) &
+                * dynamicMaskList(i)%srcElement(j)
+              renorm = renorm + dynamicMaskList(i)%factor(j)
+            endif
+          enddo
+          if (renorm > 0.d0) then
+            dynamicMaskList(i)%dstElement = dynamicMaskList(i)%dstElement / reno
+rm
+          else if (present(dynamicSrcMaskValue)) then
+            dynamicMaskList(i)%dstElement = dynamicSrcMaskValue
+          else
+            rc = ESMF_RC_ARG_BAD  ! error detected
+            return
+          endif
+        enddo
+      endif
+      ! return successfully
+      rc = ESMF_SUCCESS
+    end subroutine
+
+   So far in the example only the srcField had been dynamically masked.
+   However, elements in the dstField can be masked as well, following
+   exactly the same manner.
+
+   First ensure that the dstField is in a well defined condition. This can
+   be achived by reseting it, e.g. to zero, using the ESMF_FieldFill()
+   method.
+
+  call ESMF_FieldFill(dstField, dataFillScheme="const", const1=0.d0, rc=rc)
+
+   Now some of the destination elements are set to a defined masking
+   value.
+
+  call ESMF_FieldGet(dstField, farrayPtr=farrayPtr, rc=rc)
+
+  ! setting an arbitrary local destination element to special value 'dstMaskValu
+e'
+  farrayPtr(lbound(farrayPtr,1)+1,lbound(farrayPtr,2)+1) = dstMaskValue
+
+   The dynamicMask is reset using the same DynamicMaskSet method as
+   before, but in addition to the previous arguments, dynamicDstMaskValue
+   is also specified.
+
+  call ESMF_DynamicMaskSetR8R8R8(dynamicMask, &
+    dynamicSrcMaskValue=srcMaskValue, &
+    dynamicDstMaskValue=dstMaskValue, &
+    dynamicMaskRoutine=simpleDynMaskProc, &
+    rc=rc)
+
+   Passing the reset dynamicMask object into ESMF_FieldRegrid() causes
+   ESMF to not only look for source elements that match
+   dynamicSrcMaskValue, but also destination elements that match
+   dynamicDstMaskValue.
+
+  call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, zeroregion=ESMF_REGION_EMPTY, &
+    dynamicMask=dynamicMask, rc=rc)
+
+   Again an adequate procedure is supplied through dynamicMaskRoutine. For
+   the current case, however, a suitable procedure would be inspecting the
+   dstElement as well as all the dstElements provided via the dynMaskList
+   argument.
+
+   Notice the zeroregion = ESMF_REGION_EMPTY specification in the
+   ESMF_FieldRegrid() call. This setting ensures that values in the
+   dstField remain unchanged until they are checked for
+   dynamicDstMaskValue.
+
+   The DynamicMaskSet methods provide an argument of logical type, called
+   handleAllElements. By default it is set to .false., which means that
+   only elements affected by dynamic masking - as described above - are
+   passed to the dynamicMaskRoutine. However, when handleAllElements is
+   set to .true., all local elements on each PET are made available to the
+   dynamicMaskRoutine. This allows the user supplied procedure to
+   implement fully customized handling of the interpolation from source to
+   destination, using the information supplied by ESMF.
+
+   To demonstrate this, a custom routine simpleHandleAllProc() is passed
+   in as dynamicMaskRoutine, and handleAllElements is set to .true.. All
+   other aspects of the user interface remain unchanged.
+
+  call ESMF_DynamicMaskSetR8R8R8(dynamicMask, &
+    dynamicSrcMaskValue=srcMaskValue, &
+    dynamicDstMaskValue=-2.d0, &
+    dynamicMaskRoutine=simpleHandleAllProc, &
+    handleAllElements=.true., &
+    rc=rc)
+
+  call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, zeroregion=ESMF_REGION_EMPTY, &
+    dynamicMask=dynamicMask, rc=rc)
+
+   Dynamic masking is also available for source and destination fields
+   that contain leading undistributed dimensions. When ESMF applies the
+   regridding weights, it interprets the product space of leading
+   undistributed dimensions of a Field or Array as the elements of a
+   vector. In this approach the interpolation becomes a vector operation.
+   When applying the concept of dynamic masking to such a vector
+   operation, without making further assumptions, it must be assumed that
+   different vector elements may be affected differently by the dynamic
+   mask. ESMF therefore unrolls the vector dimension when constructing the
+   information passed to the dynamicMaskRoutine. As a consequence of this,
+   masking routines do not generally have to consider vectorization
+   explicitly.
+
+   The concept is demonstrated by creating source and destination fields
+   with one leading undistributed dimension.
+
+  srcField = ESMF_FieldCreate(srcGrid, ESMF_TYPEKIND_R8, &
+    gridToFieldMap=(/2,3/), ungriddedLBound=(/1/), ungriddedUBound=(/20/), &
+    rc=rc)
+
+  dstField = ESMF_FieldCreate(dstGrid, ESMF_TYPEKIND_R8, &
+    gridToFieldMap=(/2,3/), ungriddedLBound=(/1/), ungriddedUBound=(/20/), &
+    rc=rc)
+
+   A regrid operation is computed in the usual manner. In order to make
+   the resulting RouteHandle object suitable for dynamic masking,
+   computations are pushed completely onto the destination PETs, as in
+   previous examples, by setting the srcTermProcessing argument to zero.
+
+  srcTermProcessing=0
+
+  call ESMF_FieldRegridStore(srcField=srcField, dstField=dstField, &
+    srcTermProcessing=srcTermProcessing, routehandle=routehandle, rc=rc)
+
+   The same dynamicMaskRoutine as before can be used when setting up the
+   ESMF_DynamicMask object. However, the source and destination Fields now
+   contain 20 undistributed elements at each distributed location, and the
+   dynamic mask routine will handle all elements that are affected by the
+   dynamic mask conditions.
+
+  call ESMF_DynamicMaskSetR8R8R8(dynamicMask, &
+    dynamicSrcMaskValue=srcMaskValue, &
+    dynamicDstMaskValue=dstMaskValue, &
+    dynamicMaskRoutine=simpleDynMaskProc, &
+    rc=rc)
+
+  call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, zeroregion=ESMF_REGION_EMPTY, &
+    dynamicMask=dynamicMask, rc=rc)
+
+   Setting the handleAllElements to .true. will pass all elements to the
+   dynamicMaskRoutine. There are 20 times as many elements on the source
+   and destination side, and therefore the dynamic masking routine will
+   handle exactly 20 times as many elements compared to the case without
+   undistributed dimension.
+
+  call ESMF_DynamicMaskSetR8R8R8(dynamicMask, &
+    dynamicSrcMaskValue=srcMaskValue, &
+    dynamicDstMaskValue=-2.d0, &
+    dynamicMaskRoutine=simpleHandleAllProc, &
+    handleAllElements=.true., &
+    rc=rc)
+
+  call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, zeroregion=ESMF_REGION_EMPTY, &
+    dynamicMask=dynamicMask, rc=rc)
+
+   For the case with handleAllElements=.true., where the entire vector of
+   undistributed elements is passed to dynamicMaskRoutine at every
+   distributed location, an alternative implementation option exists for
+   the dynamic masking routine. In some cases this alternative may result
+   in more efficient code because it allows to vectorize over the
+   undistributed elements when summing up the interpolation terms. The
+   alternative interface for dynamicMaskRoutine is:
+
+    interface
+      subroutine ESMF_DynamicMaskRoutineR8R8R8V(dynMaskList, &
+        dynamicSrcMaskValue, dynamicDstMaskValue, rc)
+        use ESMF_UtilTypesMod
+        implicit none
+        type(ESMF_DynamicMaskElementR8R8R8V), pointer       :: dynMaskList(:)
+        real(ESMF_KIND_R8),            intent(in), optional :: dynamicSrcMaskVal
+ue
+        real(ESMF_KIND_R8),            intent(in), optional :: dynamicDstMaskVal
+ue
+        integer,                       intent(out)  :: rc
+      end subroutine
+    end interface
+
+   The difference compared to the previously used interface is that the
+   first argument now is of type ESMF_DynamicMaskElementR8R8R8V. This type
+   is declared as follows:
+
+    type ESMF_DynamicMaskElementR8R8R8V
+      real(ESMF_KIND_R8), pointer       :: dstElement(:)
+      real(ESMF_KIND_R8), allocatable   :: factor(:)
+      type(ESMF_PtrR8D1), allocatable   :: srcElement(:)
+    end type
+
+   Here size(dstElement) for every element in dynMaskList is identical to
+   the vector size, i.e. the number of undistributed elements to be
+   handled. The same is true for size(srcElement(j)%ptr)), for every
+   element j of the interpolation stencile.
+
+  call ESMF_DynamicMaskSetR8R8R8V(dynamicMask, &
+    dynamicSrcMaskValue=srcMaskValue, &
+    dynamicDstMaskValue=-2.d0, &
+    dynamicMaskRoutine=simpleHandleAllProcV, &
+    handleAllElements=.true., &
+    rc=rc)
+
+  call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, zeroregion=ESMF_REGION_EMPTY, &
+    dynamicMask=dynamicMask, rc=rc)
+
+   Applying dynamic masking to source and destination fields of other
+   typekind than R8 only requires that the correct DynamicMaskSet method
+   is chosen. Here we create real(ESMF_KIND_R4) source and destination
+   fields.
+
+  srcField = ESMF_FieldCreate(srcGrid, ESMF_TYPEKIND_R4, rc=rc)
+
+  dstField = ESMF_FieldCreate(dstGrid, ESMF_TYPEKIND_R4, rc=rc)
+
+   Computing a suitable RouteHandle is unchanged.
+
+  srcTermProcessing=0
+
+  call ESMF_FieldRegridStore(srcField=srcField, dstField=dstField, &
+    srcTermProcessing=srcTermProcessing, routehandle=routehandle, rc=rc)
+
+   Now setting some source and destination elements to defined special
+   values of the correct typekind.
+
+  call ESMF_FieldGet(srcField, farrayPtr=farrayPtrR4, rc=rc)
+
+  farrayPtrR4(lbound(farrayPtrR4,1)+3,lbound(farrayPtrR4,2)+3) = srcMaskValueR4
+
+  call ESMF_FieldFill(dstField, dataFillScheme="const", const1=0.d0, rc=rc)
+
+  call ESMF_FieldGet(dstField, farrayPtr=farrayPtrR4, rc=rc)
+
+  farrayPtrR4(lbound(farrayPtrR4,1)+1,lbound(farrayPtrR4,2)+1) = dstMaskValueR4
+
+   Setting up the ESMF_DynamicMask object is practically the same as
+   before, just that the correct typekind-triplet suffix for the
+   DynamicMaskSet method must be selected, indicating that the destination
+   data is of typekind R4, the factors are still of typekind R8, and the
+   source data is of typekind R4.
+
+  call ESMF_DynamicMaskSetR4R8R4(dynamicMask, &
+    dynamicSrcMaskValue=srcMaskValueR4, &
+    dynamicDstMaskValue=dstMaskValueR4, &
+    dynamicMaskRoutine=simpleDynMaskProcR4R8R4, &
+    rc=rc)
+
+   Finally calling into ESMF_FieldRegrid() with the dynamicMask object is
+   unchanged.
+
+  call ESMF_FieldRegrid(srcField=srcField, dstField=dstField, &
+    routehandle=routehandle, zeroregion=ESMF_REGION_EMPTY, &
+    dynamicMask=dynamicMask, rc=rc)
+
+37.3 Restrictions and Future Work
+
+     * Non-blocking communication via the routesyncflag option is
+       implemented for Fields and Arrays. It is not available for
+       FieldBundles and ArrayBundles. The user is advised to use the
+       VMEpoch approach for all cases to achive asynchronicity.
+     * The dynamic masking feature currently has the following
+       limitations:
+          + Only available for ESMF_TYPEKIND_R8 and ESMF_TYPEKIND_R4
+            Fields and Arrays.
+          + Only available through the ESMF_FieldRegrid() and
+            ESMF_ArraySMM() methods.
+          + Destination objects that have undistributed dimensions after
+            any distributed dimension are not supported.
+          + No check is implemented that ensure the user-provided
+            RouteHandle object is suitable for dynamic masking.
+
+37.4 Design and Implementation Notes
+
+   Internally all route-based communication calls are implemented as
+   sparse matrix multiplications. The precompute step for all of the
+   supported communication methods can be broken up into three steps:
+    1. Construction of the sparse matrix for the specific communication
+       method.
+    2. Generation of the communication pattern according to the sparse
+       matrix.
+    3. Encoding of the communication pattern for each participating PET in
+       form of an XXE stream.
+
+37.5 Class API
+

@@ -1,0 +1,53 @@
+  33.4.13 ESMF_MeshCreateCubedSphere - Create a Mesh representation of a cubed
+  sphere grid
+
+   INTERFACE:
+ function ESMF_MeshCreateCubedSphere(tileSize, nx, ny, name, rc)
+
+   RETURN VALUE:
+     type(ESMF_Mesh)         :: ESMF_MeshCreateCubedSphere
+
+   ARGUMENTS:
+     integer,                  intent(in)            :: tileSize
+     integer,                  intent(in)            :: nx
+     integer,                  intent(in)            :: ny
+     character(len=*),         intent(in),  optional :: name
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a ESMF_Mesh object for a cubed sphere grid using identical
+   regular decomposition for every tile. The grid coordinates are
+   generated based on the algorithm used by GEOS-5, The tile resolution is
+   defined by tileSize. Each tile is decomposed into nx x ny blocks and
+   the total number of DEs used is nx x ny x 6. If the total PET is not
+   equal to the number of DEs, the DEs are distributed into PETs in the
+   default cyclic distribution. Internally, the nodes and the elements
+   from multiple DEs are collapsed into a 1D array. Therefore, the nodal
+   distgrid or the element distgrid attached to the Mesh object is always
+   a one DE arbitrarily distributed distgrid. The sequential indices of
+   the nodes and the elements are derived based on the location of the
+   point in the Cubed Sphere grid. If an element is located at (x, y) of
+   tile n. Its sequential index would be
+   (n-1)*tileSize*tileSize+(y-1)*tileSize+x. If it is a node, its
+   sequential index would be
+   (n-1)*(tileSize+1)*(tileSize+1)+(y-1)*(tileSize+1)+x.
+
+   The arguments are:
+
+   tilesize
+          The number of elements on each side of the tile of the Cubed
+          Sphere grid
+
+   nx
+          The number of blocks on the horizontal size of each tile
+
+   ny
+          The number of blocks on the vertical size of each tile
+
+   [name]
+          The name of the Mesh.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

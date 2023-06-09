@@ -1,0 +1,492 @@
+          + [89]43 Time Class
+               o [90]43.1 Description
+               o [91]43.2 Use and Examples
+                    # [92]43.2.1 Time initialization
+                    # [93]43.2.2 Time increment
+                    # [94]43.2.3 Time comparison
+               o [95]43.3 Restrictions and Future Work
+               o [96]43.4 Class API
+                    # [97]43.4.1 ESMF_TimeAssignment(=)
+                    # [98]43.4.2 ESMF_TimeOperator(+)
+                    # [99]43.4.3 ESMF_TimeOperator(-)
+                    # [100]43.4.4 ESMF_TimeOperator(-)
+                    # [101]43.4.5 ESMF_TimeOperator(==)
+                    # [102]43.4.6 ESMF_TimeOperator(/=)
+                    # [103]43.4.7 ESMF_TimeOperator(<)
+                    # [104]43.4.8 ESMF_TimeOperator(<=)
+                    # [105]43.4.9 ESMF_TimeOperator(>)
+                    # [106]43.4.10 ESMF_TimeOperator(>=)
+                    # [107]43.4.11 ESMF_TimeGet
+                    # [108]43.4.12 ESMF_TimeIsLeapYear
+                    # [109]43.4.13 ESMF_TimeIsSameCalendar
+                    # [110]43.4.14 ESMF_TimePrint
+                    # [111]43.4.15 ESMF_TimeSet
+                    # [112]43.4.16 ESMF_TimeSet
+                    # [113]43.4.17 ESMF_TimeSyncToRealTime
+                    # [114]43.4.18 ESMF_TimeValidate
+                                 43 Time Class
+
+43.1 Description
+
+   A Time represents a specific point in time. In order to accommodate the
+   range of time scales in Earth system applications, Times in the ESMF
+   can be specified in many different ways, from years to nanoseconds. The
+   Time interface is designed so that you select one or more options from
+   a list of time units in order to specify a Time. The options for
+   specifying a Time are shown in Table [524]41.4.
+
+   There are Time methods defined for setting and getting a Time,
+   incrementing and decrementing a Time by a TimeInterval, taking the
+   difference between two Times, and comparing Times. Special quantities
+   such as the middle of the month and the day of the year associated with
+   a particular Time can be retrieved. There is a method for returning the
+   Time value as a string in the ISO 8601 format YYYY-MM-DDThh:mm:ss
+   [[525]26].
+
+   A Time that is specified in hours, minutes, seconds, or subsecond
+   intervals does not need to be associated with a standard calendar; a
+   Time whose specification includes time units of a day and greater must
+   be. The ESMF representation of a calendar, the Calendar class, is
+   described in Section [526]42.1. The ESMF_TimeSet method is used to
+   initialize a Time as well as associate it with a Calendar. If a Time
+   method is invoked in which a Calendar is necessary and one has not been
+   set, the ESMF method will return an error condition.
+
+   In the ESMF the TimeInterval class is used to represent time periods.
+   This class is frequently used in combination with the Time class. The
+   Clock class, for example, advances model time by incrementing a Time
+   with a TimeInterval.
+
+43.2 Use and Examples
+
+   Times are most frequently used to represent start, stop, and current
+   model times. The following examples show how to create, initialize, and
+   manipulate Time.
+
+! !PROGRAM: ESMF_TimeEx - Time initialization and manipulation examples
+!
+! !DESCRIPTION:
+!
+! This program shows examples of Time initialization and manipulation
+!-----------------------------------------------------------------------------
+#include "ESMF.h"
+
+      ! ESMF Framework module
+      use ESMF
+      use ESMF_TestMod
+      implicit none
+
+      ! instantiate two times
+      type(ESMF_Time) :: time1, time2
+
+      type(ESMF_VM) :: vm
+
+      ! instantiate a time interval
+      type(ESMF_TimeInterval) :: timeinterval1
+
+      ! local variables for Get methods
+      integer :: YY, MM, DD, H, M, S
+
+      ! return code
+      integer:: rc
+
+      ! initialize ESMF framework
+      call ESMF_Initialize(vm=vm, defaultCalKind=ESMF_CALKIND_GREGORIAN, &
+        defaultlogfilename="TimeEx.Log", &
+        logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+  43.2.1 Time initialization
+
+   This example shows how to initialize an ESMF_Time.
+
+      ! initialize time1 to 2/28/2000 2:24:45
+      call ESMF_TimeSet(time1, yy=2000, mm=2, dd=28, h=2, m=24, s=45, rc=rc)
+
+      print *, "Time1 = "
+      call ESMF_TimePrint(time1, options="string", rc=rc)
+
+  43.2.2 Time increment
+
+   This example shows how to increment an ESMF_Time by an
+   ESMF_TimeInterval.
+
+      ! initialize a time interval to 2 days, 8 hours, 36 minutes, 15 seconds
+      call ESMF_TimeIntervalSet(timeinterval1, d=2, h=8, m=36, s=15, rc=rc)
+
+      print *, "Timeinterval1 = "
+      call ESMF_TimeIntervalPrint(timeinterval1, options="string", rc=rc)
+
+      ! increment time1 with timeinterval1
+      time2 = time1 + timeinterval1
+
+      call ESMF_TimeGet(time2, yy=YY, mm=MM, dd=DD, h=H, m=M, s=S, rc=rc)
+      print *, "time2 = time1 + timeinterval1 = ", YY, "/", MM, "/", DD, &
+               " ",  H, ":", M, ":", S
+
+  43.2.3 Time comparison
+
+   This example shows how to compare two ESMF_Times.
+
+      if (time2 > time1) then
+        print *, "time2 is larger than time1"
+      else
+        print *, "time1 is smaller than or equal to time2"
+      endif
+
+      ! finalize ESMF framework
+      call ESMF_Finalize(rc=rc)
+
+      end program ESMF_TimeEx
+
+43.3 Restrictions and Future Work
+
+    1. Limits on size and resolution of Time. The limits on the size and
+       resolution of the time representation are based on the 64-bit
+       integer types used. For seconds, a signed 64-bit integer will have
+       a range of +/- $2^{63}$ -1, or +/- 9,223,372,036,854,775,807. This
+       corresponds to a maximum size of +/- ( $2^{63}$ -1)/(86400 *
+       365.25) or +/- 292,271,023,045 years.
+       For fractional seconds, a signed 64-bit integer will handle a
+       resolution of +/- $2^{31}$ -1, or +/- 9,223,372,036,854,775,807
+       parts of a second.
+
+43.4 Class API
+
+  43.4.1 ESMF_TimeAssignment(=) - Assign a Time to another Time
+
+   INTERFACE:
+       interface assignment(=)
+       time1 = time2
+
+   ARGUMENTS:
+       type(ESMF_Time) :: time1
+       type(ESMF_Time) :: time2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Set time1 equal to time2. This is the default Fortran assignment, which
+   creates a complete, independent copy of time2 as time1. If time2 is an
+   invalid ESMF_Time object then time1 will be equally invalid after the
+   assignment.
+
+   The arguments are:
+
+   time1
+          The ESMF_Time to be set.
+
+   time2
+          The ESMF_Time to be copied.
+
+  43.4.2 ESMF_TimeOperator(+) - Increment a Time by a TimeInterval
+
+   INTERFACE:
+       interface operator(+)
+       time2 = time1 + timeinterval
+
+   RETURN VALUE:
+       type(ESMF_Time) :: time2
+
+   ARGUMENTS:
+       type(ESMF_Time),         intent(in) :: time1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (+) operator for the ESMF_Time class to increment time1
+   with timeinterval and return the result as an ESMF_Time.
+
+   The arguments are:
+
+   time1
+          The ESMF_Time to increment.
+
+   timeinterval
+          The ESMF_TimeInterval to add to the given ESMF_Time.
+
+  43.4.3 ESMF_TimeOperator(-) - Decrement a Time by a TimeInterval
+
+   INTERFACE:
+       interface operator(-)
+       time2 = time1 - timeinterval
+
+   RETURN VALUE:
+       type(ESMF_Time) :: time2
+
+   ARGUMENTS:
+       type(ESMF_Time),         intent(in) :: time1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (-) operator for the ESMF_Time class to decrement time1
+   with timeinterval, and return the result as an ESMF_Time.
+
+   The arguments are:
+
+   time1
+          The ESMF_Time to decrement.
+
+   timeinterval
+          The ESMF_TimeInterval to subtract from the given ESMF_Time.
+
+  43.4.4 ESMF_TimeOperator(-) - Return the difference between two Times
+
+   INTERFACE:
+       interface operator(-)
+       timeinterval = time1 - time2
+
+   RETURN VALUE:
+       type(ESMF_TimeInterval) :: timeinterval
+
+   ARGUMENTS:
+       type(ESMF_Time),         intent(in) :: time1
+       type(ESMF_Time),         intent(in) :: time2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (-) operator for the ESMF_Time class to return the
+   difference between time1 and time2 as an ESMF_TimeInterval. It is
+   assumed that time1 is later than time2; if not, the resulting
+   ESMF_TimeInterval will have a negative value.
+
+   The arguments are:
+
+   time1
+          The first ESMF_Time in comparison.
+
+   time2
+          The second ESMF_Time in comparison.
+
+  43.4.5 ESMF_TimeOperator(==) - Test if Time 1 is equal to Time 2
+
+   INTERFACE:
+       interface operator(==)
+       if (time1 == time2) then ... endif
+                    OR
+       result = (time1 == time2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Time), intent(in) :: time1
+       type(ESMF_Time), intent(in) :: time2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (==) operator for the ESMF_Time class to return .true. if
+   time1 and time2 represent the same instant in time, and .false.
+   otherwise.
+
+   The arguments are:
+
+   time1
+          First ESMF_Time in comparison.
+
+   time2
+          Second ESMF_Time in comparison.
+
+  43.4.6 ESMF_TimeOperator(/=) - Test if Time 1 is not equal to Time 2
+
+   INTERFACE:
+       interface operator(/=)
+       if (time1 /= time2) then ... endif
+                    OR
+       result = (time1 /= time2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Time), intent(in) :: time1
+       type(ESMF_Time), intent(in) :: time2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (/=) operator for the ESMF_Time class to return .true. if
+   time1 and time2 do not represent the same instant in time, and .false.
+   otherwise.
+
+   The arguments are:
+
+   time1
+          First ESMF_Time in comparison.
+
+   time2
+          Second ESMF_Time in comparison.
+
+  43.4.7 ESMF_TimeOperator(<) - Test if Time 1 is less than Time 2
+
+   INTERFACE:
+       interface operator(<)
+       if (time1 < time2) then ... endif
+                    OR
+       result = (time1 < time2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Time), intent(in) :: time1
+       type(ESMF_Time), intent(in) :: time2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (<) operator for the ESMF_Time class to return .true. if
+   time1 is earlier in time than time2, and .false. otherwise.
+
+   The arguments are:
+
+   time1
+          First ESMF_Time in comparison.
+
+   time2
+          Second ESMF_Time in comparison.
+
+  43.4.8 ESMF_TimeOperator(<=) - Test if Time 1 is less than or equal to Time 2
+
+   INTERFACE:
+       interface operator(<=)
+       if (time1 <= time2) then ... endif
+                    OR
+       result = (time1 <= time2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Time), intent(in) :: time1
+       type(ESMF_Time), intent(in) :: time2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (<=) operator for the ESMF_Time class to return .true. if
+   time1 is earlier in time or the same time as time2, and .false.
+   otherwise.
+
+   The arguments are:
+
+   time1
+          First ESMF_Time in comparison.
+
+   time2
+          Second ESMF_Time in comparison.
+
+  43.4.9 ESMF_TimeOperator(>) - Test if Time 1 is greater than Time 2
+
+   INTERFACE:
+       interface operator(>)
+       if (time1 > time2) then ... endif
+                    OR
+       result = (time1 > time2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Time), intent(in) :: time1
+       type(ESMF_Time), intent(in) :: time2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (>) operator for the ESMF_Time class to return .true. if
+   time1 is later in time than time2, and .false. otherwise.
+
+   The arguments are:
+
+   time1
+          First ESMF_Time in comparison.
+
+   time2
+          Second ESMF_Time in comparison.
+
+  43.4.10 ESMF_TimeOperator(>=) - Test if Time 1 is greater than or equal to
+  Time 2
+
+   INTERFACE:
+       interface operator(>=)
+       if (time1 >= time2) then ... endif
+                    OR
+       result = (time1 >= time2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Time), intent(in) :: time1
+       type(ESMF_Time), intent(in) :: time2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (>=) operator for the ESMF_Time class to return .true. if
+   time1 is later in time or the same time as time2, and .false.
+   otherwise.
+
+   The arguments are:
+
+   time1
+          First ESMF_Time in comparison.
+
+   time2
+          Second ESMF_Time in comparison.
+

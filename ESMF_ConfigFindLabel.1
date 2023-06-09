@@ -1,0 +1,56 @@
+  47.3.7 ESMF_ConfigFindLabel - Find a label in a Config object
+
+   INTERFACE:
+     subroutine ESMF_ConfigFindLabel(config, label, isPresent, rc)
+
+   ARGUMENTS:
+       type(ESMF_Config), intent(inout)           :: config
+       character(len=*),  intent(in)              :: label
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       logical,           intent(out),  optional  :: isPresent
+       integer,           intent(out),  optional  :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added the isPresent argument. Allows detection of
+                end-of-line condition to be separate from the rc.
+
+   DESCRIPTION:
+
+   Finds the label (key) string in the config object starting from the
+   beginning of its content.
+
+   Since the search is done by looking for a string, possibly
+   multi-worded, in the whole Config object, it is important to use
+   special conventions to distinguish labels from other words. This is
+   done in the Resource File by using the NASA/DAO convention to finish
+   line labels with a colon (:) and table labels with a double colon (::).
+
+   The arguments are:
+
+   config
+          Already created ESMF_Config object.
+
+   label
+          Identifying label.
+
+   [isPresent]
+          Set to .true. if the item is found.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors. If the
+          label is not found, and the isPresent argument is not present,
+          an error is returned.
+

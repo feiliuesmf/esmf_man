@@ -1,0 +1,23 @@
+  26.6.72 ESMF_FieldSync - Synchronize DEs across the Field in case of sharing
+
+   INTERFACE:
+   subroutine ESMF_FieldSync(field, rc)
+
+   ARGUMENTS:
+     type(ESMF_Field), intent(in)            :: field
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Synchronizes access to DEs across field to make sure PETs correctly
+   access the data for read and write when DEs are shared.
+
+   The arguments are:
+
+   field
+          Specified ESMF_Field object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

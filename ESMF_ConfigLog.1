@@ -1,0 +1,42 @@
+  47.3.18 ESMF_ConfigLog - Write content of Config object to log
+
+   INTERFACE:
+   subroutine ESMF_ConfigLog(config, raw, prefix, logMsgFlag, &
+     log, rc)
+
+   ARGUMENTS:
+     type(ESMF_Config),      intent(in)              :: config
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                intent(in),    optional :: raw
+     character (len=*),      intent(in),    optional :: prefix
+     type(ESMF_LogMsg_Flag), intent(in),    optional :: logMsgFlag
+     type(ESMF_Log),         intent(inout), optional :: log
+     integer,                intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   Write content of ESMF_Config object to ESMF log.
+
+   The arguments are:
+
+   config
+          The ESMF_Config object to be logged.
+
+   [raw]
+          For .true. output the internal buffer as is, for .false. output
+          in the interpreted format. The default is .false..
+
+   [prefix]
+          String to prefix the memory info message. Default is no prefix.
+
+   [logMsgFlag]
+          Type of log message generated. See section [593]49.2.3 for a
+          list of valid message types. Default is ESMF_LOGMSG_INFO.
+
+   [log]
+          ESMF_Log object that can be used instead of the default Log.
+          Default is to use the default log.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

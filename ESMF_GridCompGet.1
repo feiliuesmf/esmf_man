@@ -1,0 +1,238 @@
+  17.4.7 ESMF_GridCompGet - Get GridComp information
+
+   INTERFACE:
+   recursive subroutine ESMF_GridCompGet(gridcomp, &
+     gridIsPresent, grid, gridList, meshIsPresent, mesh, meshList, &
+     locstreamIsPresent, locstream, locstreamList, xgridIsPresent, &
+     xgrid, xgridList, importStateIsPresent, importState, &
+     exportStateIsPresent, exportState, configIsPresent, config, &
+     configFileIsPresent, configFile, clockIsPresent, clock, localPet, &
+     petCount, contextflag, currentMethod, currentPhase, comptype, &
+     vmIsPresent, vm, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp),           intent(in)            :: gridcomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,                       intent(out), optional :: gridIsPresent
+     type(ESMF_Grid),               intent(out), optional :: grid
+     type(ESMF_Grid), allocatable,  intent(out), optional :: gridList(:)
+     logical,                       intent(out), optional :: meshIsPresent
+     type(ESMF_Mesh),               intent(out), optional :: mesh
+     type(ESMF_Mesh), allocatable,  intent(out), optional :: meshList(:)
+     logical,                       intent(out), optional :: locstreamIsPresent
+     type(ESMF_LocStream),          intent(out), optional :: locstream
+     type(ESMF_LocStream), allocatable, intent(out), optional :: locstreamList(:
+)
+     logical,                       intent(out), optional :: xgridIsPresent
+     type(ESMF_XGrid),              intent(out), optional :: xgrid
+     type(ESMF_XGrid), allocatable, intent(out), optional :: xgridList(:)
+     logical,                       intent(out), optional :: importStateIsPresen
+t
+     type(ESMF_State),              intent(out), optional :: importState
+     logical,                       intent(out), optional :: exportStateIsPresen
+t
+     type(ESMF_State),              intent(out), optional :: exportState
+     logical,                       intent(out), optional :: configIsPresent
+     type(ESMF_Config),             intent(out), optional :: config
+     logical,                       intent(out), optional :: configFileIsPresent
+     character(len=*),              intent(out), optional :: configFile
+     logical,                       intent(out), optional :: clockIsPresent
+     type(ESMF_Clock),              intent(out), optional :: clock
+     integer,                       intent(out), optional :: localPet
+     integer,                       intent(out), optional :: petCount
+     type(ESMF_Context_Flag),       intent(out), optional :: contextflag
+     type(ESMF_Method_Flag),        intent(out), optional :: currentMethod
+     integer,                       intent(out), optional :: currentPhase
+     type(ESMF_CompType_Flag),      intent(out), optional :: comptype
+     logical,                       intent(out), optional :: vmIsPresent
+     type(ESMF_VM),                 intent(out), optional :: vm
+     character(len=*),              intent(out), optional :: name
+     integer,                       intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added arguments gridList, meshIsPresent, mesh, meshList,
+                locstreamIsPresent, locstream, locstreamList,
+                xgridIsPresent, xgrid, and xgridList. These arguments add
+                support for accessing references to multiple geom objects,
+                either of the same type, or different type, associated
+                with the same ESMF_GridComp object.
+
+   DESCRIPTION:
+
+   Get information about an ESMF_GridComp object.
+
+   The arguments are:
+
+   gridcomp
+          The ESMF_GridComp object being queried.
+
+   [gridIsPresent]
+          Set to .true. if at least one ESMF_Grid object is associated
+          with the gridcomp component. Set to .false. otherwise.
+
+   [grid]
+          Return the ESMF_Grid object associated with the gridcomp
+          component. If multiple ESMF_Grid objects are associated, return
+          the first in the list. It is an error to query for grid if no
+          ESMF_Grid object is associated with the gridcomp component. If
+          unsure, query for gridIsPresent first, or use the gridList
+          variant.
+
+   [gridList]
+          Return a list of all ESMF_Grid objects associated with the
+          gridcomp component. The size of the returned gridList
+          corresponds to the number of ESMF_Grid objects associated. If no
+          ESMF_Grid object is associated with the gridcomp component, the
+          size of the returned gridList is zero.
+
+   [meshIsPresent]
+          Set to .true. if at least one ESMF_Mesh object is associated
+          with the gridcomp component. Set to .false. otherwise.
+
+   [mesh]
+          Return the ESMF_Mesh object associated with the gridcomp
+          component. If multiple ESMF_Mesh objects are associated, return
+          the first in the list. It is an error to query for mesh if no
+          ESMF_Mesh object is associated with the gridcomp component. If
+          unsure, query for meshIsPresent first, or use the meshList
+          variant.
+
+   [meshList]
+          Return a list of all ESMF_Mesh objects associated with the
+          gridcomp component. The size of the returned meshList
+          corresponds to the number of ESMF_Mesh objects associated. If no
+          ESMF_Mesh object is associated with the gridcomp component, the
+          size of the returned meshList is zero.
+
+   [locstreamIsPresent]
+          Set to .true. if at least one ESMF_LocStream object is
+          associated with the gridcomp component. Set to .false.
+          otherwise.
+
+   [locstream]
+          Return the ESMF_LocStream object associated with the gridcomp
+          component. If multiple ESMF_LocStream objects are associated,
+          return the first in the list. It is an error to query for
+          locstream if no ESMF_Grid object is associated with the gridcomp
+          component. If unsure, query for locstreamIsPresent first, or use
+          the locstreamList variant.
+
+   [locstreamList]
+          Return a list of all ESMF_LocStream objects associated with the
+          gridcomp component. The size of the returned locstreamList
+          corresponds to the number of ESMF_LocStream objects associated.
+          If no ESMF_LocStream object is associated with the gridcomp
+          component, the size of the returned locstreamList is zero.
+
+   [xgridIsPresent]
+          Set to .true. if at least one ESMF_XGrid object is associated
+          with the gridcomp component. Set to .false. otherwise.
+
+   [xgrid]
+          Return the ESMF_XGrid object associated with the gridcomp
+          component. If multiple ESMF_XGrid objects are associated, return
+          the first in the list. It is an error to query for xgrid if no
+          ESMF_XGrid object is associated with the gridcomp component. If
+          unsure, query for xgridIsPresent first, or use the xgridList
+          variant.
+
+   [xgridList]
+          Return a list of all ESMF_XGrid objects associated with the
+          gridcomp component. The size of the returned xgridList
+          corresponds to the number of ESMF_XGrid objects associated. If
+          no ESMF_XGrid object is associated with the gridcomp component,
+          the size of the returned xgridList is zero.
+
+   [importStateIsPresent]
+          .true. if importState was set in GridComp object, .false.
+          otherwise.
+
+   [importState]
+          Return the associated import State. It is an error to query for
+          the import State if none is associated with the GridComp. If
+          unsure, get importStateIsPresent first to determine the status.
+
+   [exportStateIsPresent]
+          .true. if exportState was set in GridComp object, .false.
+          otherwise.
+
+   [exportState]
+          Return the associated export State. It is an error to query for
+          the export State if none is associated with the GridComp. If
+          unsure, get exportStateIsPresent first to determine the status.
+
+   [configIsPresent]
+          .true. if config was set in GridComp object, .false. otherwise.
+
+   [config]
+          Return the associated Config. It is an error to query for the
+          Config if none is associated with the GridComp. If unsure, get
+          configIsPresent first to determine the status.
+
+   [configFileIsPresent]
+          .true. if configFile was set in GridComp object, .false.
+          otherwise.
+
+   [configFile]
+          Return the associated configuration filename. It is an error to
+          query for the configuration filename if none is associated with
+          the GridComp. If unsure, get configFileIsPresent first to
+          determine the status.
+
+   [clockIsPresent]
+          .true. if clock was set in GridComp object, .false. otherwise.
+
+   [clock]
+          Return the associated Clock. It is an error to query for the
+          Clock if none is associated with the GridComp. If unsure, get
+          clockIsPresent first to determine the status.
+
+   [localPet]
+          Return the local PET id within the ESMF_GridComp object.
+
+   [petCount]
+          Return the number of PETs in the the ESMF_GridComp object.
+
+   [contextflag]
+          Return the ESMF_Context_Flag for this ESMF_GridComp. See section
+          [265]54.10 for a complete list of valid flags.
+
+   [currentMethod]
+          Return the current ESMF_Method_Flag of the ESMF_GridComp
+          execution. See section [266]54.42 for a complete list of valid
+          options.
+
+   [currentPhase]
+          Return the current phase of the ESMF_GridComp execution.
+
+   [comptype]
+          Return the Component type. See section [267]54.9 for a complete
+          list of valid flags.
+
+   [vmIsPresent]
+          .true. if vm was set in GridComp object, .false. otherwise.
+
+   [vm]
+          Return the associated VM. It is an error to query for the VM if
+          none is associated with the GridComp. If unsure, get vmIsPresent
+          first to determine the status.
+
+   [name]
+          Return the name of the ESMF_GridComp.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

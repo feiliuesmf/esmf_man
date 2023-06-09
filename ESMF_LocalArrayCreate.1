@@ -1,0 +1,216 @@
+  29.3.4 ESMF_LocalArrayCreate - Create a LocalArray by explicitly specifying
+  typekind and rank arguments
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocalArrayCreate()
+   function ESMF_LocalArrayCreateByTKR(typekind, rank, totalCount, &
+     totalLBound, totalUBound, rc)
+
+   RETURN VALUE:
+     type(ESMF_LocalArray) :: ESMF_LocalArrayCreateByTKR
+
+   ARGUMENTS:
+     type(ESMF_TypeKind_Flag), intent(in) :: typekind
+     integer, intent(in) :: rank
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(in), optional :: totalCount(:)
+     integer, intent(in), optional :: totalLBound(:)
+     integer, intent(in), optional :: totalUBound(:)
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Create a new ESMF_LocalArray and allocate data space, which remains
+   uninitialized. The return value is a new LocalArray.
+
+   The arguments are:
+
+   typekind
+          Array typekind. See section [1182]54.59 for valid values.
+
+   rank
+          Array rank (dimensionality, 1D, 2D, etc). Maximum allowed is 7D.
+
+   [totalCount]
+          The number of items in each dimension of the array. This is a 1D
+          integer array the same length as the rank. The count argument
+          may be omitted if both totalLBound and totalUBound arguments are
+          present.
+
+   [totalLBound]
+          An integer array of length rank, with the lower index for each
+          dimension.
+
+   [totalUBound]
+          An integer array of length rank, with the upper index for each
+          dimension.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  29.3.5 ESMF_LocalArrayCreate - Create a LocalArray by specifying an ArraySpec
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocalArrayCreate()
+   function ESMF_LocalArrayCreateBySpec(arrayspec, totalCount, &
+     totalLBound, totalUBound, rc)
+
+   RETURN VALUE:
+     type(ESMF_LocalArray) :: ESMF_LocalArrayCreateBySpec
+
+   ARGUMENTS:
+     type(ESMF_ArraySpec), intent(in) :: arrayspec
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(in), optional :: totalCount(:)
+     integer, intent(in), optional :: totalLBound(:)
+     integer, intent(in), optional :: totalUBound(:)
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Create a new ESMF_LocalArray and allocate data space, which remains
+   uninitialized. The return value is a new LocalArray.
+
+   The arguments are:
+
+   arrayspec
+          ArraySpec object specifying typekind and rank.
+
+   [totalCount]
+          The number of items in each dimension of the array. This is a 1D
+          integer array the same length as the rank. The count argument
+          may be omitted if both totalLBound and totalUBound arguments are
+          present.
+
+   [totalLBound]
+          An integer array of length rank, with the lower index for each
+          dimension.
+
+   [totalUBound]
+          An integer array of length rank, with the upper index for each
+          dimension.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  29.3.6 ESMF_LocalArrayCreate - Create a LocalArray from pre-existing
+  LocalArray
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocalArrayCreate()
+   function ESMF_LocalArrayCreateCopy(localarray, rc)
+
+   RETURN VALUE:
+     type(ESMF_LocalArray) :: ESMF_LocalArrayCreateCopy
+
+   ARGUMENTS:
+     type(ESMF_LocalArray), intent(in) :: localarray
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Perform a deep copy of an existing ESMF_LocalArray object. The return
+   value is a new LocalArray.
+
+   The arguments are:
+
+   localarray
+          Existing LocalArray to be copied.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  29.3.7 ESMF_LocalArrayCreate - Create a LocalArray from a Fortran pointer
+  (associated or unassociated)
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocalArrayCreate()
+   function ESMF_LocalArrCreateByPtr<rank><type><kind>(farrayPtr, &
+   datacopyflag, totalCount, totalLBound, totalUBound, rc)
+
+   RETURN VALUE:
+   type(ESMF_LocalArray) :: ESMF_LocalArrCreateByPtr<rank><type><kind>
+
+   ARGUMENTS:
+   <type> (ESMF_KIND_<kind>), pointer :: farrayPtr(<rank>)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   integer, intent(in), optional :: totalCount(:)
+   integer, intent(in), optional :: totalLBound(:)
+   integer, intent(in), optional :: totalUBound(:)
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Creates an ESMF_LocalArray based on a Fortran array pointer. Two cases
+   must be distinguished.
+
+   First, if farrayPtr is associated the optional datacopyflag argument
+   may be used to indicate whether the associated data is to be copied or
+   referenced. For associated farrayPtr the optional totalCount,
+   totalLBound and totalUBound arguments need not be specified. However,
+   all present arguments will be checked against farrayPtr for
+   consistency.
+
+   Second, if farrayPtr is unassociated the optional argument datacopyflag
+   must not be specified. However, in this case a complete set of
+   totalCount and bounds information must be provided. Any combination of
+   present totalCount totalLBound and totalUBound arguments that provides
+   a complete specification is valid. All input information will be
+   checked for consistency.
+
+   The arguments are:
+
+   farrayPtr
+          A Fortran array pointer (associated or unassociated).
+
+   [datacopyflag]
+          Indicate copy vs. reference behavior in case of associated
+          farrayPtr. This argument must not be present for unassociated
+          farrayPtr. Default to ESMF_DATACOPY_REFERENCE, makes the
+          ESMF_LocalArray reference the associated data array. If set to
+          ESMF_DATACOPY_VALUE this routine allocates new memory and copies
+          the data from the pointer into the new LocalArray allocation.
+
+   [totalCount]
+          The number of items in each dimension of the array. This is a 1D
+          integer array the same length as the rank. The count argument
+          may be omitted if both totalLBound and totalUBound arguments are
+          present.
+
+   [totalLBound]
+          An integer array of lower index values. Must be the same length
+          as the rank.
+
+   [totalUBound]
+          An integer array of upper index values. Must be the same length
+          as the rank.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

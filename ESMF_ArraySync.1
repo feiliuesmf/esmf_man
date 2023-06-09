@@ -1,0 +1,23 @@
+  28.5.45 ESMF_ArraySync - Synchronize DEs across the Array in case of sharing
+
+   INTERFACE:
+   subroutine ESMF_ArraySync(array, rc)
+
+   ARGUMENTS:
+     type(ESMF_Array), intent(in)            :: array
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Synchronizes access to DEs across array to make sure PETs correctly
+   access the data for read and write when DEs are shared.
+
+   The arguments are:
+
+   array
+          Specified ESMF_Array object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

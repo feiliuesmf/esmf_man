@@ -1,0 +1,557 @@
+  31.6.32 ESMF_GridEmptyComplete - Complete a Grid with user set edge
+  connections and an irregular distribution
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridEmptyComplete()
+       subroutine ESMF_GridEmptyCompleteEConnI(grid, minIndex,         &
+         countsPerDEDim1,countsPerDeDim2,                  &
+         countsPerDEDim3,                                  &
+         connDim1, connDim2, connDim3,                     &
+         coordSys, coordTypeKind,                          &
+         coordDep1, coordDep2, coordDep3,                  &
+         gridEdgeLWidth, gridEdgeUWidth, gridAlign,        &
+         gridMemLBound, indexflag, petMap, name, rc)
+
+   ARGUMENTS:
+        type (ESMF_Grid)                                :: grid
+        integer,                  intent(in),  optional :: minIndex(:)
+        integer,                  intent(in)            :: countsPerDEDim1(:)
+        integer,                  intent(in)            :: countsPerDEDim2(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        integer,                  intent(in),  optional :: countsPerDEDim3(:)
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim1(:)
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim2(:)
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim3(:)
+        type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+        type(ESMF_TypeKind_Flag), intent(in),  optional :: coordTypeKind
+        integer,                  intent(in),  optional :: coordDep1(:)
+        integer,                  intent(in),  optional :: coordDep2(:)
+        integer,                  intent(in),  optional :: coordDep3(:)
+        integer,                  intent(in),  optional :: gridEdgeLWidth(:)
+        integer,                  intent(in),  optional :: gridEdgeUWidth(:)
+        integer,                  intent(in),  optional :: gridAlign(:)
+        integer,                  intent(in),  optional :: gridMemLBound(:)
+        type(ESMF_Index_Flag),    intent(in),  optional :: indexflag
+        integer,                  intent(in),  optional :: petMap(:,:,:)
+        character (len=*),        intent(in),  optional :: name
+        integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method takes in an empty Grid created by ESMF_GridEmptyCreate().
+   It then completes the grid to form a single tile, irregularly
+   distributed grid (see Figure [1340]13). To specify the irregular
+   distribution, the user passes in an array for each grid dimension,
+   where the length of the array is the number of DEs in the dimension.
+   Currently this call only supports creating 2D or 3D Grids. A 2D Grid
+   can be specified using the countsPerDEDim1 and countsPerDEDim2
+   arguments. A 3D Grid can be specified by also using the optional
+   countsPerDEDim3 argument. The index of each array element in these
+   arguments corresponds to a DE number. The array value at the index is
+   the number of grid cells on the DE in that dimension.
+
+   Section [1341]31.3.4 shows an example of using an irregular
+   distribution to create a 2D Grid with uniformly spaced coordinates.
+   This creation method can also be used as the basis for grids with
+   rectilinear coordinates or curvilinear coordinates.
+
+   For consistency's sake the ESMF_GridEmptyComplete() call should be
+   executed in the same set or a subset of the PETs in which the
+   ESMF_GridEmptyCreate() call was made. If the call is made in a subset,
+   the Grid objects outside that subset will still be "empty" and not
+   usable.
+
+   The arguments are:
+
+   grid
+          The empty ESMF_Grid to set information into and then commit.
+
+   [minIndex]
+          Tuple to start the index ranges at. If not present, defaults to
+          /1,1,1,.../.
+
+   countsPerDEDim1
+          This arrays specifies the number of cells per DE for index
+          dimension 1 for the exclusive region (the center stagger
+          location).
+
+   countsPerDEDim2
+          This array specifies the number of cells per DE for index
+          dimension 2 for the exclusive region (center stagger location).
+
+   [countsPerDEDim3]
+          This array specifies the number of cells per DE for index
+          dimension 3 for the exclusive region (center stagger location).
+          If not specified then grid is 2D.
+
+   [connDim1]
+          Fortran array describing the index dimension 1 connections. The
+          first element represents the minimum end of dimension 1. The
+          second element represents the maximum end of dimension 1. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1342]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [connDim2]
+          Fortran array describing the index dimension 2 connections. The
+          first element represents the minimum end of dimension 2. The
+          second element represents the maximum end of dimension 2. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1343]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [connDim3]
+          Fortran array describing the index dimension 3 connections. The
+          first element represents the minimum end of dimension 3. The
+          second element represents the maximum end of dimension 3. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1344]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1345]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. All numerical types
+          listed under section [1346]54.59 are supported. If not specified
+          then defaults to ESMF_TYPEKIND_R8.
+
+   [coordDep1]
+          This array specifies the dependence of the first coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the first coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [coordDep2]
+          This array specifies the dependence of the second coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the second coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [coordDep3]
+          This array specifies the dependence of the third coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the third coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [gridEdgeLWidth]
+          The padding around the lower edges of the grid. This padding is
+          between the index space corresponding to the cells and the
+          boundary of the the exclusive region. This extra space is to
+          contain the extra padding for non-center stagger locations, and
+          should be big enough to hold any stagger in the grid. If this
+          and gridAlign are not present then defaults to 0, 0, ..., 0 (all
+          zeros).
+
+   [gridEdgeUWidth]
+          The padding around the upper edges of the grid. This padding is
+          between the index space corresponding to the cells and the
+          boundary of the the exclusive region. This extra space is to
+          contain the extra padding for non-center stagger locations, and
+          should be big enough to hold any stagger in the grid. If this
+          and gridAlign are not present then defaults to 1, 1, ..., 1 (all
+          ones).
+
+   [gridAlign]
+          Specification of how the stagger locations should align with the
+          cell index space (can be overridden by the individual
+          staggerAligns). If the gridEdgeWidths are not specified than
+          this argument implies the gridEdgeWidths. If the gridEdgeWidths
+          are specified and this argument isn't then this argument is
+          implied by the gridEdgeWidths. If this and the gridEdgeWidths
+          are not specified, then defaults to -1, -1, ..., -1 (all
+          negative ones).
+
+   [gridMemLBound]
+          Specifies the lower index range of the memory of every DE in
+          this Grid. Only used when indexflag is ESMF_INDEX_USER. May be
+          overridden by staggerMemLBound.
+
+   [indexflag]
+          Indicates the indexing scheme to be used in the new Grid. Please
+          see Section [1347]54.27 for the list of options. If not present,
+          defaults to ESMF_INDEX_DELOCAL.
+
+   [petMap]
+          Sets the mapping of pets to the created DEs. This 3D should be
+          of size size(countsPerDEDim1) x size(countsPerDEDim2) x
+          size(countsPerDEDim3). If countsPerDEDim3 isn't present, then
+          the last dimension is of size 1.
+
+   [name]
+          ESMF_Grid name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.33 ESMF_GridEmptyComplete - Complete a Grid with user set edge
+  connections and a regular distribution
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridEmptyComplete()
+      subroutine ESMF_GridEmptyCompleteEConnR(grid, regDecomp, decompFlag, &
+         minIndex, maxIndex,                                    &
+         connDim1, connDim2, connDim3,                       &
+         coordSys, coordTypeKind,                            &
+         coordDep1, coordDep2, coordDep3,                    &
+         gridEdgeLWidth, gridEdgeUWidth, gridAlign,          &
+         gridMemLBound, indexflag, petMap, name, rc)
+
+  !
+
+   ARGUMENTS:
+        type (ESMF_Grid)                                :: grid
+        integer,                  intent(in),  optional :: regDecomp(:)
+        type(ESMF_Decomp_Flag),   intent(in),  optional :: decompflag(:)
+        integer,                  intent(in),  optional :: minIndex(:)
+        integer,                  intent(in)            :: maxIndex(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim1(:)
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim2(:)
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim3(:)
+        type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+        type(ESMF_TypeKind_Flag), intent(in),  optional :: coordTypeKind
+        integer,                  intent(in),  optional :: coordDep1(:)
+        integer,                  intent(in),  optional :: coordDep2(:)
+        integer,                  intent(in),  optional :: coordDep3(:)
+        integer,                  intent(in),  optional :: gridEdgeLWidth(:)
+        integer,                  intent(in),  optional :: gridEdgeUWidth(:)
+        integer,                  intent(in),  optional :: gridAlign(:)
+        integer,                  intent(in),  optional :: gridMemLBound(:)
+        type(ESMF_Index_Flag),    intent(in),  optional :: indexflag
+        integer,                  intent(in),  optional :: petMap(:,:,:)
+        character (len=*),        intent(in),  optional :: name
+        integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method takes in an empty Grid created by ESMF_GridEmptyCreate().
+   It then completes the grid to form a single tile, regularly distributed
+   grid (see Figure [1348]13). To specify the distribution, the user
+   passes in an array (regDecomp) specifying the number of DEs to divide
+   each dimension into. The array decompFlag indicates how the division
+   into DEs is to occur. The default is to divide the range as evenly as
+   possible. Currently this call only supports creating a 2D or 3D Grid,
+   and thus, for example, maxIndex must be of size 2 or 3.
+
+   For consistency's sake the ESMF_GridEmptyComplete() call should be
+   executed in the same set or a subset of the PETs in which the
+   ESMF_GridEmptyCreate() call was made. If the call is made in a subset,
+   the Grid objects outside that subset will still be "empty" and not
+   usable.
+
+   The arguments are:
+
+   grid
+          The empty ESMF_Grid to set information into and then commit.
+
+   [regDecomp]
+          List that has the same number of elements as maxIndex. Each
+          entry is the number of decounts for that dimension. If not
+          specified, the default decomposition will be petCountx1x1..x1.
+
+   [decompflag]
+          List of decomposition flags indicating how each dimension of the
+          tile is to be divided between the DEs. The default setting is
+          ESMF_DECOMP_BALANCED in all dimensions. Please see
+          Section [1349]54.13 for a full description of the possible
+          options. Note that currently the option ESMF_DECOMP_CYCLIC isn't
+          supported in Grid creation.
+
+   [minIndex]
+          The bottom extent of the grid array. If not given then the value
+          defaults to /1,1,1,.../.
+
+   maxIndex
+          The upper extent of the grid array.
+
+   [connDim1]
+          Fortran array describing the index dimension 1 connections. The
+          first element represents the minimum end of dimension 1. The
+          second element represents the maximum end of dimension 1. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1350]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [connDim2]
+          Fortran array describing the index dimension 2 connections. The
+          first element represents the minimum end of dimension 2. The
+          second element represents the maximum end of dimension 2. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1351]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [connDim3]
+          Fortran array describing the index dimension 3 connections. The
+          first element represents the minimum end of dimension 3. The
+          second element represents the maximum end of dimension 3. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1352]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1353]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. All numerical types
+          listed under section [1354]54.59 are supported. If not specified
+          then defaults to ESMF_TYPEKIND_R8.
+
+   [coordDep1]
+          This array specifies the dependence of the first coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the first coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [coordDep2]
+          This array specifies the dependence of the second coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the second coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [coordDep3]
+          This array specifies the dependence of the third coordinate
+          component on the three index dimensions described by
+          coordsPerDEDim1,2,3. The size of the array specifies the number
+          of dimensions of the third coordinate component array. The
+          values specify which of the index dimensions the corresponding
+          coordinate arrays map to. If not present the default is
+          1,2,...,grid rank.
+
+   [gridEdgeLWidth]
+          The padding around the lower edges of the grid. This padding is
+          between the index space corresponding to the cells and the
+          boundary of the the exclusive region. This extra space is to
+          contain the extra padding for non-center stagger locations, and
+          should be big enough to hold any stagger in the grid. If this
+          and gridAlign are not present then defaults to 0, 0, ..., 0 (all
+          zeros).
+
+   [gridEdgeUWidth]
+          The padding around the upper edges of the grid. This padding is
+          between the index space corresponding to the cells and the
+          boundary of the the exclusive region. This extra space is to
+          contain the extra padding for non-center stagger locations, and
+          should be big enough to hold any stagger in the grid. If this
+          and gridAlign are not present then defaults to 1, 1, ..., 1 (all
+          ones).
+
+   [gridAlign]
+          Specification of how the stagger locations should align with the
+          cell index space (can be overridden by the individual
+          staggerAligns). If the gridEdgeWidths are not specified than
+          this argument implies the gridEdgeWidths. If the gridEdgeWidths
+          are specified and this argument isn't then this argument is
+          implied by the gridEdgeWidths. If this and the gridEdgeWidths
+          are not specified, then defaults to -1, -1, ..., -1 (all
+          negative ones).
+
+   [gridMemLBound]
+          Specifies the lower index range of the memory of every DE in
+          this Grid. Only used when indexflag is ESMF_INDEX_USER. May be
+          overridden by staggerMemLBound.
+
+   [indexflag]
+          Indicates the indexing scheme to be used in the new Grid. Please
+          see Section [1355]54.27 for the list of options. If not present,
+          defaults to ESMF_INDEX_DELOCAL.
+
+   [petMap]
+          Sets the mapping of pets to the created DEs. This 3D should be
+          of size regDecomp(1) x regDecomp(2) x regDecomp(3) If the Grid
+          is 2D, then the last dimension is of size 1.
+
+   [name]
+          ESMF_Grid name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.34 ESMF_GridEmptyComplete - Complete a Grid with user set edge
+  connections and an arbitrary distribution
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridEmptyComplete()
+       subroutine ESMF_GridEmptyCompleteEConnA(grid, minIndex, maxIndex,  &
+         arbIndexCount, arbIndexList,                         &
+         connDim1, connDim2, connDim3,                     &
+         coordSys, coordTypeKind,                          &
+         coordDep1, coordDep2, coordDep3,                  &
+         distDim, name, rc)
+  !
+
+   ARGUMENTS:
+        type (ESMF_Grid)                                :: grid
+        integer,                  intent(in),  optional :: minIndex(:)
+        integer,                  intent(in)            :: maxIndex(:)
+        integer,                  intent(in)            :: arbIndexCount
+        integer,                  intent(in)            :: arbIndexList(:,:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim1(:)
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim2(:)
+        type(ESMF_GridConn_Flag), intent(in),  optional :: connDim3(:)
+        type(ESMF_CoordSys_Flag), intent(in),  optional :: coordSys
+        type(ESMF_TypeKind_Flag), intent(in),  optional :: coordTypeKind
+        integer,                  intent(in),  optional :: coordDep1(:)
+        integer,                  intent(in),  optional :: coordDep2(:)
+        integer,                  intent(in),  optional :: coordDep3(:)
+        integer,                  intent(in),  optional :: distDim(:)
+        character (len=*),        intent(in),  optional :: name
+        integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method takes in an empty Grid created by ESMF_GridEmptyCreate().
+   It then completes the grid to form a single tile, arbitrarily
+   distributed grid (see Figure [1356]13). To specify the arbitrary
+   distribution, the user passes in an 2D array of local indices, where
+   the first dimension is the number of local grid cells specified by
+   localArbIndexCount and the second dimension is the number of
+   distributed dimensions.
+
+   distDim specifies which grid dimensions are arbitrarily distributed.
+   The size of distDim has to agree with the size of the second dimension
+   of localArbIndex.
+
+   Currently this call only supports creating a 2D or 3D Grid, and thus,
+   for example, maxIndex must be of size 2 or 3.
+
+   For consistency's sake the ESMF_GridEmptyComplete() call should be
+   executed in the same set or a subset of the PETs in which the
+   ESMF_GridEmptyCreate() call was made. If the call is made in a subset,
+   the Grid objects outside that subset will still be "empty" and not
+   usable.
+
+   The arguments are:
+
+   grid
+          The empty ESMF_Grid to set information into and then commit.
+
+   [minIndex]
+          Tuple to start the index ranges at. If not present, defaults to
+          /1,1,1,.../.
+
+   maxIndex
+          The upper extend of the grid index ranges.
+
+   arbIndexCount
+          The number of grid cells in the local DE. It is okay to have 0
+          grid cell in a local DE.
+
+   arbIndexList
+          This 2D array specifies the indices of the PET LOCAL grid cells.
+          The dimensions should be arbIndexCount * number of Distributed
+          grid dimensions where arbIndexCount is the input argument
+          specified below
+
+   [connDim1]
+          Fortran array describing the index dimension 1 connections. The
+          first element represents the minimum end of dimension 1. The
+          second element represents the maximum end of dimension 1. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1357]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [connDim2]
+          Fortran array describing the index dimension 2 connections. The
+          first element represents the minimum end of dimension 2. The
+          second element represents the maximum end of dimension 2. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1358]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [connDim3]
+          Fortran array describing the index dimension 3 connections. The
+          first element represents the minimum end of dimension 3. The
+          second element represents the maximum end of dimension 3. If
+          array is only one element long, then that element is used for
+          both the minimum and maximum end. Please see
+          Section [1359]31.2.1 for a list of valid options. If not
+          present, defaults to ESMF_GRIDCONN_NONE.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data. For a full
+          list of options, please see Section [1360]54.11. If not
+          specified then defaults to ESMF_COORDSYS_SPH_DEG.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. All numerical types
+          listed under section [1361]54.59 are supported. If not specified
+          then defaults to ESMF_TYPEKIND_R8.
+
+   [coordDep1]
+          The size of the array specifies the number of dimensions of the
+          first coordinate component array. The values specify which of
+          the index dimensions the corresponding coordinate arrays map to.
+          The format should be /ESMF_GRID_ARBDIM/ where /ESMF_GRID_ARBDIM/
+          is mapped to the collapsed 1D dimension from all the arbitrarily
+          distributed dimensions. n is the dimension that is not
+          distributed (if exists). If not present the default is
+          /ESMF_GRID_ARBDIM/ if the first dimension is arbitararily
+          distributed, or /n/ if not distributed (i.e. n=1) Please see
+          Section [1362]54.2 for a definition of ESMF_GRID_ARBDIM.
+
+   [coordDep2]
+          The size of the array specifies the number of dimensions of the
+          second coordinate component array. The values specify which of
+          the index dimensions the corresponding coordinate arrays map to.
+          The format should be /ESMF_GRID_ARBDIM/ where /ESMF_GRID_ARBDIM/
+          is mapped to the collapsed 1D dimension from all the arbitrarily
+          distributed dimensions. n is the dimension that is not
+          distributed (if exists). If not present the default is
+          /ESMF_GRID_ARBDIM/ if this dimension is arbitararily
+          distributed, or /n/ if not distributed (i.e. n=2) Please see
+          Section [1363]54.2 for a definition of ESMF_GRID_ARBDIM.
+
+   [coordDep3]
+          The size of the array specifies the number of dimensions of the
+          third coordinate component array. The values specify which of
+          the index dimensions the corresponding coordinate arrays map to.
+          The format should be /ESMF_GRID_ARBDIM/ where /ESMF_GRID_ARBDIM/
+          is mapped to the collapsed 1D dimension from all the arbitrarily
+          distributed dimensions. n is the dimension that is not
+          distributed (if exists). If not present the default is
+          /ESMF_GRID_ARBDIM/ if this dimension is arbitararily
+          distributed, or /n/ if not distributed (i.e. n=3) Please see
+          Section [1364]54.2 for a definition of ESMF_GRID_ARBDIM.
+
+   [distDim]
+          This array specifies which dimensions are arbitrarily
+          distributed. The size of the array specifies the total
+          distributed dimensions. if not specified, defaults is all
+          dimensions will be arbitrarily distributed. The size has to
+          agree with the size of the second dimension of localArbIndex.
+
+   [name]
+          ESMF_Grid name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,68 @@
+  48.5.3 ESMF_HConfigAdd - Add <Type> content to HConfig object
+
+   INTERFACE:
+    subroutine ESMF_HConfigAdd(hconfig, content, &
+      addKey, addKeyString, index, keyString, doc, rc)
+
+   ARGUMENTS:
+      type(ESMF_HConfig[Iter}), intent(in)      :: hconfig
+      <Type>,             intent(in)            :: content[(:)]
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      type(ESMF_HConfig), intent(in),  optional :: addKey
+      character(*),       intent(in),  optional :: addKeyString
+      integer,            intent(in),  optional :: index
+      character(*),       intent(in),  optional :: keyString
+      integer,            intent(in),  optional :: doc
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Add the content of type <Type> to the hconfig, at the current location,
+   or as specified by index or keyString (mutually exclusive!). Most
+   <Type> options support the sequence array variant (:) in addition to
+   the scalar variant.
+
+   If either addKey or addKeyString (mutually exclusive!) is specified,
+   then add a new map element with the respective key. Otherwise add a new
+   list element at the end of the list. Error checking is implemented to
+   ensure respective conditions are met.
+
+   The supported <Type> options are:
+     * type(HConfig) (scalar only variant!)
+     * integer(ESMF_KIND_I4)
+     * integer(ESMF_KIND_I8)
+     * logical
+     * real(ESMF_KIND_R4)
+     * real(ESMF_KIND_R8)
+     * character(*)
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig or ESMF_HConfigIter object.
+
+   content
+          The content to be added.
+
+   [addKey]
+          The key under which to add the new map item. Mutural exclusive
+          with addKeyString.
+
+   [addKeyString]
+          The key string under which to add the new map item. Mutural
+          exclusive with addKey.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          keyString.
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index.
+
+   [doc]
+          The doc index. Defaults to the first document.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

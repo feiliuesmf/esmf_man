@@ -1,0 +1,40 @@
+  53.4.5 ESMF_UtilIOMkDir - Create a directory in the file system
+
+   INTERFACE:
+    subroutine ESMF_UtilIOMkDir (pathName,  &
+        mode, relaxedFlag,  &
+        rc)
+
+   PARAMETERS:
+      character(*), intent(in)            :: pathName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,      intent(in),  optional :: mode
+      logical,      intent(in),  optional :: relaxedFlag
+      integer,      intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Call the system-dependent routine to create a directory in the file
+   system.
+
+   The arguments are:
+
+   pathName
+          Name of the directory to be created.
+
+   [mode]
+          File permission mode. Typically an octal constant is used as a
+          value, for example: mode=o'755'. If not specified on
+          POSIX-compliant systems, the default is o'755' - corresponding
+          to owner read/write/execute, group read/execute, and world
+          read/execute. On native Windows, this argument is ignored and
+          default security settings are used.
+
+   [relaxedFlag]
+          When set to .true., if the directory already exists, rc will be
+          set to ESMF_SUCCESS instead of an error. If not specified, the
+          default is .false..
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

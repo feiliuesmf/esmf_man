@@ -1,0 +1,99 @@
+  35.2.6 ESMF_GeomGet - Get information about a Grid
+
+   INTERFACE:
+       subroutine ESMF_GeomGet(geom, &
+           dimCount, rank, localDECount, distgrid, &
+           distgridToGridMap, indexFlag, geomtype, &
+           grid, staggerloc, mesh, meshloc, locstream, &
+           xgrid, xgridside, gridIndex,rc)
+
+   ARGUMENTS:
+       type(ESMF_Geom),   intent(in)            :: geom
+       integer,               intent(out), optional :: dimCount
+       integer,               intent(out), optional :: rank
+       integer,               intent(out), optional :: localDECount
+       type(ESMF_DistGrid),   intent(out), optional :: distgrid
+       integer,               intent(out), optional :: distgridToGridMap(:)
+       type(ESMF_Index_Flag),  intent(out), optional :: indexflag
+       type(ESMF_GeomType_Flag),   intent(out), optional :: geomtype
+       type(ESMF_Grid),       intent(out), optional :: grid
+       type(ESMF_StaggerLoc), intent(out), optional :: staggerloc
+       type(ESMF_Mesh),       intent(out), optional :: mesh
+       type(ESMF_MeshLoc),    intent(out), optional :: meshloc
+       type(ESMF_LocStream),  intent(out), optional :: locstream
+       type(ESMF_XGrid),      intent(out), optional :: xgrid
+       type(ESMF_XGridSide_Flag),  intent(out), optional :: xgridside
+       integer,               intent(out), optional :: gridIndex
+       integer,               intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get various types of information about a Geom.
+
+   The arguments are:
+
+   geom
+          Geom to get the information from.
+
+   [dimCount]
+          The full number of dimensions of the Distgrid object underneath
+          the Geom object.
+
+   [rank]
+          The count of the memory dimensions in this Geom object.
+          Typically it's the same as dimCount. However, in some cases
+          (e.g. arbitrarily distributed grids) it can be different.
+
+   [localDECount]
+          The number of DEs in this Geom object on this PET.
+
+   [distgrid]
+          The structure describing the distribution of the Geom object.
+
+   [distgridToGridMap]
+          List that has as many elements as the distgrid dimCount. This
+          array describes mapping between the Geom object's dimensions and
+          its Distgrid.
+
+   [indexflag]
+          Flag that indicates how the DE-local indices are to be defined.
+
+   [geomtype]
+          The type of geometry on which the Field is built. See
+          section [1499]54.22 for the range of values.
+
+   [grid]
+          If the Geom object holds a Grid, then this will pass out that
+          Grid object.
+
+   [staggerloc]
+          If the Geom object holds a Grid, then this will pass out the
+          staggerloc.
+
+   [mesh]
+          If the Geom object holds a Mesh, then this will pass out that
+          Mesh object.
+
+   [meshloc]
+          If the Geom object holds a Mesh, then this will pass out the
+          meshloc.
+
+   [locstream]
+          If the Geom object holds a LocStream, then this will pass out
+          that LocStream object.
+
+   [xgrid]
+          If the Geom object holds an XGrid, then this will pass out that
+          XGrid object.
+
+   [xgridSide]
+          If the Geom object holds an XGrid, then this will pass out the
+          XGrid side.
+
+   [gridIndex]
+          If the Geom object holds an XGrid, then this will pass out the
+          gridIndex.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

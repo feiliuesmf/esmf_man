@@ -1,0 +1,171 @@
+  27.5.8 ESMF_ArrayBundleGet - Get object-wide information from an ArrayBundle
+
+   INTERFACE:
+     ! Private name; call using ESMF_ArrayBundleGet()
+     subroutine ESMF_ArrayBundleGetListAll(arraybundle, &
+       itemorderflag, arrayCount, arrayList, arrayNameList, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle),    intent(in)            :: arraybundle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_ItemOrder_Flag), intent(in),  optional :: itemorderflag
+     integer,                   intent(out), optional :: arrayCount
+     type(ESMF_Array),          intent(out), optional :: arrayList(:)
+     character(len=*),          intent(out), optional :: arrayNameList(:)
+     character(len=*),          intent(out), optional :: name
+     integer,                   intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument itemorderflag. The new argument gives the
+                user control over the order in which the items are
+                returned.
+
+   DESCRIPTION:
+
+   Get general, i.e. not Array name specific information from the
+   ArrayBundle.
+
+   arraybundle
+          ESMF_ArrayBundle to be queried.
+
+   [itemorderflag]
+          Specifies the order of the returned items in the arrayList and
+          arrayNameList. The default is ESMF_ITEMORDER_ABC. See
+          [1040]54.32 for a full list of options.
+
+   [arrayCount]
+          Upon return holds the number of Arrays bundled in the
+          ArrayBundle.
+
+   [arrayList]
+          Upon return holds a list of Arrays bundled in arraybundle. The
+          argument must be allocated to be at least of size arrayCount.
+
+   [arrayNameList]
+          Upon return holds a list of the names of the Arrays bundled in
+          arraybundle. The argument must be allocated to be at least of
+          size arrayCount.
+
+   [name]
+          Name of the ArrayBundle object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  27.5.9 ESMF_ArrayBundleGet - Get information about an Array by name and
+  optionally return an Array
+
+   INTERFACE:
+     ! Private name; call using ESMF_ArrayBundleGet()
+     subroutine ESMF_ArrayBundleGetItem(arraybundle, arrayName, &
+       array, arrayCount, isPresent, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle), intent(in)            :: arraybundle
+     character(len=*),       intent(in)            :: arrayName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_Array),       intent(out), optional :: array
+     integer,                intent(out), optional :: arrayCount
+     logical,                intent(out), optional :: isPresent
+     integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Get information about items that match arrayName in ArrayBundle.
+
+   arraybundle
+          ESMF_ArrayBundle to be queried.
+
+   arrayName
+          Specified name.
+
+   [array]
+          Upon return holds the requested Array item. It is an error if
+          this argument was specified and there is not exactly one Array
+          item in arraybundle that matches arrayName.
+
+   [arrayCount]
+          Number of Arrays with arrayName in arraybundle.
+
+   [isPresent]
+          Upon return indicates whether Array(s) with arrayName exist in
+          arraybundle.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  27.5.10 ESMF_ArrayBundleGet - Get a list of Arrays by name
+
+   INTERFACE:
+     ! Private name; call using ESMF_ArrayBundleGet()
+     subroutine ESMF_ArrayBundleGetList(arraybundle, arrayName, arrayList, &
+       itemorderflag, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle),    intent(in)            :: arraybundle
+     character(len=*),          intent(in)            :: arrayName
+     type(ESMF_Array),          intent(out)           :: arrayList(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_ItemOrder_Flag), intent(in),  optional :: itemorderflag
+     integer,                   intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument itemorderflag. The new argument gives the
+                user control over the order in which the items are
+                returned.
+
+   DESCRIPTION:
+
+   Get the list of Arrays from ArrayBundle that match arrayName.
+
+   arraybundle
+          ESMF_ArrayBundle to be queried.
+
+   arrayName
+          Specified name.
+
+   arrayList
+          List of Arrays in arraybundle that match arrayName. The argument
+          must be allocated to be at least of size arrayCount returned for
+          this arrayName.
+
+   [itemorderflag]
+          Specifies the order of the returned items in the arrayList. The
+          default is ESMF_ITEMORDER_ABC. See [1041]54.32 for a full list
+          of options.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

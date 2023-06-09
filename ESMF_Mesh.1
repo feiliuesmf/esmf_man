@@ -1,0 +1,1502 @@
+          + [520]33 Mesh Class
+               o [521]33.1 Description
+                    # [522]33.1.1 Mesh representation in ESMF
+                    # [523]33.1.2 Supported Meshes
+               o [524]33.2 Constants
+                    # [525]33.2.1 ESMF_MESHELEMTYPE
+               o [526]33.3 Use and Examples
+                    # [527]33.3.1 Mesh creation
+                    # [528]33.3.2 Create a small single PET Mesh in one
+                      step
+                    # [529]33.3.3 Create a small single PET Mesh in three
+                      steps
+                    # [530]33.3.4 Create a small Mesh on 4 PETs in one
+                      step
+                    # [531]33.3.5 Create a copy of a Mesh with a new
+                      distribution
+                    # [532]33.3.6 Create a small Mesh of all one element
+                      type on 4 PETs using easy element method
+                    # [533]33.3.7 Create a small Mesh of multiple element
+                      types on 4 PETs using easy element method
+                    # [534]33.3.8 Create a Mesh from an unstructured grid
+                      file
+                    # [535]33.3.9 Create a Mesh representation of a cubed
+                      sphere grid
+                    # [536]33.3.10 Remove Mesh memory
+                    # [537]33.3.11 Mesh Masking
+                    # [538]33.3.12 Mesh Halo Communication
+               o [539]33.4 Class API
+                    # [540]33.4.1 ESMF_MeshAssignment(=)
+                    # [541]33.4.2 ESMF_MeshOperator(==)
+                    # [542]33.4.3 ESMF_MeshOperator(/=)
+                    # [543]33.4.4 ESMF_MeshAddElements
+                    # [544]33.4.5 ESMF_MeshAddNodes
+                    # [545]33.4.6 ESMF_MeshCreate
+                    # [546]33.4.7 ESMF_MeshCreate
+                    # [547]33.4.8 ESMF_MeshCreate
+                    # [548]33.4.9 ESMF_MeshCreate
+                    # [549]33.4.10 ESMF_MeshCreate
+                    # [550]33.4.11 ESMF_MeshCreate
+                    # [551]33.4.12 ESMF_MeshCreate
+                    # [552]33.4.13 ESMF_MeshCreateCubedSphere
+                    # [553]33.4.14 ESMF_MeshDestroy
+                    # [554]33.4.15 ESMF_MeshEmptyCreate
+                    # [555]33.4.16 ESMF_MeshFreeMemory
+                    # [556]33.4.17 ESMF_MeshGet
+                    # [557]33.4.18 ESMF_MeshGetMOAB
+                    # [558]33.4.19 ESMF_MeshIsCreated
+                    # [559]33.4.20 ESMF_MeshSet
+                    # [560]33.4.21 ESMF_MeshSetMOAB
+                                 33 Mesh Class
+
+33.1 Description
+
+   Unstructured grids are commonly used in the computational solution of
+   partial differential equations. These are especially useful for
+   problems that involve complex geometry, where using the less flexible
+   structured grids can result in grid representation of regions where no
+   computation is needed. Finite element and finite volume methods map
+   naturally to unstructured grids and are used commonly in hydrology,
+   ocean modeling, and many other applications.
+
+   In order to provide support for application codes using unstructured
+   grids, the ESMF library provides a class for representing unstructured
+   grids called the Mesh. Fields can be created on a Mesh to hold data.
+   Fields created on a Mesh can also be used as either the source or
+   destination or both of an interpolation (i.e. an
+   ESMF_FieldRegridStore() call) which allows data to be moved between
+   unstructured grids. This section describes the Mesh and how to create
+   and use them in ESMF.
+
+  33.1.1 Mesh representation in ESMF
+
+   A Mesh in ESMF is constructed of nodes and elements.
+
+   A node, also known as a vertex or corner, is a part of a Mesh which
+   represents a single point. Coordinate information is set in a node.
+
+   An element, also known as a cell, is a part of a mesh which represents
+   a small region of space. Elements are described in terms of a connected
+   set of nodes which represent locations along their boundaries.
+
+   Field data may be located on either the nodes or elements of a Mesh.
+
+   The dimension of a Mesh in ESMF is specified with two parameters: the
+   parametric dimension and the spatial dimension.
+
+   The parametric dimension of a Mesh is the dimension of the topology of
+   the Mesh. This can be thought of as the dimension of the elements which
+   make up the Mesh. For example, a Mesh composed of triangles would have
+   a parametric dimension of 2, whereas a Mesh composed of tetrahedra
+   would have a parametric dimension of 3.
+
+   The spatial dimension of a Mesh is the dimension of the space the Mesh
+   is embedded in. In other words, it is the number of coordinate
+   dimensions needed to describe the location of the nodes making up the
+   Mesh.
+
+   For example, a Mesh constructed of squares on a plane would have a
+   parametric dimension of 2 and a spatial dimension of 2. If that same
+   Mesh were used to represent the 2D surface of a sphere, then the Mesh
+   would still have a parametric dimension of 2, but now its spatial
+   dimension would be 3.
+
+  33.1.2 Supported Meshes
+
+   The range of Meshes supported by ESMF are defined by several factors:
+   dimension, element types, and distribution.
+
+   ESMF currently only supports Meshes whose number of coordinate
+   dimensions (spatial dimension) is 2 or 3. The dimension of the elements
+   in a Mesh (parametric dimension) must be less than or equal to the
+   spatial dimension, but also must be either 2 or 3. This means that a
+   Mesh may be either 2D elements in 2D space, 3D elements in 3D space, or
+   a manifold constructed of 2D elements embedded in 3D space.
+
+   ESMF supports a range of elements for each Mesh parametric dimension.
+   For a parametric dimension of 2, the native supported element types are
+   triangles and quadrilaterals. In addition to these, ESMF supports 2D
+   polygons with any number of sides. Internally these are represented as
+   sets of triangles, but to the user should behave like any other
+   element. For a parametric dimension of 3, the supported element types
+   are tetrahedrons and hexahedrons. See Section [1449]33.2.1 for diagrams
+   of these. The Mesh supports any combination of element types within a
+   particular dimension, but types from different dimensions may not be
+   mixed. For example, a Mesh cannot be constructed of both quadrilaterals
+   and tetrahedra.
+
+   ESMF currently only supports distributions where every node on a PET
+   must be a part of an element on that PET. In other words, there must
+   not be nodes without a corresponding element on any PET.
+
+33.2 Constants
+
+  33.2.1 ESMF_MESHELEMTYPE
+
+   DESCRIPTION:
+   An ESMF Mesh can be constructed from a combination of different
+   elements. The type of elements that can be used in a Mesh depends on
+   the Mesh's parameteric dimension, which is set during Mesh creation.
+   The following are the valid Mesh element types for each valid Mesh
+   parametric dimension (2D or 3D) .
+
+                     3                          4 ---------- 3
+                    / \                         |            |
+                   /   \                        |            |
+                  /     \                       |            |
+                 /       \                      |            |
+                /         \                     |            |
+               1 --------- 2                    1 ---------- 2
+
+           ESMF_MESHELEMTYPE_TRI            ESMF_MESHELEMTYPE_QUAD
+
+     2D element types (numbers are the order for elementConn during Mesh create)
+
+   For a Mesh with parametric dimension of 2 ESMF supports two native
+   element types (illustrated above), but also supports polygons with more
+   sides. Internally these polygons are represented as a set of triangles,
+   but to the user should behave like other elements. To specify the
+   non-native polygons in the elementType argument use the number of
+   corners of the polygon (e.g. for a pentagon use 5). The connectivity
+   for a polygon should be specified in counterclockwise order. The
+   following table summarizes this information:
+
+   Element Type           Number of Nodes Description
+   ESMF_MESHELEMTYPE_TRI         3        A triangle
+   ESMF_MESHELEMTYPE_QUAD        4        A quadrilateral (e.g. a rectangle)
+   N                             N        An N-gon (e.g. if N=5 a pentagon)
+
+
+                 3                               8---------------7
+                /|\                             /|              /|
+               / | \                           / |             / |
+              /  |  \                         /  |            /  |
+             /   |   \                       /   |           /   |
+            /    |    \                     5---------------6    |
+           4-----|-----2                    |    |          |    |
+            \    |    /                     |    4----------|----3
+             \   |   /                      |   /           |   /
+              \  |  /                       |  /            |  /
+               \ | /                        | /             | /
+                \|/                         |/              |/
+                 1                          1---------------2
+
+       ESMF_MESHELEMTYPE_TETRA             ESMF_MESHELEMTYPE_HEX
+
+  3D element types (numbers are the order for elementConn during Mesh create)
+
+   For a Mesh with parametric dimension of 3 the valid element types
+   (illustrated above) are:
+
+   Element Type Number of Nodes Description
+   ESMF_MESHELEMTYPE_TETRA 4 A tetrahedron (NOT VALID IN BILINEAR OR PATCH
+   REGRID)
+   ESMF_MESHELEMTYPE_HEX 8 A hexahedron (e.g. a cube)
+
+33.3 Use and Examples
+
+   This section describes the use of the ESMF Mesh class. It starts with
+   an explanation and examples of creating a Mesh and then goes through
+   other Mesh methods. This set of sections covers the use of the Mesh
+   class interfaces. For further detail which applies to creating a Field
+   on a Mesh, please see Section [1450]26.3.19.
+
+  33.3.1 Mesh creation
+
+   To create a Mesh we need to set some properties of the Mesh as a whole,
+   some properties of each node in the mesh and then some properties of
+   each element which connects the nodes (for a definition of node and
+   element please see Section [1451]33.1.1).
+
+   For the Mesh as a whole we set its parametric dimension (parametricDim)
+   and spatial dimension (spatialDim). A Mesh's parametric dimension can
+   be thought of as the dimension of the elements which make up the Mesh.
+   A Mesh's spatial dimension, on the other hand, is the is the number of
+   coordinate dimensions needed to describe the location of the nodes
+   making up the Mesh. (For a fuller definition of these terms please see
+   Section [1452]33.1.1.)
+
+   The structure of the per node and element information used to create a
+   Mesh is influenced by the Mesh distribution strategy. The Mesh class is
+   distributed by elements. This means that a node must be present on any
+   PET that contains an element associated with that node, but not on any
+   other PET (a node can't be on a PET without an element "home"). Since a
+   node may be used by two or more elements located on different PETs, a
+   node may be duplicated on multiple PETs. When a node is duplicated in
+   this manner, one and only one of the PETs that contain the node must
+   "own" the node. The user sets this ownership when they define the nodes
+   during Mesh creation. When a Field is created on a Mesh (i.e. on the
+   Mesh nodes), on each PET the Field is only created on the nodes which
+   are owned by that PET. This means that the size of the Field memory on
+   the PET can be smaller than the number of nodes used to create the Mesh
+   on that PET. Please see Section [1453]26.3.19 in Field for further
+   explanation and examples of this issue and others in working with
+   Fields on Meshes.
+
+   For each node in the Mesh we set three properties: the global id of the
+   node (nodeIds), node coordinates (nodeCoords), and which PET owns the
+   node (nodeOwners). The node id is a unique (across all PETs) integer
+   attached to the particular node. It is used to indicate which nodes are
+   the same when connecting together pieces of the Mesh on different
+   processors. The node coordinates indicate the location of a node in
+   space and are used in the ESMF_FieldRegrid() functionality when
+   interpolating. The node owner indicates which PET is in charge of the
+   node. This is used when creating a Field on the Mesh to indicate which
+   PET should contain a Field location for the data.
+
+   For each element in the Mesh we set three properties: the global id of
+   the element (elementIds), the topology type of the element
+   (elementTypes), and which nodes are connected together to form the
+   element (elementConn). The element id is a unique (across all PETs)
+   integer attached to the particular element. The element type describes
+   the topology of the element (e.g. a triangle vs. a quadrilateral). The
+   range of choices for the topology of the elements in a Mesh are
+   restricted by the Mesh's parametric dimension (e.g. a Mesh can't
+   contain a 2D element like a triangle, when its parametric dimension is
+   3D), but it can contain any combination of elements appropriate to its
+   dimension. In particular, in 2D ESMF supports two native element types
+   triangle and quadrilateral, but also provides support for polygons with
+   any number of sides. These polygons are represented internally as sets
+   of triangles, but to the user should behave like other elements. To
+   specify a polygon with more than four sides, the element type should be
+   set to the number of corners of the polygon (e.g. element type=6 for a
+   hexagon). The element connectivity indicates which nodes are to be
+   connected together to form the element. The number of nodes connected
+   together for each element is implied by the elements topology type
+   (elementTypes). It is IMPORTANT to note, that the entries in this list
+   are NOT the global ids of the nodes, but are indices into the PET local
+   lists of node info used in the Mesh Create. In other words, the element
+   connectivity isn't specified in terms of the global list of nodes, but
+   instead is specified in terms of the locally described node info. One
+   other important point about connectivities is that the order of the
+   nodes in the connectivity list of an element is important. Please see
+   Section [1454]33.2.1 for diagrams illustrating the correct order of
+   nodes in an element. In general, when specifying an element with
+   parametric dimension 2, the nodes should be given in counterclockwise
+   order around the element.
+
+   Mesh creation may either be performed as a one step process using the
+   full ESMF_MeshCreate() call, or may be done in three steps. The three
+   step process starts with a more minimal ESMF_MeshCreate() call. It is
+   then followed by the ESMF_MeshAddNodes() to specify nodes, and then the
+   ESMF_MeshAddElements() call to specify elements. This three step
+   sequence is useful to conserve memory because the node arrays being
+   used for the ESMF_MeshAddNodes() call can be deallocated before
+   creating the arrays to be used in the ESMF_MeshAddElements() call.
+
+  33.3.2 Create a small single PET Mesh in one step
+
+
+
+    2.0   7 ------- 8 ------- 9
+          |         |         |
+          |    4    |    5    |
+          |         |         |
+    1.0   4 ------- 5 ------- 6
+          |         |  \   3  |
+          |    1    |    \    |
+          |         |  2   \  |
+    0.0   1 ------- 2 ------- 3
+
+         0.0       1.0        2.0
+
+          Node Id labels at corners
+         Element Id labels in centers
+         (Everything owned by PET 0)
+
+   This example is intended to illustrate the creation of a small Mesh on
+   one PET. The reason for starting with a single PET case is so that the
+   user can start to familiarize themselves with the concepts of Mesh
+   creation without the added complication of multiple processors. Later
+   examples illustrate the multiple processor case. This example creates
+   the small 2D Mesh which can be seen in the figure above. Note that this
+   Mesh consists of 9 nodes and 5 elements, where the elements are a
+   mixture of quadrilaterals and triangles. The coordinates of the nodes
+   in the Mesh range from 0.0 to 2.0 in both dimensions. The node ids are
+   in the corners of the elements whereas the element ids are in the
+   centers. The following section of code illustrates the creation of this
+   Mesh.
+
+  ! Set number of nodes
+  numNodes=9
+
+  ! Allocate and fill the node id array.
+  allocate(nodeIds(numNodes))
+  nodeIds=(/1,2,3,4,5,6,7,8,9/)
+
+  ! Allocate and fill node coordinate array.
+  ! Since this is a 2D Mesh the size is 2x the
+  ! number of nodes.
+  allocate(nodeCoords(2*numNodes))
+  nodeCoords=(/0.0,0.0, & ! node id 1
+               1.0,0.0, & ! node id 2
+               2.0,0.0, & ! node id 3
+               0.0,1.0, & ! node id 4
+               1.0,1.0, & ! node id 5
+               2.0,1.0, & ! node id 6
+               0.0,2.0, & ! node id 7
+               1.0,2.0, & ! node id 8
+               2.0,2.0 /) ! node id 9
+
+  ! Allocate and fill the node owner array.
+  ! Since this Mesh is all on PET 0, it's just set to all 0.
+  allocate(nodeOwners(numNodes))
+  nodeOwners=0 ! everything on PET 0
+
+
+  ! Set the number of each type of element, plus the total number.
+  numQuadElems=3
+  numTriElems=2
+  numTotElems=numQuadElems+numTriElems
+
+
+  ! Allocate and fill the element id array.
+  allocate(elemIds(numTotElems))
+  elemIds=(/1,2,3,4,5/)
+
+
+  ! Allocate and fill the element topology type array.
+  allocate(elemTypes(numTotElems))
+  elemTypes=(/ESMF_MESHELEMTYPE_QUAD, & ! elem id 1
+              ESMF_MESHELEMTYPE_TRI,  & ! elem id 2
+              ESMF_MESHELEMTYPE_TRI,  & ! elem id 3
+              ESMF_MESHELEMTYPE_QUAD, & ! elem id 4
+              ESMF_MESHELEMTYPE_QUAD/)  ! elem id 5
+
+
+  ! Allocate and fill the element connection type array.
+  ! Note that entries in this array refer to the
+  ! positions in the nodeIds, etc. arrays and that
+  ! the order and number of entries for each element
+  ! reflects that given in the Mesh options
+  ! section for the corresponding entry
+  ! in the elemTypes array. The number of
+  ! entries in this elemConn array is the
+  ! number of nodes in a quad. (4) times the
+  ! number of quad. elements plus the number
+  ! of nodes in a triangle (3) times the number
+  ! of triangle elements.
+  allocate(elemConn(4*numQuadElems+3*numTriElems))
+  elemConn=(/1,2,5,4, &  ! elem id 1
+             2,3,5,   &  ! elem id 2
+             3,6,5,   &  ! elem id 3
+             4,5,8,7, &  ! elem id 4
+             5,6,9,8/)   ! elem id 5
+
+
+  ! Create Mesh structure in 1 step
+  mesh=ESMF_MeshCreate(parametricDim=2,spatialDim=2, &
+         coordSys=ESMF_COORDSYS_CART, &
+         nodeIds=nodeIds, nodeCoords=nodeCoords, &
+         nodeOwners=nodeOwners, elementIds=elemIds,&
+         elementTypes=elemTypes, elementConn=elemConn, &
+         rc=localrc)
+
+
+  ! After the creation we are through with the arrays, so they may be
+  ! deallocated.
+  deallocate(nodeIds)
+  deallocate(nodeCoords)
+  deallocate(nodeOwners)
+  deallocate(elemIds)
+  deallocate(elemTypes)
+  deallocate(elemConn)
+
+
+  ! At this point the mesh is ready to use. For example, as is
+  ! illustrated here, to have a field created on it. Note that
+  ! the Field only contains data for nodes owned by the current PET.
+  ! Please see Section "Create a Field from a Mesh" under Field
+  ! for more information on creating a Field on a Mesh.
+  field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8,  rc=localrc)
+
+  33.3.3 Create a small single PET Mesh in three steps
+
+   This example is intended to illustrate the creation of a small Mesh in
+   three steps on one PET. The Mesh being created is exactly the same one
+   as in the last example (Section [1455]33.3.2), but the three step
+   process allows the creation to occur in a more memory efficient manner.
+
+  ! Create the mesh structure setting the dimensions
+  ! and coordinate system
+  mesh = ESMF_MeshCreate(parametricDim=2,spatialDim=2, &
+                         coordSys=ESMF_COORDSYS_CART, &
+                         rc=localrc)
+
+  ! Set number of nodes
+  numNodes=9
+
+  ! Allocate and fill the node id array.
+  allocate(nodeIds(numNodes))
+  nodeIds=(/1,2,3,4,5,6,7,8,9/)
+
+  ! Allocate and fill node coordinate array.
+  ! Since this is a 2D Mesh the size is 2x the
+  ! number of nodes.
+  allocate(nodeCoords(2*numNodes))
+  nodeCoords=(/0.0,0.0, & ! node id 1
+               1.0,0.0, & ! node id 2
+               2.0,0.0, & ! node id 3
+               0.0,1.0, & ! node id 4
+               1.0,1.0, & ! node id 5
+               2.0,1.0, & ! node id 6
+               0.0,2.0, & ! node id 7
+               1.0,2.0, & ! node id 8
+               2.0,2.0 /) ! node id 9
+
+  ! Allocate and fill the node owner array.
+  ! Since this Mesh is all on PET 0, it's just set to all 0.
+  allocate(nodeOwners(numNodes))
+  nodeOwners=0 ! everything on PET 0
+
+  ! Add the nodes to the Mesh
+  call ESMF_MeshAddNodes(mesh, nodeIds=nodeIds, &
+         nodeCoords=nodeCoords, nodeOwners=nodeOwners, rc=localrc)
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! HERE IS THE POINT OF THE THREE STEP METHOD
+  ! WE CAN DELETE THESE NODE ARRAYS BEFORE
+  ! ALLOCATING THE ELEMENT ARRAYS, THEREBY
+  ! REDUCING THE AMOUNT OF MEMORY NEEDED
+  ! AT ONE TIME.
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  deallocate(nodeIds)
+  deallocate(nodeCoords)
+  deallocate(nodeOwners)
+
+
+  ! Set the number of each type of element, plus the total number.
+  numQuadElems=3
+  numTriElems=2
+  numTotElems=numQuadElems+numTriElems
+
+  ! Allocate and fill the element id array.
+  allocate(elemIds(numTotElems))
+  elemIds=(/1,2,3,4,5/)
+
+  ! Allocate and fill the element topology type array.
+  allocate(elemTypes(numTotElems))
+  elemTypes=(/ESMF_MESHELEMTYPE_QUAD, & ! elem id 1
+              ESMF_MESHELEMTYPE_TRI,  & ! elem id 2
+              ESMF_MESHELEMTYPE_TRI,  & ! elem id 3
+              ESMF_MESHELEMTYPE_QUAD, & ! elem id 4
+              ESMF_MESHELEMTYPE_QUAD/)  ! elem id 5
+
+
+  ! Allocate and fill the element connection type array.
+  ! Note that entries in this array refer to the
+  ! positions in the nodeIds, etc. arrays and that
+  ! the order and number of entries for each element
+  ! reflects that given in the Mesh options
+  ! section for the corresponding entry
+  ! in the elemTypes array. The number of
+  ! entries in this elemConn array is the
+  ! number of nodes in a quad. (4) times the
+  ! number of quad. elements plus the number
+  ! of nodes in a triangle (3) times the number
+  ! of triangle elements.
+  allocate(elemConn(4*numQuadElems+3*numTriElems))
+  elemConn=(/1,2,5,4, &  ! elem id 1
+             2,3,5,   &  ! elem id 2
+             3,6,5,   &  ! elem id 3
+             4,5,8,7, &  ! elem id 4
+             5,6,9,8/)   ! elem id 5
+
+
+  ! Finish the creation of the Mesh by adding the elements
+  call ESMF_MeshAddElements(mesh, elementIds=elemIds,&
+         elementTypes=elemTypes, elementConn=elemConn, &
+         rc=localrc)
+
+  ! After the creation we are through with the arrays, so they may be
+  ! deallocated.
+  deallocate(elemIds)
+  deallocate(elemTypes)
+  deallocate(elemConn)
+
+
+  ! At this point the mesh is ready to use. For example, as is
+  ! illustrated here, to have a field created on it. Note that
+  ! the Field only contains data for nodes owned by the current PET.
+  ! Please see Section "Create a Field from a Mesh" under Field
+  ! for more information on creating a Field on a Mesh.
+  field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8,  rc=localrc)
+
+  33.3.4 Create a small Mesh on 4 PETs in one step
+
+
+    2.0   7 ------- 8        [8] ------ 9
+          |         |         |         |
+          |    4    |         |    5    |
+          |         |         |         |
+    1.0  [4] ----- [5]       [5] ----- [6]
+
+         0.0       1.0       1.0       2.0
+
+             PET 2               PET 3
+
+
+    1.0   4 ------- 5        [5] ------ 6
+          |         |         |  \   3  |
+          |    1    |         |    \    |
+          |         |         | 2    \  |
+    0.0   1 ------- 2        [2] ------ 3
+
+         0.0       1.0       1.0      2.0
+
+             PET 0               PET 1
+
+                 Node Id labels at corners
+                Element Id labels in centers
+
+   This example is intended to illustrate the creation of a small Mesh on
+   multiple PETs. This example creates the same small 2D Mesh as the
+   previous two examples (See Section [1456]33.3.2 for a diagram),
+   however, in this case the Mesh is broken up across 4 PETs. The figure
+   above illustrates the distribution of the Mesh across the PETs. As in
+   the previous diagram, the node ids are in the corners of the elements
+   and the element ids are in the centers. In this figure '[' and ']'
+   around a character indicate a node which is owned by another PET. The
+   nodeOwner parameter indicates which PET owns the node. Note that the
+   three step creation illustrated in Section [1457]33.3.3 could also be
+   used in a parallel Mesh creation such as this by simply interleaving
+   the three calls in the appropriate places between the node and element
+   array definitions.
+
+ ! Break up what's being set by PET
+ if (localPET .eq. 0) then !!! This part only for PET 0
+    ! Set number of nodes
+     numNodes=4
+
+    ! Allocate and fill the node id array.
+    allocate(nodeIds(numNodes))
+    nodeIds=(/1,2,4,5/)
+
+    ! Allocate and fill node coordinate array.
+    ! Since this is a 2D Mesh the size is 2x the
+    ! number of nodes.
+    allocate(nodeCoords(2*numNodes))
+    nodeCoords=(/0.0,0.0, & ! node id 1
+                 1.0,0.0, & ! node id 2
+                 0.0,1.0, & ! node id 4
+                 1.0,1.0 /) ! node id 5
+
+    ! Allocate and fill the node owner array.
+    allocate(nodeOwners(numNodes))
+    nodeOwners=(/0, & ! node id 1
+                 0, & ! node id 2
+                 0, & ! node id 4
+                 0/)  ! node id 5
+
+    ! Set the number of each type of element, plus the total number.
+    numQuadElems=1
+    numTriElems=0
+    numTotElems=numQuadElems+numTriElems
+
+    ! Allocate and fill the element id array.
+    allocate(elemIds(numTotElems))
+    elemIds=(/1/)
+
+    ! Allocate and fill the element topology type array.
+    allocate(elemTypes(numTotElems))
+    elemTypes=(/ESMF_MESHELEMTYPE_QUAD/) ! elem id 1
+
+    ! Allocate and fill the element connection type array.
+    ! Note that entry are local indices
+    allocate(elemConn(4*numQuadElems+3*numTriElems))
+    elemConn=(/1,2,4,3/) ! elem id 1
+
+  else if (localPET .eq. 1) then !!! This part only for PET 1
+    ! Set number of nodes
+     numNodes=4
+
+    ! Allocate and fill the node id array.
+    allocate(nodeIds(numNodes))
+    nodeIds=(/2,3,5,6/)
+
+    ! Allocate and fill node coordinate array.
+    ! Since this is a 2D Mesh the size is 2x the
+    ! number of nodes.
+    allocate(nodeCoords(2*numNodes))
+    nodeCoords=(/1.0,0.0, & ! node id 2
+                 2.0,0.0, & ! node id 3
+                 1.0,1.0, & ! node id 5
+                 2.0,1.0 /) ! node id 6
+
+    ! Allocate and fill the node owner array.
+    allocate(nodeOwners(numNodes))
+    nodeOwners=(/0, & ! node id 2
+                 1, & ! node id 3
+                 0, & ! node id 5
+                 1/)  ! node id 6
+
+    ! Set the number of each type of element, plus the total number.
+    numQuadElems=0
+    numTriElems=2
+    numTotElems=numQuadElems+numTriElems
+
+    ! Allocate and fill the element id array.
+    allocate(elemIds(numTotElems))
+    elemIds=(/2,3/)
+
+    ! Allocate and fill the element topology type array.
+    allocate(elemTypes(numTotElems))
+    elemTypes=(/ESMF_MESHELEMTYPE_TRI, & ! elem id 2
+                ESMF_MESHELEMTYPE_TRI/)  ! elem id 3
+
+    ! Allocate and fill the element connection type array.
+    allocate(elemConn(4*numQuadElems+3*numTriElems))
+    elemConn=(/1,2,3, & ! elem id 2
+               2,4,3/)  ! elem id 3
+
+  else if (localPET .eq. 2) then !!! This part only for PET 2
+    ! Set number of nodes
+     numNodes=4
+
+    ! Allocate and fill the node id array.
+    allocate(nodeIds(numNodes))
+    nodeIds=(/4,5,7,8/)
+
+    ! Allocate and fill node coordinate array.
+    ! Since this is a 2D Mesh the size is 2x the
+    ! number of nodes.
+    allocate(nodeCoords(2*numNodes))
+    nodeCoords=(/0.0,1.0, & ! node id 4
+                 1.0,1.0, & ! node id 5
+                 0.0,2.0, & ! node id 7
+                 1.0,2.0 /) ! node id 8
+
+    ! Allocate and fill the node owner array.
+    ! Since this Mesh is all on PET 0, it's just set to all 0.
+    allocate(nodeOwners(numNodes))
+    nodeOwners=(/0, & ! node id 4
+                 0, & ! node id 5
+                 2, & ! node id 7
+                 2/)  ! node id 8
+
+    ! Set the number of each type of element, plus the total number.
+    numQuadElems=1
+    numTriElems=0
+    numTotElems=numQuadElems+numTriElems
+
+    ! Allocate and fill the element id array.
+    allocate(elemIds(numTotElems))
+    elemIds=(/4/)
+
+    ! Allocate and fill the element topology type array.
+    allocate(elemTypes(numTotElems))
+    elemTypes=(/ESMF_MESHELEMTYPE_QUAD/) ! elem id 4
+
+    ! Allocate and fill the element connection type array.
+    allocate(elemConn(4*numQuadElems+3*numTriElems))
+    elemConn=(/1,2,4,3/) ! elem id 4
+
+  else if (localPET .eq. 3) then !!! This part only for PET 3
+    ! Set number of nodes
+     numNodes=4
+
+    ! Allocate and fill the node id array.
+    allocate(nodeIds(numNodes))
+    nodeIds=(/5,6,8,9/)
+
+    ! Allocate and fill node coordinate array.
+    ! Since this is a 2D Mesh the size is 2x the
+    ! number of nodes.
+    allocate(nodeCoords(2*numNodes))
+    nodeCoords=(/1.0,1.0, &  ! node id 5
+                 2.0,1.0, &  ! node id 6
+                 1.0,2.0, &  ! node id 8
+                 2.0,2.0 /)  ! node id 9
+
+    ! Allocate and fill the node owner array.
+    allocate(nodeOwners(numNodes))
+    nodeOwners=(/0, & ! node id 5
+                 1, & ! node id 6
+                 2, & ! node id 8
+                 3/)  ! node id 9
+
+    ! Set the number of each type of element, plus the total number.
+    numQuadElems=1
+    numTriElems=0
+    numTotElems=numQuadElems+numTriElems
+
+    ! Allocate and fill the element id array.
+    allocate(elemIds(numTotElems))
+    elemIds=(/5/)
+
+    ! Allocate and fill the element topology type array.
+    allocate(elemTypes(numTotElems))
+    elemTypes=(/ESMF_MESHELEMTYPE_QUAD/) ! elem id 5
+
+    ! Allocate and fill the element connection type array.
+    allocate(elemConn(4*numQuadElems+3*numTriElems))
+    elemConn=(/1,2,4,3/) ! elem id 5
+  endif
+
+
+  ! Create Mesh structure in 1 step
+  mesh=ESMF_MeshCreate(parametricDim=2, spatialDim=2, &
+         coordSys=ESMF_COORDSYS_CART, &
+         nodeIds=nodeIds, nodeCoords=nodeCoords, &
+         nodeOwners=nodeOwners, elementIds=elemIds,&
+         elementTypes=elemTypes, elementConn=elemConn, &
+         rc=localrc)
+
+
+  ! After the creation we are through with the arrays, so they may be
+  ! deallocated.
+  deallocate(nodeIds)
+  deallocate(nodeCoords)
+  deallocate(nodeOwners)
+  deallocate(elemIds)
+  deallocate(elemTypes)
+  deallocate(elemConn)
+
+
+  ! At this point the mesh is ready to use. For example, as is
+  ! illustrated here, to have a field created on it. Note that
+  ! the Field only contains data for nodes owned by the current PET.
+  ! Please see Section "Create a Field from a Mesh" under Field
+  ! for more information on creating a Field on a Mesh.
+  field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8,  rc=localrc)
+
+  33.3.5 Create a copy of a Mesh with a new distribution
+
+
+    2.0   7 -------[8]               8 ------- 9
+          |         |                |         |
+          |    4    |                |    5    |
+          |         |                |         |
+    1.0   4 ------ [5]               5 ------- 6
+
+         0.0       1.0              1.0       2.0
+
+             PET 1                      PET 0
+
+
+    1.0  [4] ----- [5]              [5] ----- [6]
+          |         |  \                \      |
+          |    1    | 2  \                \  3 |
+          |         |      \                \  |
+    0.0   1 ------- 2 -----[3]                 3
+
+         0.0       1.0               1.0      2.0
+
+             PET 2                      PET 3
+
+                 Node Id labels at corners
+                Element Id labels in centers
+
+   This example demonstrates the creation of a new Mesh which is a copy of
+   an existing Mesh with a new distribution of the original Mesh's nodes
+   and elements. To create the new Mesh in this manner the user needs two
+   DistGrids. One to describe the new distribution of the nodes. The other
+   to describe the new distribution of the elements. In this example we
+   create new DistGrids from a list of indices. The DistGrids are then
+   used in the redistribution Mesh create interface which is overloaded to
+   ESMF_MeshCreate(). In this example we redistribute the Mesh created in
+   the previous example (Section [1458]33.3.4) to the distribution
+   pictured above. Note that for simplicity's sake, the position of the
+   Mesh in the diagram is basically the same, but the PET positions and
+   node owners have been changed.
+
+  ! Setup the new location of nodes and elements depending on the processor
+  if (localPet .eq. 0) then !!! This part only for PET 0
+     allocate(elemIds(1))
+     elemIds=(/5/)
+
+     allocate(nodeIds(4))
+     nodeIds=(/5,6,8,9/)
+
+  else if (localPet .eq. 1) then !!! This part only for PET 1
+     allocate(elemIds(1))
+     elemIds=(/4/)
+
+     allocate(nodeIds(2))
+     nodeIds=(/7,4/)
+
+  else if (localPet .eq. 2) then !!! This part only for PET 2
+     allocate(elemIds(2))
+     elemIds=(/1,2/)
+
+     allocate(nodeIds(2))
+     nodeIds=(/1,2/)
+
+  else if (localPet .eq. 3) then !!! This part only for PET 3
+     allocate(elemIds(1))
+     elemIds=(/3/)
+
+     allocate(nodeIds(1))
+     nodeIds=(/3/)
+
+  endif
+
+
+  ! Create new node DistGrid
+  nodedistgrid=ESMF_DistGridCreate(nodeIds, rc=localrc)
+  if (localrc .ne. ESMF_SUCCESS) rc=ESMF_FAILURE
+
+
+  ! Create new element DistGrid
+  elemdistgrid=ESMF_DistGridCreate(elemIds, rc=localrc)
+  if (localrc .ne. ESMF_SUCCESS) rc=ESMF_FAILURE
+
+
+  ! Can now deallocate distribution lists
+  deallocate(elemIds)
+  deallocate(nodeIds)
+
+
+  ! Create new redisted Mesh based on DistGrids
+  mesh2=ESMF_MeshCreate(mesh,                         &
+                        nodalDistgrid=nodedistgrid,   &
+                        elementDistgrid=elemdistgrid, &
+                        rc=localrc)
+  if (localrc .ne. ESMF_SUCCESS) rc=ESMF_FAILURE
+
+
+  ! At this point the mesh is ready to use. For example, as is
+  ! illustrated here, to have a field created on it. Note that
+  ! the Field only contains data for nodes owned by the current PET.
+  ! Please see Section "Create a Field from a Mesh" under Field
+  ! for more information on creating a Field on a Mesh.
+  field = ESMF_FieldCreate(mesh2, ESMF_TYPEKIND_R8,  rc=localrc)
+
+  33.3.6 Create a small Mesh of all one element type on 4 PETs using easy
+  element method
+
+
+    2.0   * ------- *         * ------- *
+          |         |         |         |
+          |    3    |         |    4    |
+          |         |         |         |
+    1.0   * ------- *         * ------- *
+
+         0.0       1.0       1.0       2.0
+
+             PET 2               PET 3
+
+
+    1.0   * ------- *         * ------- *
+          |         |         |         |
+          |    1    |         |    2    |
+          |         |         |         |
+    0.0   * ------- *         * ------- *
+
+         0.0       1.0       1.0      2.0
+
+             PET 0               PET 1
+
+             Element Id labels in centers
+
+   This example is intended to illustrate the creation of a small Mesh on
+   multiple PETs using the easy element creation interface. Here the Mesh
+   consists of only one type of element, so we can use a slightly more
+   convenient interface. In this interface the user only needs to specify
+   the element type once and the elementCornerCoords argument has three
+   dimensions. This means that the corners for all elements are not
+   collapsed into a 1D list as happens with the next example.
+
+   The figure above shows the Mesh to be created and it's distribution
+   across the PETs. As in the previous diagrams, the element ids are in
+   the centers. Note that in the example code below the user doesn't
+   specify the element ids. In this case, they are assigned sequentially
+   through the local elements on each PET starting with 1 for the first
+   element on PET 0. (It isn't shown in the example below, but there is an
+   optional argument that enables the user to set the element ids if they
+   wish.) Unlike some of the previous examples of Mesh creation, here the
+   user doesn't specify node ids or ownership, so that information is
+   shown by a "*" in the diagram.
+
+ ! Break up what's being set by PET
+ if (localPET .eq. 0) then !!! This part only for PET 0
+
+    ! Set the number of elements on this PET
+    numTotElems=1
+
+    ! Allocate and fill element corner coordinate array.
+    allocate(elemCornerCoords3(2,4,numTotElems))
+    elemCornerCoords3(:,1,1)=(/0.0,0.0/) ! elem id 1 corner 1
+    elemCornerCoords3(:,2,1)=(/1.0,0.0/) ! elem id 1 corner 2
+    elemCornerCoords3(:,3,1)=(/1.0,1.0/) ! elem id 1 corner 3
+    elemCornerCoords3(:,4,1)=(/0.0,1.0/) ! elem id 1 corner 4
+
+  else if (localPET .eq. 1) then !!! This part only for PET 1
+
+    ! Set the number of elements on this PET
+    numTotElems=1
+
+    ! Allocate and fill element corner coordinate array.
+    allocate(elemCornerCoords3(2,4,numTotElems))
+    elemCornerCoords3(:,1,1)=(/1.0,0.0/) ! elem id 2 corner 1
+    elemCornerCoords3(:,2,1)=(/2.0,0.0/) ! elem id 2 corner 2
+    elemCornerCoords3(:,3,1)=(/2.0,1.0/) ! elem id 2 corner 3
+    elemCornerCoords3(:,4,1)=(/1.0,1.0/) ! elem id 2 corner 4
+
+
+  else if (localPET .eq. 2) then !!! This part only for PET 2
+
+    ! Set the number of elements on this PET
+    numTotElems=1
+
+    ! Allocate and fill element corner coordinate array.
+    allocate(elemCornerCoords3(2,4,numTotElems))
+    elemCornerCoords3(:,1,1)=(/0.0,1.0/) ! elem id 3 corner 1
+    elemCornerCoords3(:,2,1)=(/1.0,1.0/) ! elem id 3 corner 2
+    elemCornerCoords3(:,3,1)=(/1.0,2.0/) ! elem id 3 corner 3
+    elemCornerCoords3(:,4,1)=(/0.0,2.0/) ! elem id 3 corner 4
+
+
+  else if (localPET .eq. 3) then !!! This part only for PET 3
+
+    ! Set the number of elements on this PET
+    numTotElems=1
+
+    ! Allocate and fill element corner coordinate array.
+    allocate(elemCornerCoords3(2,4,numTotElems))
+    elemCornerCoords3(:,1,1)=(/1.0,1.0/) ! elem id 4 corner 1
+    elemCornerCoords3(:,2,1)=(/2.0,1.0/) ! elem id 4 corner 2
+    elemCornerCoords3(:,3,1)=(/2.0,2.0/) ! elem id 4 corner 3
+    elemCornerCoords3(:,4,1)=(/1.0,2.0/) ! elem id 4 corner 4
+
+  endif
+
+  ! Create Mesh structure in 1 step
+  mesh=ESMF_MeshCreate(parametricDim=2, &
+         coordSys=ESMF_COORDSYS_CART,   &
+         elementType=ESMF_MESHELEMTYPE_QUAD, &
+         elementCornerCoords=elemCornerCoords3, &
+         rc=localrc)
+
+
+  ! After the creation we are through with the arrays, so they may be
+  ! deallocated.
+  deallocate(elemCornerCoords3)
+
+  ! At this point the mesh is ready to use. For example, as is
+  ! illustrated here, to have a field created on it. Note that
+  ! the Field only contains data for elements owned by the current PET.
+  ! Please see Section "Create a Field from a Mesh" under Field
+  ! for more information on creating a Field on a Mesh.
+  field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, &
+       meshloc=ESMF_MESHLOC_ELEMENT, rc=localrc)
+
+  33.3.7 Create a small Mesh of multiple element types on 4 PETs using easy
+  element method
+
+
+    2.0   * ------- *         * ------- *
+          |         |         |         |
+          |    4    |         |    5    |
+          |         |         |         |
+    1.0   * ------- *         * ------- *
+
+         0.0       1.0       1.0       2.0
+
+             PET 2               PET 3
+
+
+    1.0   * ------- *         * ------- *
+          |         |         |  \   3  |
+          |    1    |         |    \    |
+          |         |         | 2    \  |
+    0.0   * ------- *         * ------- *
+
+         0.0       1.0       1.0      2.0
+
+             PET 0               PET 1
+
+             Element Id labels in centers
+
+   This example is intended to illustrate the creation of a small Mesh on
+   multiple PETs using the easy element creation interface. In this
+   example, the Mesh being created contains elements of multiple types. To
+   support the specification of a set of elements containing different
+   types and thus different numbers of corners, the elementCornerCoords
+   argument has the corner and element dimensions collapsed together into
+   one dimension.
+
+   The figure above shows the Mesh to be created and it's distribution
+   across the PETs. As in the previous diagrams, the element ids are in
+   the centers. Note that in the example code below the user doesn't
+   specify the element ids. In this case, they are assigned sequentially
+   through the local elements on each PET starting with 1 for the first
+   element on PET 0. (It isn't shown in the example below, but there is an
+   optional argument that enables the user to set the element ids if they
+   wish.) Unlike some of the previous examples of Mesh creation, here the
+   user doesn't specify node ids or ownership, so that information is
+   shown by a "*" in the diagram.
+
+ ! Break up what's being set by PET
+ if (localPET .eq. 0) then !!! This part only for PET 0
+
+    ! Set the number of each type of element, plus the total number.
+    numQuadElems=1
+    numTriElems=0
+    numTotElems=numQuadElems+numTriElems
+    numElemCorners=4*numQuadElems+3*numTriElems
+
+    ! Allocate and fill the element type array.
+    allocate(elemTypes(numTotElems))
+    elemTypes=(/ESMF_MESHELEMTYPE_QUAD/) ! elem id 1
+
+    ! Allocate and fill element corner coordinate array.
+    allocate(elemCornerCoords2(2,numElemCorners))
+    elemCornerCoords2(:,1)=(/0.0,0.0/) ! elem id 1 corner 1
+    elemCornerCoords2(:,2)=(/1.0,0.0/) ! elem id 1 corner 2
+    elemCornerCoords2(:,3)=(/1.0,1.0/) ! elem id 1 corner 3
+    elemCornerCoords2(:,4)=(/0.0,1.0/) ! elem id 1 corner 4
+
+  else if (localPET .eq. 1) then !!! This part only for PET 1
+
+    ! Set the number of each type of element, plus the total number.
+    numQuadElems=0
+    numTriElems=2
+    numTotElems=numQuadElems+numTriElems
+    numElemCorners=4*numQuadElems+3*numTriElems
+
+    ! Allocate and fill the element type array.
+    allocate(elemTypes(numTotElems))
+    elemTypes=(/ESMF_MESHELEMTYPE_TRI, & ! elem id 2
+                ESMF_MESHELEMTYPE_TRI/)  ! elem id 3
+
+    ! Allocate and fill element corner coordinate array.
+    allocate(elemCornerCoords2(2,numElemCorners))
+    elemCornerCoords2(:,1)=(/1.0,0.0/) ! elem id 2 corner 1
+    elemCornerCoords2(:,2)=(/2.0,0.0/) ! elem id 2 corner 2
+    elemCornerCoords2(:,3)=(/1.0,1.0/) ! elem id 2 corner 3
+    elemCornerCoords2(:,4)=(/2.0,0.0/) ! elem id 3 corner 1
+    elemCornerCoords2(:,5)=(/2.0,1.0/) ! elem id 3 corner 2
+    elemCornerCoords2(:,6)=(/1.0,1.0/) ! elem id 3 corner 3
+
+  else if (localPET .eq. 2) then !!! This part only for PET 2
+
+    ! Set the number of each type of element, plus the total number.
+    numQuadElems=1
+    numTriElems=0
+    numTotElems=numQuadElems+numTriElems
+    numElemCorners=4*numQuadElems+3*numTriElems
+
+
+    ! Allocate and fill the element type array.
+    allocate(elemTypes(numTotElems))
+    elemTypes=(/ESMF_MESHELEMTYPE_QUAD/) ! elem id 4
+
+    ! Allocate and fill element corner coordinate array.
+    allocate(elemCornerCoords2(2,numElemCorners))
+    elemCornerCoords2(:,1)=(/0.0,1.0/) ! elem id 4 corner 1
+    elemCornerCoords2(:,2)=(/1.0,1.0/) ! elem id 4 corner 2
+    elemCornerCoords2(:,3)=(/1.0,2.0/) ! elem id 4 corner 3
+    elemCornerCoords2(:,4)=(/0.0,2.0/) ! elem id 4 corner 4
+
+
+  else if (localPET .eq. 3) then !!! This part only for PET 3
+
+    ! Set the number of each type of element, plus the total number.
+    numQuadElems=1
+    numTriElems=0
+    numTotElems=numQuadElems+numTriElems
+    numElemCorners=4*numQuadElems+3*numTriElems
+
+    ! Allocate and fill the element type array.
+    allocate(elemTypes(numTotElems))
+    elemTypes=(/ESMF_MESHELEMTYPE_QUAD/) ! elem id 5
+
+    ! Allocate and fill element corner coordinate array.
+    allocate(elemCornerCoords2(2,numElemCorners))
+    elemCornerCoords2(:,1)=(/1.0,1.0/) ! elem id 5 corner 1
+    elemCornerCoords2(:,2)=(/2.0,1.0/) ! elem id 5 corner 2
+    elemCornerCoords2(:,3)=(/2.0,2.0/) ! elem id 5 corner 3
+    elemCornerCoords2(:,4)=(/1.0,2.0/) ! elem id 5 corner 4
+
+  endif
+
+  ! Create Mesh structure in 1 step
+  mesh=ESMF_MeshCreate(parametricDim=2, &
+         coordSys=ESMF_COORDSYS_CART,   &
+         elementTypes=elemTypes, &
+         elementCornerCoords=elemCornerCoords2, &
+         rc=localrc)
+
+
+  ! After the creation we are through with the arrays, so they may be
+  ! deallocated.
+  deallocate(elemTypes)
+  deallocate(elemCornerCoords2)
+
+  ! At this point the mesh is ready to use. For example, as is
+  ! illustrated here, to have a field created on it. Note that
+  ! the Field only contains data for elements owned by the current PET.
+  ! Please see Section "Create a Field from a Mesh" under Field
+  ! for more information on creating a Field on a Mesh.
+  field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, &
+       meshloc=ESMF_MESHLOC_ELEMENT, rc=localrc)
+
+  33.3.8 Create a Mesh from an unstructured grid file
+
+   ESMF supports the creation of a Mesh from three grid file formats: the
+   SCRIP format [1459]12.8.1, the ESMF format [1460]12.8.2 or the proposed
+   CF unstructured grid UGRID format [1461]12.8.4. All three of these grid
+   file formats are NetCDF files.
+
+   When creating a Mesh from a SCRIP format file, there are a number of
+   options to control the output Mesh. The data is located at the center
+   of the grid cell in a SCRIP grid; whereas the data is located at the
+   corner of a cell in an ESMF Mesh object. Therefore, we create a Mesh
+   object by default by constructing a "dual" mesh using the coordinates
+   in the file. If the user wishes to not construct the dual mesh, the
+   optional argument convertToDual may be used to control this behavior.
+   When comvertToDual is set to .false. the Mesh constructed from the file
+   will not be the dual. This is necessary when using the Mesh as part of
+   a conservative regridding operation in the ESMF_FieldRegridStore()
+   call, so the weights are properly generated for the cell centers in the
+   file.
+
+   The following example code depicts how to create a Mesh using a SCRIP
+   file. Note that you have to set the fileformat to
+   ESMF_FILEFORMAT_SCRIP.
+
+   mesh = ESMF_MeshCreate(filename="data/ne4np4-pentagons.nc", &
+        fileformat=ESMF_FILEFORMAT_SCRIP, rc=localrc)
+
+   As mentioned above ESMF also supports creating Meshes from the ESMF
+   format. The ESMF format works better with the methods used to create an
+   ESMF Mesh object, so less conversion needs to be done to create a Mesh,
+   and thus this format is more efficient than SCRIP to use within ESMF.
+   The ESMF format is also more general than the SCRIP format because it
+   supports higher dimension coordinates and more general topologies.
+   Currently, ESMF_MeshCreate() does not support conversion to a dual mesh
+   for this format. All regrid methods are supported on Meshes in this
+   format.
+
+   Here is an example of creating a Mesh from an ESMF unstructured grid
+   file. Note that you have to set the fileformat to
+   ESMF_FILEFORMAT_ESMFMESH.
+
+   mesh = ESMF_MeshCreate(filename="data/ne4np4-esmf.nc", &
+            fileformat=ESMF_FILEFORMAT_ESMFMESH, &
+            rc=localrc)
+
+  33.3.9 Create a Mesh representation of a cubed sphere grid
+
+   This example demostrates how to create a ESMF_Mesh object representing
+   a cubed sphere grid with identical regular decomposition for every
+   tile. In this example, the tile resolution is 45, so there will be a
+   total 45x45x6=12150 elements in the mesh. nx and ny are the regular
+   decomposition of each tile. The total number of DEs is nx x ny x 6. If
+   the number of PETs are less than the total number of DEs, the DEs will
+   be distributed to the PETs using the default cyclic distribution.
+
+   ! Decompose each tile into 2 x 1 blocks
+   nx=2
+   ny=1
+
+   ! Create Mesh
+   mesh = ESMF_MeshCreateCubedSphere(tileSize=45, nx=nx,ny=ny, rc=localrc)
+
+  33.3.10 Remove Mesh memory
+
+   There are two different levels that the memory in a Mesh can be
+   removed. The first of these is the standard destroy call,
+   ESMF_MeshDestroy(). As with other classes, this call removes all memory
+   associated with the object, and afterwards the object can not be used
+   further (i.e. should not be used in any methods). The second, which is
+   unique to Mesh, is the ESMF_MeshFreeMemory() call. This call removes
+   the connection and coordinate information associated with the Mesh, but
+   leaves the distgrid information. The coordinate and connection
+   information held in the Mesh can consume a large amount of memory for a
+   big Mesh, so using this call can very significantly reduce the amount
+   of memory used. However, once this method has been used on a Mesh there
+   are some restriction on what may be done with it. Once a Mesh has had
+   its memory freed using this method, any Field built on the Mesh can no
+   longer be used as part of an ESMF_FieldRegridStore() call. However,
+   because the distgrid information is still part of the Mesh, Fields
+   built on such a Mesh can still be part of an ESMF_FieldRegrid() call
+   (where the routehandle was generated previous to the
+   ESMF_MeshFreeMemory() operation). Fields may also still be created on
+   these Meshes. The following short piece of code illustrates the use of
+   this call.
+
+   ! Here a Field built on a mesh may be used
+   ! as part of a ESMF_FieldRegridStore() call
+
+   ! This call removes connection and coordinate
+   ! information, significantly reducing the memory used by
+   ! mesh, but limiting what can be done with it.
+   call ESMF_MeshFreeMemory(mesh, rc=localrc)
+
+   ! Here a new Field may be built on mesh, or
+   ! a field built on a mesh may be used as part
+   ! of an ESMF_FieldRegrid() call
+
+   ! Destroy the mesh
+   call ESMF_MeshDestroy(mesh, rc=localrc)
+
+   ! Here mesh can't be used for anything
+
+  33.3.11 Mesh Masking
+
+   There are two types of masking available in Mesh: node masking and
+   element masking. These both work in a similar manner, but vary slightly
+   in the details of setting the mask information during mesh creation.
+
+   For node masking, the mask information is set using the nodeMask
+   argument to either ESMF_MeshCreate() or ESMF_MeshAddNodes(). When a
+   regrid store method is called (e.g. ESMF_FieldRegridStore()) the mask
+   values arguments (srcMaskValues and dstMaskValues) can then be used to
+   indicate which particular values set in the nodeMask array indicate
+   that the node should be masked. For example, when calling
+   ESMF_FieldRegridStore() if dstMaskValues has been set to 1, then any
+   node in the destination Mesh whose corresponding nodeMask value is 1
+   will be masked out (a node with any other value than 1 will not be
+   masked).
+
+   For element masking, the mask information is set using the elementMask
+   argument to either ESMF_MeshCreate() or ESMF_MeshAddElements(). In a
+   similar manner to node masking, when a regrid store method is called
+   (e.g. ESMF_FieldRegridStore()) the mask values arguments (srcMaskValues
+   and dstMaskValues) can then be used to indicate which particular values
+   set in the elementMask array indicate that the element should be
+   masked. For example, when calling ESMF_FieldRegridStore() if
+   dstMaskValues has been set to 1, then any element in the destination
+   Mesh whose corresponding elementMask value is 1 will be masked out (an
+   element with any other value than 1 will not be masked).
+
+  33.3.12 Mesh Halo Communication
+
+
+    2.0   7 ------- 8        [8] ------ 9
+          |         |         |         |
+          |    4    |         |    5    |
+          |         |         |         |
+    1.0  [4] ----- [5]       [5] ----- [6]
+
+         0.0       1.0       1.0       2.0
+
+             PET 2               PET 3
+
+
+    1.0   4 ------- 5        [5] ------ 6
+          |         |         |  \   3  |
+          |    1    |         |    \    |
+          |         |         | 2    \  |
+    0.0   1 ------- 2        [2] ------ 3
+
+         0.0       1.0       1.0      2.0
+
+             PET 0               PET 1
+
+              Node Id labels at corners
+             Element Id labels in centers
+
+   This section illustrates the process of setting up halo communication
+   for a Field built on the nodes of a Mesh. The Mesh used in this example
+   is the one that was created in section [1462]33.3.4. The diagram for
+   that Mesh is repeated above for convenience's sake. The halo method
+   used here is the one described in section [1463]28.2.16, but made more
+   specific to the case of a Mesh. This example shows how to set up
+   haloing for nodes which are owned by another processor (e.g. the node
+   with id 5 on PET 1 above). However, it could be expanded to halo other
+   nodes simply by including them in the halo arrays below on the PET
+   where their values are needed.
+
+   The first step in setting up the halo communication is to create arrays
+   containing the ids of the haloed nodes on the PETs where they are
+   needed.
+
+   The following illustrates that for the Mesh diagramed above.
+
+  ! Create halo lists based on PET id.
+  if (localPET .eq. 0) then !!! This part only for PET 0
+
+    ! Allocate and fill the halo list.
+    allocate(haloSeqIndexList(0))  ! There are no haloed points on PET 0
+
+  else if (localPET .eq. 1) then !!! This part only for PET 1
+
+    ! Allocate and fill the halo list.
+    allocate(haloSeqIndexList(2))
+    haloSeqIndexList=(/2,5/)
+
+  else if (localPET .eq. 2) then !!! This part only for PET 2
+
+    ! Allocate and fill the halo list.
+    allocate(haloSeqIndexList(2))
+    haloSeqIndexList=(/4,5/)
+
+  else if (localPET .eq. 3) then !!! This part only for PET 3
+
+    ! Allocate and fill the halo list.
+    allocate(haloSeqIndexList(3))
+    haloSeqIndexList=(/5,6,8/)
+
+  endif
+
+   The next step is to create an ESMF Array with a halo region to hold the
+   data being haloed.
+
+  ! Get node DistGrid from the Mesh.
+  call ESMF_MeshGet(mesh, nodalDistgrid=nodeDistgrid, rc=localrc)
+
+  ! Create an ESMF Array with a halo region from a node DistGrid.
+  array=ESMF_ArrayCreate(nodeDistgrid, typekind=ESMF_TYPEKIND_R8, &
+       haloSeqIndexList=haloSeqIndexList, rc=localrc)
+
+   Note that currently the halo data is stored at the end of the Array
+   data on each PET in the order specified by the haloSeqIndexList
+   argument (e.g. for PET 3 the halo information will be in the order
+   5,6,8 at the end of the piece of array on PET 3). This means that if
+   the halo information needs to be in the order of nodes specified when
+   you create the Mesh, then the nodes owned by another processor need to
+   be at the end of the node information when the Mesh is created (e.g.
+   when creating the piece of the Mesh on PET 3, then nodes 5,6,8 would
+   need to be at the end of the node information lists).
+
+   At this point haloing could be done on the ESMF Array by using the
+   ESMF_ArrayHaloStore() call followed by ESMF_ArrayHalo(). However, in
+   this example we wrap the Array in an ESMF Field. This allows it to be
+   used in Field specific calls (e.g. ESMF_FieldRegridStore()) as well as
+   for haloing.
+
+  ! Wrap the ESMF Array in a Field created on the nodes of the Mesh.
+  field=ESMF_FieldCreate(mesh, array=array, &
+       meshLoc=ESMF_MESHLOC_NODE, rc=localrc)
+
+   We can now proceed with haloing the Field by using the
+   ESMF_FieldHaloStore() call to create a RouteHandle, and then the
+   ESMF_FieldHalo() call to apply the RouteHandle. Note that once the
+   RouteHandle has been created it can be applied repeatedly to redo the
+   halo communication as data changes in the Field.
+
+  ! Create the RouteHandle for the halo communication.
+  call ESMF_FieldHaloStore(field, routehandle=haloHandle, rc=localrc)
+
+  ! Can repeatedly do halo as data in field changes.
+  ! do t=...
+
+    ! Data set in non-halo field locations.
+
+    ! Do the halo communication.
+    call ESMF_FieldHalo(field, routehandle=haloHandle, rc=localrc)
+
+    ! Halo locations now filled in field.
+
+  ! enddo
+
+  ! After its last use the RouteHandle can be released.
+  call ESMF_FieldHaloRelease(haloHandle, rc=localrc)
+
+  ! The Field can now be destroyed.
+  call ESMF_FieldDestroy(field, rc=localrc)
+
+  ! The Array can now be destroyed.
+  call ESMF_ArrayDestroy(array, rc=localrc)
+
+33.4 Class API
+
+  33.4.1 ESMF_MeshAssignment(=) - Mesh assignment
+
+   INTERFACE:
+     interface assignment(=)
+     mesh1 = mesh2
+
+   ARGUMENTS:
+     type(ESMF_Mesh) :: mesh1
+     type(ESMF_Mesh) :: mesh2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign mesh1 as an alias to the same ESMF Mesh object in memory as
+   mesh2. If mesh2 is invalid, then mesh1 will be equally invalid after
+   the assignment.
+
+   The arguments are:
+
+   mesh1
+          The ESMF_Mesh object on the left hand side of the assignment.
+
+   mesh2
+          The ESMF_Mesh object on the right hand side of the assignment.
+
+  33.4.2 ESMF_MeshOperator(==) - Mesh equality operator
+
+   INTERFACE:
+    interface operator(==)
+     if (mesh1 == mesh2) then ... endif
+               OR
+     result = (mesh1 == mesh2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_Mesh), intent(in) :: mesh1
+     type(ESMF_Mesh), intent(in) :: mesh2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether mesh1 and mesh2 are valid aliases to the same ESMF Mesh
+   object in memory. For a more general comparison of two ESMF Meshes,
+   going beyond the simple alias test, the ESMF_MeshMatch() function (not
+   yet implemented) must be used.
+
+   The arguments are:
+
+   mesh1
+          The ESMF_Mesh object on the left hand side of the equality
+          operation.
+
+   mesh2
+          The ESMF_Mesh object on the right hand side of the equality
+          operation.
+
+  33.4.3 ESMF_MeshOperator(/=) - Mesh not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (mesh1 /= mesh2) then ... endif
+               OR
+     result = (mesh1 /= mesh2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_Mesh), intent(in) :: mesh1
+     type(ESMF_Mesh), intent(in) :: mesh2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether mesh1 and mesh2 are not valid aliases to the same ESMF
+   Mesh object in memory. For a more general comparison of two ESMF
+   Meshes, going beyond the simple alias test, the ESMF_MeshMatch()
+   function (not yet implemented) must be used.
+
+   The arguments are:
+
+   mesh1
+          The ESMF_Mesh object on the left hand side of the non-equality
+          operation.
+
+   mesh2
+          The ESMF_Mesh object on the right hand side of the non-equality
+          operation.
+

@@ -1,0 +1,248 @@
+  25.5.10 ESMF_FieldBundleGet - Get object-wide information from a FieldBundle
+
+   INTERFACE:
+     ! Private name; call using ESMF_FieldBundleGet()
+     subroutine ESMF_FieldBundleGetListAll(fieldbundle, &
+       itemorderflag, geomtype, grid, locstream, mesh, xgrid, &
+       fieldCount, fieldList, fieldNameList, isPacked, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(in) :: fieldbundle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_ItemOrder_Flag), intent(in), optional :: itemorderflag
+     type(ESMF_GeomType_Flag), intent(out), optional :: geomtype
+     type(ESMF_Grid), intent(out), optional :: grid
+     type(ESMF_LocStream), intent(out), optional :: locstream
+     type(ESMF_Mesh), intent(out), optional :: mesh
+     type(ESMF_XGrid), intent(out), optional :: xgrid
+     integer, intent(out), optional :: fieldCount
+     type(ESMF_Field), intent(out), optional :: fieldList(:)
+     character(len=*), intent(out), optional :: fieldNameList(:)
+     logical, intent(out), optional :: isPacked
+     character(len=*), intent(out), optional :: name
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument itemorderflag. The new argument gives the
+                user control over the order in which the items are
+                returned.
+
+        8.0.0
+                Added argument isPacked. The new argument allows the user
+                to query if this is a packed FieldBundle.
+
+   DESCRIPTION:
+
+   Get the list of all Fields and field names bundled in a FieldBundle.
+
+   fieldbundle
+          ESMF_FieldBundle to be queried.
+
+   [itemorderflag]
+          Specifies the order of the returned items in the fieldList or
+          the fieldNameList. The default is ESMF_ITEMORDER_ABC. See
+          [735]54.32 for a full list of options.
+
+   [geomtype]
+          Flag that indicates what type of geometry this FieldBundle
+          object holds. Can be ESMF_GEOMTYPE_GRID, ESMF_GEOMTYPE_MESH,
+          ESMF_GEOMTYPE_LOCSTREAM, ESMF_GEOMTYPE_XGRID
+
+   [grid]
+          The Grid object that this FieldBundle object holds.
+
+   [locstream]
+          The LocStream object that this FieldBundle object holds.
+
+   [mesh]
+          The Mesh object that this FieldBundle object holds.
+
+   [xgrid]
+          The XGrid object that this FieldBundle object holds.
+
+   [fieldCount]
+          Upon return holds the number of Fields bundled in the
+          fieldbundle.
+
+   [fieldList]
+          Upon return holds a list of Fields bundled in ESMF_FieldBundle.
+          The argument must be allocated to be at least of size
+          fieldCount.
+
+   [fieldNameList]
+          Upon return holds a list of the names of the fields bundled in
+          ESMF_FieldBundle. The argument must be allocated to be at least
+          of size fieldCount.
+
+   [isPacked]
+          Upon return holds the information if this FieldBundle is packed.
+
+   [name]
+          Name of the fieldbundle object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  25.5.11 ESMF_FieldBundleGet - Get information about a Field by name and
+  optionally return a Field
+
+   INTERFACE:
+     ! Private name; call using ESMF_FieldBundleGet()
+     subroutine ESMF_FieldBundleGetItem(fieldbundle, fieldName, &
+       field, fieldCount, isPresent, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(in) :: fieldbundle
+     character(len=*), intent(in) :: fieldName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_Field), intent(out), optional :: field
+     integer, intent(out), optional :: fieldCount
+     logical, intent(out), optional :: isPresent
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Get information about items that match fieldName in FieldBundle.
+
+   fieldbundle
+          ESMF_FieldBundle to be queried.
+
+   fieldName
+          Specified name.
+
+   [field]
+          Upon return holds the requested field item. It is an error if
+          this argument was specified and there is not exactly one field
+          item in ESMF_FieldBundle that matches fieldName.
+
+   [fieldCount]
+          Number of Fields with fieldName in ESMF_FieldBundle.
+
+   [isPresent]
+          Upon return indicates whether field(s) with fieldName exist in
+          ESMF_FieldBundle.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  25.5.12 ESMF_FieldBundleGet - Get a list of Fields by name
+
+   INTERFACE:
+     ! Private name; call using ESMF_FieldBundleGet()
+     subroutine ESMF_FieldBundleGetList(fieldbundle, fieldName, fieldList, &
+       itemorderflag, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(in) :: fieldbundle
+     character(len=*), intent(in) :: fieldName
+     type(ESMF_Field), intent(out) :: fieldList(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_ItemOrder_Flag), intent(in), optional :: itemorderflag
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument itemorderflag. The new argument gives the
+                user control over the order in which the items are
+                returned.
+
+   DESCRIPTION:
+
+   Get the list of Fields from fieldbundle that match fieldName.
+
+   fieldbundle
+          ESMF_FieldBundle to be queried.
+
+   fieldName
+          Specified name.
+
+   fieldList
+          List of Fields in ESMF_FieldBundle that match fieldName. The
+          argument must be allocated to be at least of size fieldCount
+          returned for this fieldName.
+
+   [itemorderflag]
+          Specifies the order of the returned items in the fieldList. The
+          default is ESMF_ITEMORDER_ABC. See [736]54.32 for a full list of
+          options.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  25.5.13 ESMF_FieldBundleGet - Get Fortran array pointer from a packed
+  FieldBundle
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldBundleGet()
+   function ESMF_FieldBundleGetDataPtr<rank><type><kind>(fieldBundle, &
+   localDe, farrayPtr, &
+   rc)
+
+   RETURN VALUE:
+   type(ESMF_FieldBundle) :: ESMF_FieldBundleGetDataPtr<rank><type><kind>
+
+   ARGUMENTS:
+   type(ESMF_FieldBundle), intent(in) :: fieldBundle
+   integer, intent(in), optional :: localDe
+   <type> (ESMF_KIND_<kind>), dimension(<rank>), pointer :: farrayPtr
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get a Fortran pointer to DE-local memory allocation within packed
+   FieldBundle. It's erroneous to perform this call on a FieldBundle
+   that's not packed.
+
+   The arguments are:
+
+   fieldBundle
+          ESMF_FieldBundle object.
+
+   [localDe]
+          Local DE for which information is requested.
+          [0,..,localDeCount-1]. For localDeCount==1 the localDe argument
+          may be omitted, in which case it will default to localDe=0. In
+          the case where packed FieldBundle is created on a Grid, the
+          number of localDes can be queried from the Grid attached to the
+          FieldBundle. In the case where packed FieldBundle is created on
+          a Mesh, the number of localDes is 1.
+
+   farrayPtr
+          Fortran array pointer which will be pointed at DE-local memory
+          allocation in packed FieldBundle.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

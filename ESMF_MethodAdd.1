@@ -1,0 +1,341 @@
+  22.4.1 ESMF_MethodAdd - Attach user method to CplComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodAdd()
+   subroutine ESMF_MethodCplCompAdd(cplcomp, label, index, userRoutine, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp)                      :: cplcomp
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     interface
+       subroutine userRoutine(cplcomp, rc)
+         use ESMF_CompMod
+         implicit none
+         type(ESMF_CplComp)          :: cplcomp      ! must not be optional
+         integer, intent(out)        :: rc           ! must not be optional
+       end subroutine
+     end interface
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Attach userRoutine. Error out if there is a previous attached method
+   under the same label and index.
+
+   The arguments are:
+
+   cplcomp
+          The ESMF_CplComp to attach to.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   userRoutine
+          The user-supplied subroutine to be associated with the label.
+
+          The subroutine must have the exact interface shown above for the
+          userRoutine argument. Arguments in userRoutine must not be
+          declared as optional, and the types, intent and order must
+          match. Prior to Fortran-2008, the subroutine must be either a
+          module scope procedure, or an external procedure that has a
+          matching interface block specified for it. An internal procedure
+          which is contained within another procedure must not be used.
+          From Fortran-2008 onwards, an internal procedure contained
+          within either a main program or a module procedure may be used.
+          If the internal procedure is contained within a module
+          procedure, it is subject to initialization requirements. See:
+          [307]16.4.9
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.2 ESMF_MethodAdd - Attach user method, located in shared object, to
+  CplComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodAdd()
+   subroutine ESMF_MethodCplCompAddShObj(cplcomp, label, index, userRoutine, &
+     sharedObj, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp)                      :: cplcomp
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     character(len=*), intent(in)            :: userRoutine
+     character(len=*), intent(in),  optional :: sharedObj
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Attach userRoutine. Error out if there is a previous attached method
+   under the same label and index.
+
+   The arguments are:
+
+   cplcomp
+          The ESMF_CplComp to attach to.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   userRoutine
+          Name of user-supplied subroutine to be associated with the
+          label, specified as a character string.
+
+          The subroutine must have the exact interface shown in
+          ESMF_MethodCplCompAdd for the userRoutine argument. Arguments in
+          userRoutine must not be declared as optional, and the types,
+          intent and order must match. Prior to Fortran-2008, the
+          subroutine must be either a module scope procedure, or an
+          external procedure that has a matching interface block specified
+          for it. An internal procedure which is contained within another
+          procedure must not be used. From Fortran-2008 onwards, an
+          internal procedure contained within either a main program or a
+          module procedure may be used. If the internal procedure is
+          contained within a module procedure, it is subject to
+          initialization requirements. See: [308]16.4.9
+
+   [sharedObj]
+          Name of shared object that contains userRoutine. If the
+          sharedObj argument is not provided the executable itself will be
+          searched for userRoutine.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.3 ESMF_MethodAdd - Attach user method to GridComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodAdd()
+   subroutine ESMF_MethodGridCompAdd(gcomp, label, index, userRoutine, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp)                     :: gcomp
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     interface
+       subroutine userRoutine(gcomp, rc)
+         use ESMF_CompMod
+         implicit none
+         type(ESMF_GridComp)         :: gcomp        ! must not be optional
+         integer, intent(out)        :: rc           ! must not be optional
+       end subroutine
+     end interface
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Attach userRoutine. Error out if there is a previous attached method
+   under the same label and index.
+
+   The arguments are:
+
+   gcomp
+          The ESMF_GridComp to attach to.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   userRoutine
+          The user-supplied subroutine to be associated with the label.
+
+          The subroutine must have the exact interface shown above for the
+          userRoutine argument. Arguments in userRoutine must not be
+          declared as optional, and the types, intent and order must
+          match. Prior to Fortran-2008, the subroutine must be either a
+          module scope procedure, or an external procedure that has a
+          matching interface block specified for it. An internal procedure
+          which is contained within another procedure must not be used.
+          From Fortran-2008 onwards, an internal procedure contained
+          within either a main program or a module procedure may be used.
+          If the internal procedure is contained within a module
+          procedure, it is subject to initialization requirements. See:
+          [309]16.4.9
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.4 ESMF_MethodAdd - Attach user method, located in shared object, to
+  GridComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodAdd()
+   subroutine ESMF_MethodGridCompAddShObj(gcomp, label, index, userRoutine, &
+     sharedObj, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp)                     :: gcomp
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     character(len=*), intent(in)            :: userRoutine
+     character(len=*), intent(in),  optional :: sharedObj
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Attach userRoutine. Error out if there is a previous attached method
+   under the same label and index.
+
+   The arguments are:
+
+   gcomp
+          The ESMF_GridComp to attach to.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   userRoutine
+          Name of user-supplied subroutine to be associated with the
+          label, specified as a character string.
+
+          The subroutine must have the exact interface shown in
+          ESMF_MethodGridCompAdd for the userRoutine argument. Arguments
+          in userRoutine must not be declared as optional, and the types,
+          intent and order must match. Prior to Fortran-2008, the
+          subroutine must be either a module scope procedure, or an
+          external procedure that has a matching interface block specified
+          for it. An internal procedure which is contained within another
+          procedure must not be used. From Fortran-2008 onwards, an
+          internal procedure contained within either a main program or a
+          module procedure may be used. If the internal procedure is
+          contained within a module procedure, it is subject to
+          initialization requirements. See: [310]16.4.9
+
+   [sharedObj]
+          Name of shared object that contains userRoutine. If the
+          sharedObj argument is not provided the executable itself will be
+          searched for userRoutine.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.5 ESMF_MethodAdd - Attach user method to State
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodAdd()
+   subroutine ESMF_MethodStateAdd(state, label, index, userRoutine, rc)
+
+   ARGUMENTS:
+     type(ESMF_State)                        :: state
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     interface
+       subroutine userRoutine(state, rc)
+         use ESMF_StateMod
+         implicit none
+         type(ESMF_State)            :: state        ! must not be optional
+         integer, intent(out)        :: rc           ! must not be optional
+       end subroutine
+     end interface
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Attach userRoutine. Error out if there is a previous attached method
+   under the same label and index.
+
+   The arguments are:
+
+   state
+          The ESMF_State to attach to.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   userRoutine
+          The user-supplied subroutine to be associated with the label.
+
+          The subroutine must have the exact interface shown above for the
+          userRoutine argument. Arguments in userRoutine must not be
+          declared as optional, and the types, intent and order must
+          match. Prior to Fortran-2008, the subroutine must be either a
+          module scope procedure, or an external procedure that has a
+          matching interface block specified for it. An internal procedure
+          which is contained within another procedure must not be used.
+          From Fortran-2008 onwards, an internal procedure contained
+          within either a main program or a module procedure may be used.
+          If the internal procedure is contained within a module
+          procedure, it is subject to initialization requirements. See:
+          [311]16.4.9
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.6 ESMF_MethodAdd - Attach user method, located in shared object, to State
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodAdd()
+   subroutine ESMF_MethodStateAddShObj(state, label, index, userRoutine, &
+     sharedObj, rc)
+
+   ARGUMENTS:
+     type(ESMF_State)                        :: state
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     character(len=*), intent(in)            :: userRoutine
+     character(len=*), intent(in),  optional :: sharedObj
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Attach userRoutine. Error out if there is a previous attached method
+   under the same label and index.
+
+   The arguments are:
+
+   state
+          The ESMF_State to attach to.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   userRoutine
+          Name of user-supplied subroutine to be associated with the
+          label, specified as a character string.
+
+          The subroutine must have the exact interface shown in
+          ESMF_MethodStateAdd for the userRoutine argument. Arguments in
+          userRoutine must not be declared as optional, and the types,
+          intent and order must match. Prior to Fortran-2008, the
+          subroutine must be either a module scope procedure, or an
+          external procedure that has a matching interface block specified
+          for it. An internal procedure which is contained within another
+          procedure must not be used. From Fortran-2008 onwards, an
+          internal procedure contained within either a main program or a
+          module procedure may be used. If the internal procedure is
+          contained within a module procedure, it is subject to
+          initialization requirements. See: [312]16.4.9
+
+   [sharedObj]
+          Name of shared object that contains userRoutine. If the
+          sharedObj argument is not provided the executable itself will be
+          searched for userRoutine.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

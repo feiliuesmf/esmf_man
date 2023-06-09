@@ -1,0 +1,29 @@
+  44.4.20 ESMF_TimeIntervalNegAbsValue - Return the negative absolute value of a
+  TimeInterval
+
+   INTERFACE:
+       function ESMF_TimeIntervalNegAbsValue(timeinterval)
+
+   RETURN VALUE:
+       type(ESMF_TimeInterval) :: ESMF_TimeIntervalNegAbsValue
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Returns the negative absolute value of timeinterval.
+
+   The argument is:
+
+   timeinterval
+          The object instance to take the negative absolute value of.
+          Negative absolute value is returned as the value of the
+          function.
+

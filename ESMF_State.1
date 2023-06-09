@@ -1,0 +1,804 @@
+          + [145]21 State Class
+               o [146]21.1 Description
+               o [147]21.2 Constants
+                    # [148]21.2.1 ESMF_STATEINTENT
+                    # [149]21.2.2 ESMF_STATEITEM
+               o [150]21.3 Use and Examples
+                    # [151]21.3.1 State create and destroy
+                    # [152]21.3.2 Add items to a State
+                    # [153]21.3.3 Add placeholders to a State
+                    # [154]21.3.4 Mark an item NEEDED
+                    # [155]21.3.5 Create a NEEDED item
+                    # [156]21.3.6 ESMF_StateReconcile() usage
+                    # [157]21.3.7 Read Arrays from a NetCDF file and add
+                      to a State
+                    # [158]21.3.8 Print Array data from a State
+                    # [159]21.3.9 Write Array data within a State to a
+                      NetCDF file
+               o [160]21.4 Restrictions and Future Work
+               o [161]21.5 Design and Implementation Notes
+               o [162]21.6 Object Model
+               o [163]21.7 Class API
+                    # [164]21.7.1 ESMF_StateAssignment(=)
+                    # [165]21.7.2 ESMF_StateOperator(==)
+                    # [166]21.7.3 ESMF_StateOperator(/=)
+                    # [167]21.7.4 ESMF_StateAdd
+                    # [168]21.7.5 ESMF_StateAddReplace
+                    # [169]21.7.6 ESMF_StateCreate
+                    # [170]21.7.7 ESMF_StateDestroy
+                    # [171]21.7.8 ESMF_StateGet
+                    # [172]21.7.9 ESMF_StateGet
+                    # [173]21.7.10 ESMF_StateGet
+                    # [174]21.7.11 ESMF_StateIsCreated
+                    # [175]21.7.12 ESMF_StatePrint
+                    # [176]21.7.13 ESMF_StateRead
+                    # [177]21.7.14 ESMF_StateReconcile
+                    # [178]21.7.15 ESMF_StateRemove
+                    # [179]21.7.16 ESMF_StateRemove
+                    # [180]21.7.17 ESMF_StateReplace
+                    # [181]21.7.18 ESMF_StateSet
+                    # [182]21.7.19 ESMF_StateValidate
+                    # [183]21.7.20 ESMF_StateWrite
+          + [184]22 Attachable Methods
+               o [185]22.1 Description
+               o [186]22.2 Use and Examples
+                    # [187]22.2.1 Producer Component attaches user defined
+                      method
+                    # [188]22.2.2 Producer Component implements user
+                      defined method
+                    # [189]22.2.3 Consumer Component executes user defined
+                      method
+               o [190]22.3 Restrictions and Future Work
+               o [191]22.4 Class API
+                    # [192]22.4.1 ESMF_MethodAdd
+                    # [193]22.4.2 ESMF_MethodAdd
+                    # [194]22.4.3 ESMF_MethodAdd
+                    # [195]22.4.4 ESMF_MethodAdd
+                    # [196]22.4.5 ESMF_MethodAdd
+                    # [197]22.4.6 ESMF_MethodAdd
+                    # [198]22.4.7 ESMF_MethodAddReplace
+                    # [199]22.4.8 ESMF_MethodAddReplace
+                    # [200]22.4.9 ESMF_MethodAddReplace
+                    # [201]22.4.10 ESMF_MethodAddReplace
+                    # [202]22.4.11 ESMF_MethodAddReplace
+                    # [203]22.4.12 ESMF_MethodAddReplace
+                    # [204]22.4.13 ESMF_MethodExecute
+                    # [205]22.4.14 ESMF_MethodExecute
+                    # [206]22.4.15 ESMF_MethodExecute
+                    # [207]22.4.16 ESMF_MethodGet
+                    # [208]22.4.17 ESMF_MethodGet
+                    # [209]22.4.18 ESMF_MethodGet
+                    # [210]22.4.19 ESMF_MethodGet
+                    # [211]22.4.20 ESMF_MethodGet
+                    # [212]22.4.21 ESMF_MethodGet
+                    # [213]22.4.22 ESMF_MethodRemove
+                    # [214]22.4.23 ESMF_MethodRemove
+                    # [215]22.4.24 ESMF_MethodRemove
+          + [216]23 Web Services
+               o [217]23.1 Description
+                    # [218]23.1.1 Creating a Service around a Component
+                    # [219]23.1.2 Code Modifications
+                    # [220]23.1.3 Accessing the Service
+                    # [221]23.1.4 Client Application via C++ API
+                    # [222]23.1.5 Process Controller
+                    # [223]23.1.6 Tomcat/Axis2
+               o [224]23.2 Use and Examples
+                    # [225]23.2.1 Making a Component available through
+                      ESMF Web Services
+               o [226]23.3 Restrictions and Future Work
+               o [227]23.4 Class API
+                    # [228]23.4.1 ESMF_WebServicesLoop
+                    # [229]23.4.2 ESMF_WebServicesCplCompLoop
+     __________________________________________________________________
+
+                                3 Superstructure
+
+                         15 Overview of Superstructure
+
+   ESMF superstructure classes define an architecture for assembling Earth
+   system applications from modeling components. A component may be
+   defined in terms of the physical domain that it represents, such as an
+   atmosphere or sea ice model. It may also be defined in terms of a
+   computational function, such as a data assimilation system. Earth
+   system research often requires that such components be coupled together
+   to create an application. By coupling we mean the data transformations
+   and, on parallel computing systems, data transfers, that are necessary
+   to allow data from one component to be utilized by another. ESMF offers
+   regridding methods and other tools to simplify the organization and
+   execution of inter-component data exchanges.
+
+   In addition to components defined at the level of major physical
+   domains and computational functions, components may be defined that
+   represent smaller computational functions within larger components,
+   such as the transformation of data between the physics and dynamics in
+   a spectral atmosphere model, or the creation of nested higher
+   resolution regions within a coarser grid. The objective is to couple
+   components at varying scales both flexibly and efficiently. ESMF
+   encourages a hierarchical application structure, in which large
+   components branch into smaller sub-components (see Figure [230]2). ESMF
+   also makes it easier for the same component to be used in multiple
+   contexts without changes to its source code.
+
+    Key Features
+    Modular, component-based architecture.
+    Hierarchical assembly of components into applications.
+    Use of components in multiple contexts without modification.
+    Sequential or concurrent component execution.
+   Single program, multiple datastream (SPMD) applications for maximum
+   portability and reconfigurability.
+    Multiple program, multiple datastream (MPMD) option for flexibility.
+
+                                 21 State Class
+
+21.1 Description
+
+   A State contains the data and metadata to be transferred between ESMF
+   Components. It is an important class, because it defines a standard for
+   how data is represented in data transfers between Earth science
+   components. The State construct is a rational compromise between a
+   fully prescribed interface - one that would dictate what specific
+   fields should be transferred between components - and an interface in
+   which data structures are completely ad hoc.
+
+   There are two types of States, import and export. An import State
+   contains data that is necessary for a Gridded Component or Coupler
+   Component to execute, and an export State contains the data that a
+   Gridded Component or Coupler Component can make available.
+
+   States can contain Arrays, ArrayBundles, Fields, FieldBundles, and
+   other States. They cannot directly contain native language arrays (i.e.
+   Fortran or C style arrays). Objects in a State must span the VM on
+   which they are running. For sequentially executing components which run
+   on the same set of PETs this happens by calling the object create
+   methods on each PET, creating the object in unison. For concurrently
+   executing components which are running on subsets of PETs, an
+   additional method, called ESMF_StateReconcile(), is provided by ESMF to
+   broadcast information about objects which were created in
+   sub-components.
+
+   State methods include creation and deletion, adding and retrieving data
+   items, adding and retrieving attributes, and performing queries.
+
+21.2 Constants
+
+  21.2.1 ESMF_STATEINTENT
+
+   DESCRIPTION:
+   Specifies whether a ESMF_State contains data to be imported into a
+   component or exported from a component.
+
+   The type of this flag is:
+
+   type(ESMF_StateIntent_Flag)
+
+   The valid values are:
+
+   ESMF_STATEINTENT_IMPORT
+          Contains data to be imported into a component.
+
+   ESMF_STATEINTENT_EXPORT
+          Contains data to be exported out of a component.
+
+   ESMF_STATEINTENT_INTERNAL
+          Contains data that is not exposed outside of a component.
+
+   ESMF_STATEINTENT_UNSPECIFIED
+          The intent has not been specified.
+
+  21.2.2 ESMF_STATEITEM
+
+   DESCRIPTION:
+   Specifies the type of object being added to or retrieved from an
+   ESMF_State.
+
+   The type of this flag is:
+
+   type(ESMF_StateItem_Flag)
+
+   The valid values are:
+
+   ESMF_STATEITEM_ARRAY
+          Refers to an ESMF_Array within an ESMF_State.
+
+   ESMF_STATEITEM_ARRAYBUNDLE
+          Refers to an ESMF_Array within an ESMF_State.
+
+   ESMF_STATEITEM_FIELD
+          Refers to a ESMF_Field within an ESMF_State.
+
+   ESMF_STATEITEM_FIELDBUNDLE
+          Refers to a ESMF_FieldBundle within an ESMF_State.
+
+   ESMF_STATEITEM_ROUTEHANDLE
+          Refers to a ESMF_RouteHandle within an ESMF_State.
+
+   ESMF_STATEITEM_STATE
+          Refers to a ESMF_State within an ESMF_State.
+
+21.3 Use and Examples
+
+   A Gridded Component generally has one associated import State and one
+   export State. Generally the States associated with a Gridded Component
+   will be created by the Gridded Component's parent component. In many
+   cases, the States will be created containing no data. Both the empty
+   States and the newly created Gridded Component are passed by the parent
+   component into the Gridded Component's initialize method. This is where
+   the States get prepared for use and the import State is first filled
+   with data.
+
+   States can be filled with data items that do not yet have data
+   allocated. Fields, FieldBundles, Arrays, and ArrayBundles each have
+   methods that support their creation without actual data allocation -
+   the Grid and Attributes are set up but no Fortran array of data values
+   is allocated. In this approach, when a State is passed into its
+   associated Gridded Component's initialize method, the incomplete
+   Arrays, Fields, FieldBundles, and ArrayBundles within the State can
+   allocate or reference data inside the initialize method.
+
+   States are passed through the interfaces of the Gridded and Coupler
+   Components' run methods in order to carry data between the components.
+   While we expect a Gridded Component's import State to be filled with
+   data during initialization, its export State will typically be filled
+   over the course of its run method. At the end of a Gridded Component's
+   run method, the filled export State is passed out through the argument
+   list into a Coupler Component's run method. We recommend the convention
+   that it enters the Coupler Component as the Coupler Component's import
+   State. Here is it transformed into a form that another Gridded
+   Component requires, and passed out of the Coupler Component as its
+   export State. It can then be passed into the run method of a recipient
+   Gridded Component as that component's import State.
+
+   While the above sounds complicated, the rule is simple: a State going
+   into a component is an import State, and a State leaving a component is
+   an export State.
+
+   Objects inside States are normally created in unison where each PET
+   executing a component makes the same object create call. If the object
+   contains data, like a Field, each PET may have a different local chunk
+   of the entire dataset but each Field has the same name and is logically
+   one part of a single distributed object. As States are passed between
+   components, if any object in a State was not created in unison on all
+   the current PETs then some PETs have no object to pass into a
+   communication method (e.g. regrid or data redistribution). The
+   ESMF_StateReconcile() method must be called to broadcast information
+   about these objects to all PETs in a component; after which all PETs
+   have a single uniform view of all objects and metadata.
+
+   If components are running in sequential mode on all available PETs and
+   States are being passed between them there is no need to call
+   ESMF_StateReconcile since all PETs have a uniform view of the objects.
+   However, if components are running on a subset of the PETs, as is
+   usually the case when running in concurrent mode, then when States are
+   passed into components which contain a superset of those PETs, for
+   example, a Coupler Component, all PETs must call ESMF_StateReconcile on
+   the States before using them in any ESMF communication methods. The
+   reconciliation process broadcasts information about objects which exist
+   only on a subset of the PETs. On PETs missing those objects it creates
+   a proxy object which contains any qualities of the original object plus
+   enough information for it to be a data source or destination for a
+   regrid or data redistribution operation.
+
+  21.3.1 State create and destroy
+
+   States can be created and destroyed at any time during application
+   execution. The ESMF_StateCreate() routine can take many different
+   combinations of optional arguments. Refer to the API description for
+   all possible methods of creating a State. An empty State can be created
+   by providing only a name and type for the intended State:
+
+   state = ESMF_StateCreate(name, stateintent=ESMF_STATEINTENT_IMPORT,
+   rc=rc)
+
+   When finished with an ESMF_State, the ESMF_StateDestroy method removes
+   it. However, the objects inside the ESMF_State created externally
+   should be destroyed separately, since objects can be added to more than
+   one ESMF_State.
+
+  21.3.2 Add items to a State
+
+   Creation of an empty ESMF_State, and adding an ESMF_FieldBundle to it.
+   Note that the ESMF_FieldBundle does not get destroyed when the
+   ESMF_State is destroyed; the ESMF_State only contains a reference to
+   the objects it contains. It also does not make a copy; the original
+   objects can be updated and code accessing them by using the ESMF_State
+   will see the updated version.
+
+    statename = "Ocean"
+    state2 = ESMF_StateCreate(name=statename,  &
+                              stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
+
+    bundlename = "Temperature"
+    bundle1 = ESMF_FieldBundleCreate(name=bundlename, rc=rc)
+    print *, "FieldBundle Create returned", rc
+
+    call ESMF_StateAdd(state2, (/bundle1/), rc=rc)
+    print *, "StateAdd returned", rc
+
+    call ESMF_StateDestroy(state2, rc=rc)
+
+    call ESMF_FieldBundleDestroy(bundle1, rc=rc)
+
+  21.3.3 Add placeholders to a State
+
+   If a component could potentially produce a large number of optional
+   items, one strategy is to add the names only of those objects to the
+   ESMF_State. Other components can call framework routines to set the
+   ESMF_NEEDED flag to indicate they require that data. The original
+   component can query this flag and then produce only the data that is
+   required by another component.
+
+    statename = "Ocean"
+    state3 = ESMF_StateCreate(name=statename,  &
+                              stateintent=ESMF_STATEINTENT_EXPORT, rc=rc)
+
+    dataname = "Downward wind:needed"
+    call ESMF_AttributeSet (state3, dataname, .false., rc=rc)
+
+    dataname = "Humidity:needed"
+    call ESMF_AttributeSet (state3, dataname, .false., rc=rc)
+
+  21.3.4 Mark an item NEEDED
+
+   How to set the NEEDED state of an item.
+
+    dataname = "Downward wind:needed"
+    call ESMF_AttributeSet (state3, name=dataname, value=.true., rc=rc)
+
+  21.3.5 Create a NEEDED item
+
+   Query an item for the NEEDED status, and creating an item on demand.
+   Similar flags exist for "Ready", "Valid", and "Required for Restart",
+   to mark each data item as ready, having been validated, or needed if
+   the application is to be checkpointed and restarted. The flags are
+   supported to help coordinate the data exchange between components.
+
+    dataname = "Downward wind:needed"
+    call ESMF_AttributeGet (state3, dataname, value=neededFlag, rc=rc)
+
+    if (rc == ESMF_SUCCESS .and. neededFlag) then
+        bundlename = dataname
+        bundle2 = ESMF_FieldBundleCreate(name=bundlename, rc=rc)
+
+        call ESMF_StateAdd(state3, (/bundle2/), rc=rc)
+
+    else
+        print *, "Data not marked as needed", trim(dataname)
+    endif
+
+  21.3.6 ESMF_StateReconcile() usage
+
+   The set services routines are used to tell ESMF which routine hold the
+   user code for the initialize, run, and finalize blocks of user level
+   Components. These are the separate subroutines called by the code
+   below.
+
+! Initialize routine which creates "field1" on PETs 0 and 1
+subroutine comp1_init(gcomp, istate, ostate, clock, rc)
+    type(ESMF_GridComp)  :: gcomp
+    type(ESMF_State)     :: istate, ostate
+    type(ESMF_Clock)     :: clock
+    integer, intent(out) :: rc
+
+    type(ESMF_Field) :: field1
+    integer :: localrc
+
+    print *, "i am comp1_init"
+
+    field1 = ESMF_FieldEmptyCreate(name="Comp1 Field", rc=localrc)
+
+    call ESMF_StateAdd(istate, (/field1/), rc=localrc)
+
+    rc = localrc
+
+end subroutine comp1_init
+
+! Initialize routine which creates "field2" on PETs 2 and 3
+subroutine comp2_init(gcomp, istate, ostate, clock, rc)
+    type(ESMF_GridComp)  :: gcomp
+    type(ESMF_State)     :: istate, ostate
+    type(ESMF_Clock)     :: clock
+    integer, intent(out) :: rc
+
+    type(ESMF_Field) :: field2
+    integer :: localrc
+
+    print *, "i am comp2_init"
+
+    field2 = ESMF_FieldEmptyCreate(name="Comp2 Field", rc=localrc)
+
+    call ESMF_StateAdd(istate, (/field2/), rc=localrc)
+
+    rc = localrc
+
+end subroutine comp2_init
+
+subroutine comp_dummy(gcomp, rc)
+   type(ESMF_GridComp)  :: gcomp
+   integer, intent(out) :: rc
+
+   rc = ESMF_SUCCESS
+end subroutine comp_dummy
+
+! !PROGRAM: ESMF_StateReconcileEx - State reconciliation
+!
+! !DESCRIPTION:
+!
+! This program shows examples of using the State Reconcile function
+!-----------------------------------------------------------------------------
+#include "ESMF.h"
+
+    ! ESMF Framework module
+    use ESMF
+    use ESMF_TestMod
+    use ESMF_StateReconcileEx_Mod
+    implicit none
+
+    ! Local variables
+    integer :: rc, petCount
+    type(ESMF_State) :: state1
+    type(ESMF_GridComp) :: comp1, comp2
+    type(ESMF_VM) :: vm
+    character(len=ESMF_MAXSTR) :: comp1name, comp2name, statename
+
+   A Component can be created which will run only on a subset of the
+   current PET list.
+
+    ! Get the global VM for this job.
+    call ESMF_VMGetGlobal(vm=vm, rc=rc)
+
+    comp1name = "Atmosphere"
+    comp1 = ESMF_GridCompCreate(name=comp1name, petList=(/ 0, 1 /), rc=rc)
+    print *, "GridComp Create returned, name = ", trim(comp1name)
+
+    comp2name = "Ocean"
+    comp2 = ESMF_GridCompCreate(name=comp2name, petList=(/ 2, 3 /), rc=rc)
+    print *, "GridComp Create returned, name = ", trim(comp2name)
+
+    statename = "Ocn2Atm"
+    state1 = ESMF_StateCreate(name=statename, rc=rc)
+
+   Here we register the subroutines which should be called for
+   initialization. Then we call ESMF_GridCompInitialize() on all PETs, but
+   the code runs only on the PETs given in the petList when the Component
+   was created.
+
+   Because this example is so short, we call the entry point code directly
+   instead of the normal procedure of nesting it in a separate
+   SetServices() subroutine.
+
+    ! This is where the VM for each component is initialized.
+    ! Normally you would call SetEntryPoint inside set services,
+    ! but to make this example very short, they are called inline below.
+    ! This is o.k. because the SetServices routine must execute from within
+    ! the parent component VM.
+    call ESMF_GridCompSetVM(comp1, comp_dummy, rc=rc)
+
+    call ESMF_GridCompSetVM(comp2, comp_dummy, rc=rc)
+
+    call ESMF_GridCompSetServices(comp1, userRoutine=comp_dummy, rc=rc)
+
+    call ESMF_GridCompSetServices(comp2, userRoutine=comp_dummy, rc=rc)
+
+    print *, "ready to set entry point 1"
+    call ESMF_GridCompSetEntryPoint(comp1, ESMF_METHOD_INITIALIZE, &
+         comp1_init, rc=rc)
+
+    print *, "ready to set entry point 2"
+    call ESMF_GridCompSetEntryPoint(comp2, ESMF_METHOD_INITIALIZE, &
+         comp2_init, rc=rc)
+
+    print *, "ready to call init for comp 1"
+    call ESMF_GridCompInitialize(comp1, exportState=state1, rc=rc)
+
+    print *, "ready to call init for comp 2"
+    call ESMF_GridCompInitialize(comp2, exportState=state1, rc=rc)
+
+   Now we have state1 containing field1 on PETs 0 and 1, and state1
+   containing field2 on PETs 2 and 3. For the code to have a rational view
+   of the data, we call ESMF_StateReconcile which determines which objects
+   are missing from any PET, and communicates information about the
+   object. After the call to reconcile, all ESMF_State objects now have a
+   consistent view of the data.
+
+    print *, "State before calling StateReconcile()"
+    call ESMF_StatePrint(state1, rc=rc)
+
+    call ESMF_StateReconcile(state1, vm=vm, rc=rc)
+
+    print *, "State after calling StateReconcile()"
+    call ESMF_StatePrint(state1, rc=rc)
+
+end program ESMF_StateReconcileEx
+
+  21.3.7 Read Arrays from a NetCDF file and add to a State
+
+   This program shows an example of reading and writing Arrays from a
+   State from/to a NetCDF file.
+
+    ! ESMF Framework module
+    use ESMF
+    use ESMF_TestMod
+    implicit none
+
+    ! Local variables
+    type(ESMF_State) :: state
+    type(ESMF_Array) :: latArray, lonArray, timeArray, humidArray, &
+                        tempArray, pArray, rhArray
+    type(ESMF_VM) :: vm
+    integer :: localPet, rc
+
+   The following line of code will read all Array data contained in a
+   NetCDF file, place them in ESMF_Arrays and add them to an ESMF_State.
+   Only PET 0 reads the file; the States in the other PETs remain empty.
+   Currently, the data is not decomposed or distributed; each PET has only
+   1 DE and only PET 0 contains data after reading the file. Future
+   versions of ESMF will support data decomposition and distribution upon
+   reading a file.
+
+   Note that the third party NetCDF library must be installed. For more
+   details, see the "ESMF Users Guide", "Building and Installing the ESMF,
+   Third Party Libraries, NetCDF" and the website
+   http://www.unidata.ucar.edu/software/netcdf.
+
+    ! Read the NetCDF data file into Array objects in the State on PET 0
+    call ESMF_StateRead(state, "io_netcdf_testdata.nc", rc=rc)
+
+    ! If the NetCDF library is not present (on PET 0), cleanup and exit
+    if (rc == ESMF_RC_LIB_NOT_PRESENT) then
+      call ESMF_StateDestroy(state, rc=rc)
+      goto 10
+    endif
+
+   Only reading data into ESMF_Arrays is supported at this time;
+   ESMF_ArrayBundles, ESMF_Fields, and ESMF_FieldBundles will be supported
+   in future releases of ESMF.
+
+  21.3.8 Print Array data from a State
+
+   To see that the State now contains the same data as in the file, the
+   following shows how to print out what Arrays are contained within the
+   State and to print the data contained within each Array. The NetCDF
+   utility "ncdump" can be used to view the contents of the NetCDF file.
+   In this example, only PET 0 will contain data.
+
+    if (localPet == 0) then
+      ! Print the names and attributes of Array objects contained in the State
+      call ESMF_StatePrint(state, rc=rc)
+
+      ! Get each Array by name from the State
+      call ESMF_StateGet(state, "lat",  latArray,   rc=rc)
+      call ESMF_StateGet(state, "lon",  lonArray,   rc=rc)
+      call ESMF_StateGet(state, "time", timeArray,  rc=rc)
+      call ESMF_StateGet(state, "Q",    humidArray, rc=rc)
+      call ESMF_StateGet(state, "TEMP", tempArray,  rc=rc)
+      call ESMF_StateGet(state, "p",    pArray,     rc=rc)
+      call ESMF_StateGet(state, "rh",   rhArray,    rc=rc)
+
+      ! Print out the Array data
+      call ESMF_ArrayPrint(latArray,   rc=rc)
+      call ESMF_ArrayPrint(lonArray,   rc=rc)
+      call ESMF_ArrayPrint(timeArray,  rc=rc)
+      call ESMF_ArrayPrint(humidArray, rc=rc)
+      call ESMF_ArrayPrint(tempArray,  rc=rc)
+      call ESMF_ArrayPrint(pArray,     rc=rc)
+      call ESMF_ArrayPrint(rhArray,    rc=rc)
+    endif
+
+   Note that the Arrays "lat", "lon", and "time" hold spatial and temporal
+   coordinate data for the dimensions latitude, longitude and time,
+   respectively. These will be used in future releases of ESMF to create
+   ESMF_Grids.
+
+  21.3.9 Write Array data within a State to a NetCDF file
+
+   All the Array data within the State on PET 0 can be written out to a
+   NetCDF file as follows:
+
+    ! Write Arrays within the State on PET 0 to a NetCDF file
+    call ESMF_StateWrite(state, "io_netcdf_testdata_out.nc", rc=rc)
+
+   Currently writing is limited to PET 0; future versions of ESMF will
+   allow parallel writing, as well as parallel reading.
+
+21.4 Restrictions and Future Work
+
+    1. No synchronization of object IDs at object create time. Object IDs
+       are used during the reconcile process to identify objects which are
+       unknown to some subset of the PETs in the currently running VM.
+       Object IDs are assigned in sequential order at object create time.
+       One important request by the user community during the ESMF object
+       design was that there be no communication overhead or
+       synchronization when creating distributed ESMF objects. As a
+       consequence it is required to create these objects in unison across
+       all PETs in order to keep the ESMF object identification in sync.
+
+21.5 Design and Implementation Notes
+
+    1. States contain the name of the associated Component, a flag for
+       Import or Export, and a list of data objects, which can be a
+       combination of FieldBundles, Fields, and/or Arrays. The objects
+       must be named and have the proper attributes so they can be
+       identified by the receiver of the data. For example, units and
+       other detailed information may need to be associated with the data
+       as an Attribute.
+    2. Data contained in States must be created in unison on each PET of
+       the current VM. This allows the creation process to avoid doing
+       communications since each PET can compute any information it needs
+       to know about any remote PET (for example, the grid distribute
+       method can compute the decomposition of the grid on not only the
+       local PET but also the remote PETs since it knows each PET is
+       making the identical call). For all PETs to have a consistent view
+       of the data this means objects must be given unique names when
+       created, or all objects must be created in the same order on all
+       PETs so ESMF can generate consistent default names for the objects.
+       When running components on subsets of the original VM all the PETs
+       can create consistent objects but then when they are put into a
+       State and passed to a component with a different VM and a different
+       set of PETs, a communication call (reconcile) must be made to
+       communicate the missing information to the PETs which were not
+       involved in the original object creation. The reconcile call
+       broadcasts object lists; those PETs which are missing any objects
+       in the total list can receive enough information to reconstruct a
+       proxy object which contains all necessary information about that
+       object, with no local data, on that PET. These proxy objects can be
+       queried by ESMF routines to determine the amount of data and what
+       PETs contain data which is destined to be moved to the local PET
+       (for receiving data) and conversely, can determine which other PETs
+       are going to receive data and how much (for sending data).
+       For example, the FieldExcl system test creates 2 Gridded Components
+       on separate subsets of PETs. They use the option of mapping
+       particular, non-monotonic PETs to DEs. The following figures
+       illustrate how the DEs are mapped in each of the Gridded Components
+       in that test:
+
+   CAPTION: Figure 7: The mapping of PETs (processors) to DEs (data) in
+   the source grid created by user_model1.F90 in the FieldExcl system
+   test.
+
+               \scalebox{0.9}{\includegraphics{Excl_src_grid}}
+
+   CAPTION: Figure 8: The mapping of PETs (processors) to DEs (data) in
+   the destination grid created by user_model2.F90 in the FieldExcl system
+   test.
+
+               \scalebox{0.9}{\includegraphics{Excl_dst_grid}}
+
+       In the coupler code, all PETs must make the reconcile call before
+       accessing data in the State. On PETs which already contain data,
+       the objects are unchanged. On PETs which were not involved during
+       the creation of the FieldBundles or Fields, the reconcile call adds
+       an object to the State which contains all the same metadata
+       associated with the object, but creates a slightly different Grid
+       object, called a Proxy Grid. These PETs contain no local data, so
+       the Array object is empty, and the DELayout for the Grid is like
+       this:
+
+   CAPTION: Figure 9: The mapping of PETs (processors) to DEs (data) in
+   the source grid after the reconcile call in user_coupler.F90 in the
+   FieldExcl system test.
+
+             \scalebox{0.9}{\includegraphics{Excl_src_grid_cpl}}
+
+   CAPTION: Figure 10: The mapping of PETs (processors) to DEs (data) in
+   the destination grid after the reconcile call in user_coupler.F90 in
+   the FieldExcl system test.
+
+             \scalebox{0.9}{\includegraphics{Excl_dst_grid_cpl}}
+
+21.6 Object Model
+
+   The following is a simplified UML diagram showing the structure of the
+   State class. States can contain FieldBundles, Fields, Arrays, or nested
+   States. See Appendix A, A Brief Introduction to UML, for a translation
+   table that lists the symbols in the diagram and their meaning.
+
+                         \includegraphics{State_obj}
+
+21.7 Class API
+
+  21.7.1 ESMF_StateAssignment(=) - State assignment
+
+   INTERFACE:
+   interface assignment(=)
+   state1 = state2
+
+   ARGUMENTS:
+   type(ESMF_State) :: state1
+   type(ESMF_State) :: state2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign state1 as an alias to the same ESMF State object in memory as
+   state2. If state2 is invalid, then state1 will be equally invalid after
+   the assignment.
+
+   The arguments are:
+
+   state1
+          The ESMF_State object on the left hand side of the assignment.
+
+   state2
+          The ESMF_State object on the right hand side of the assignment.
+
+  21.7.2 ESMF_StateOperator(==) - State equality operator
+
+   INTERFACE:
+   interface operator(==)
+   if (state1 == state2) then ... endif
+   OR
+   result = (state1 == state2)
+
+   RETURN VALUE:
+   logical :: result
+
+   ARGUMENTS:
+   type(ESMF_State), intent(in) :: state1
+   type(ESMF_State), intent(in) :: state2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether state1 and state2 are valid aliases to the same ESMF State
+   object in memory. For a more general comparison of two ESMF States,
+   going beyond the simple alias test, the ESMF_StateMatch() function (not
+   yet implemented) must be used.
+
+   The arguments are:
+
+   state1
+          The ESMF_State object on the left hand side of the equality
+          operation.
+
+   state2
+          The ESMF_State object on the right hand side of the equality
+          operation.
+
+  21.7.3 ESMF_StateOperator(/=) - State not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+   if (state1 /= state2) then ... endif
+   OR
+   result = (state1 /= state2)
+
+   RETURN VALUE:
+   logical :: result
+
+   ARGUMENTS:
+   type(ESMF_State), intent(in) :: state1
+   type(ESMF_State), intent(in) :: state2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether state1 and state2 are not valid aliases to the same ESMF
+   State object in memory. For a more general comparison of two ESMF
+   States, going beyond the simple alias test, the ESMF_StateMatch()
+   function (not yet implemented) must be used.
+
+   The arguments are:
+
+   state1
+          The ESMF_State object on the left hand side of the non-equality
+          operation.
+
+   state2
+          The ESMF_State object on the right hand side of the non-equality
+          operation.
+

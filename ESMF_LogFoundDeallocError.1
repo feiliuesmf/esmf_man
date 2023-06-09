@@ -1,0 +1,63 @@
+  49.7.7 ESMF_LogFoundDeallocError - Check Fortran deallocation status error and
+  write message
+
+   INTERFACE:
+       function ESMF_LogFoundDeallocError(statusToCheck,  &
+                                          msg,line,file, &
+                                          method,rcToReturn,log)
+
+   RETURN VALUE:
+       logical ::ESMF_LogFoundDeallocError
+
+   ARGUMENTS:
+       integer,          intent(in)              :: statusToCheck
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character(len=*), intent(in),    optional :: msg
+       integer,          intent(in),    optional :: line
+       character(len=*), intent(in),    optional :: file
+       character(len=*), intent(in),    optional :: method
+       integer,          intent(inout), optional :: rcToReturn
+       type(ESMF_Log),   intent(inout), optional :: log
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This function returns .true. when statusToCheck indicates a
+   deallocation error, otherwise it returns .false.. The status value is
+   typically returned from a Fortran DEALLOCATE statement. If an error is
+   indicated, a ESMF memory allocation error message will be written to
+   the ESMF_Log along with a user added msg, line, file and method.
+
+   The arguments are:
+
+   statusToCheck
+          Fortran deallocation status to check. Fortran specifies that a
+          status of 0 (zero) indicates success.
+
+   [msg]
+          User-provided message string.
+
+   [line]
+          Integer source line number. Expected to be set by using the
+          preprocessor __LINE__ macro.
+
+   [file]
+          User-provided source file name.
+
+   [method]
+          User-provided method string.
+
+   [rcToReturn]
+          If specified, when the deallocation status indicates an error,
+          set the rcToReturn value to ESMF_RC_MEM. Otherwise, rcToReturn
+          is not modified.
+
+   [log]
+          An optional ESMF_Log object that can be used instead of the
+          default Log.
+

@@ -1,0 +1,23 @@
+  53.4.4 ESMF_UtilIOGetCWD - Get the current directory
+
+   INTERFACE:
+   subroutine ESMF_UtilIOGetCWD (pathName, rc)
+
+   PARAMETERS:
+     character(*), intent(out)           :: pathName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,      intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Call the system-dependent routine to get the current directory from the
+   file system.
+
+   The arguments are:
+
+   pathName
+          Name of the current working directory.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

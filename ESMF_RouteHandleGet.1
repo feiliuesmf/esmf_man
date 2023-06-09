@@ -1,0 +1,27 @@
+  37.5.4 ESMF_RouteHandleGet - Get values from a RouteHandle
+
+   INTERFACE:
+   ! Private name; call using ESMF_RouteHandleGet()
+   subroutine ESMF_RouteHandleGetP(routehandle, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_RouteHandle), intent(in)            :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len=*),       intent(out), optional :: name
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Returns information about an ESMF_RouteHandle.
+
+   The arguments are:
+
+   routehandle
+          ESMF_RouteHandle to be queried.
+
+   [name]
+          Name of the RouteHandle object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

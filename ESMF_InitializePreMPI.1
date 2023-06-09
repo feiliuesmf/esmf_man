@@ -1,0 +1,41 @@
+  16.4.2 ESMF_InitializePreMPI - Initialize parts of ESMF that must happen
+  before MPI is initialized
+
+   INTERFACE:
+       subroutine ESMF_InitializePreMPI(rc)
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,                 intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method is only needed for cases where MPI is initialized
+   explicitly by user code. In most typical cases ESMF_Initialize() is
+   called before MPI is initialized, and takes care of all the internal
+   initialization, including MPI.
+
+   There are circumstances where it is necessary or convenient to
+   initialize MPI before calling into ESMF_Initialize(). This option is
+   supported by ESMF, and for most cases no special action is required on
+   the user side. However, for cases where ESMF_*CompSetVM*() methods are
+   used to move processing elements (PEs), i.e. CPU cores, between
+   persistent execution threads (PETs), ESMF uses POSIX signals between
+   PETs. In order to do so safely, the proper signal handlers must be
+   installed before MPI is initialized. This is accomplished by calling
+   ESMF_InitializePreMPI() from the user code prior to the MPI
+   initialization.
+
+   Note also that in order to use any of the advanced resource management
+   functions that ESMF provides via the ESMF_*CompSetVM*() methods, the
+   MPI environment must be thread-safe. ESMF_Initialize() handles this
+   automatically if it is in charge of initializing MPI. However, if the
+   user code initializes MPI before calling into ESMF_Initialize(), it
+   must do so via MPI_Init_thread(), specifying MPI_THREAD_SERIALIZED or
+   above for the required level of thread support.
+
+   The arguments are:
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

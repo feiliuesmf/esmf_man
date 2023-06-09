@@ -1,0 +1,513 @@
+          + [319]49 Log Class
+               o [320]49.1 Description
+               o [321]49.2 Constants
+                    # [322]49.2.1 ESMF_LOGERR
+                    # [323]49.2.2 ESMF_LOGKIND
+                    # [324]49.2.3 ESMF_LOGMSG
+               o [325]49.3 Use and Examples
+                    # [326]49.3.1 Default Log
+                    # [327]49.3.2 User created Log
+                    # [328]49.3.3 Get and Set
+               o [329]49.4 Restrictions and Future Work
+               o [330]49.5 Design and Implementation Notes
+               o [331]49.6 Object Model
+               o [332]49.7 Class API
+                    # [333]49.7.1 ESMF_LogAssignment(=)
+                    # [334]49.7.2 ESMF_LogOperator(==)
+                    # [335]49.7.3 ESMF_LogOperator(/=)
+                    # [336]49.7.4 ESMF_LogClose
+                    # [337]49.7.5 ESMF_LogFlush
+                    # [338]49.7.6 ESMF_LogFoundAllocError
+                    # [339]49.7.7 ESMF_LogFoundDeallocError
+                    # [340]49.7.8 ESMF_LogFoundError
+                    # [341]49.7.9 ESMF_LogFoundNetCDFError
+                    # [342]49.7.10 ESMF_LogGet
+                    # [343]49.7.11 ESMF_LogOpen
+                    # [344]49.7.12 ESMF_LogOpen
+                    # [345]49.7.13 ESMF_LogSet
+                    # [346]49.7.14 ESMF_LogSetError
+                    # [347]49.7.15 ESMF_LogWrite
+                                  49 Log Class
+
+49.1 Description
+
+   The Log class consists of a variety of methods for writing error,
+   warning, and informational messages to files. A default Log is created
+   at ESMF initialization. Other Logs can be created later in the code by
+   the user. Most Log methods take a Log as an optional argument and apply
+   to the default Log when another Log is not specified. A set of standard
+   return codes and associated messages are provided for error handling.
+
+   Log provides capabilities to store message entries in a buffer, which
+   is flushed to a file, either when the buffer is full, or when the user
+   calls an ESMF_LogFlush() method. Currently, the default is for the Log
+   to flush after every ten entries. This can easily be changed by using
+   the ESMF_LogSet() method and setting the maxElements property to
+   another value. The ESMF_LogFlush() method is automatically called when
+   the program exits by any means (program completion, halt on error, or
+   when the Log is closed).
+
+   The user has the capability to abort the program on conditions such as
+   an error or on a warning by using the ESMF_LogSet() method with the
+   logmsgAbort argument. For example if the logmsgAbort array is set to
+   (ESMF_LOGMSG_ERROR,ESMF_LOGMSG_WARNING), the program will stop on any
+   and all warning or errors. When the logmsgAbort argument is set to
+   ESMF_LOGMSG_ERROR, the program will only abort on errors. Lastly, the
+   user can choose to never abort by using ESMF_LOGMSG_NONE; this is the
+   default.
+
+   Log will automatically put the PET number into the Log. Also, the user
+   can either specify ESMF_LOGKIND_SINGLE which writes all the entries to
+   a single Log or ESMF_LOGKIND_MULTI which writes entries to multiple
+   Logs according to the PET number. To distinguish Logs from each other
+   when using ESMF_LOGKIND_MULTI, the PET number (in the format PETx.)
+   will be prepended to the file name where x is the PET number.
+
+   Opening multiple log files and writing log messages from all the
+   processors may affect the application performance while running on a
+   large number of processors. For that reason, ESMF_LOGKIND_NONE is
+   provided to switch off the Log capability. All the Log methods have no
+   effect in the ESMF_LOGKIND_NONE mode.
+
+   A tracing capability may be enabled by setting the trace flag by using
+   the ESMF_LogSet() method. When tracing is enabled, calls to methods
+   such as ESMF_LogFoundError, ESMF_LogFoundAllocError, and
+   ESMF_LogFoundDeallocError are logged in the default log file. This can
+   result in voluminous output. It is typically used only around areas of
+   code which are being debugged.
+
+   Other options that are planned for Log are to adjust the verbosity of
+   output, and to optionally write to stdout instead of file(s).
+
+49.2 Constants
+
+  49.2.1 ESMF_LOGERR
+
+   The valid values are:
+
+   ESMF_LOGERR_PASSTHRU
+          A named character constant, with a predefined generic error
+          message, that can be used for the msg argument in any ESMF_Log
+          routine. The message indicated by this named constant is
+          “Passing error in return code."
+
+  49.2.2 ESMF_LOGKIND
+
+   DESCRIPTION:
+   Specifies a single log file, multiple log files (one per PET), or no
+   log files.
+
+   The type of this flag is:
+
+   type(ESMF_LogKind_Flag)
+
+   The valid values are:
+
+   ESMF_LOGKIND_SINGLE
+          Use a single log file, combining messages from all of the PETs.
+          Not supported on some platforms.
+
+   ESMF_LOGKIND_MULTI
+          Use multiple log files -- one per PET.
+
+   ESMF_LOGKIND_MULTI_ON_ERROR
+          Use multiple log files -- one per PET. A log file is only opened
+          when a message of type ESMF_LOGMSG_ERROR is encountered.
+
+   ESMF_LOGKIND_NONE
+          Do not issue messages to a log file.
+
+  49.2.3 ESMF_LOGMSG
+
+   DESCRIPTION:
+   Specifies a message level
+
+   The type of this flag is:
+
+   type(ESMF_LogMsg_Flag)
+
+   The valid values are:
+
+   ESMF_LOGMSG_INFO
+          Informational messages
+
+   ESMF_LOGMSG_WARNING
+          Warning messages
+
+   ESMF_LOGMSG_ERROR
+          Error messages
+
+   ESMF_LOGMSG_TRACE
+          Trace messages
+
+   ESMF_LOGMSG_DEBUG
+          DEBUG messages
+
+   ESMF_LOGMSG_JSON
+          JSON format messages
+
+   Valid predefined named array constant values are:
+
+   ESMF_LOGMSG_ALL
+          All messages
+
+   ESMF_LOGMSG_NONE
+          No messages
+
+   ESMF_LOGMSG_NOTRACE
+          All messages EXCEPT trace messages
+
+49.3 Use and Examples
+
+   By default ESMF_Initialize() opens a default Log in ESMF_LOGKIND_MULTI
+   mode. ESMF handles the initialization and finalization of the default
+   Log so the user can immediately start using it. If additional Log
+   objects are desired, they must be explicitly created or opened using
+   ESMF_LogOpen().
+
+   ESMF_LogOpen() requires a Log object and filename argument.
+   Additionally, the user can specify single or multi Logs by setting the
+   logkindflag property to ESMF_LOGKIND_SINGLE or ESMF_LOGKIND_MULTI. This
+   is useful as the PET numbers are automatically added to the Log
+   entries. A single Log will put all entries, regardless of PET number,
+   into a single log while a multi Log will create multiple Logs with the
+   PET number prepended to the filename and all entries will be written to
+   their corresponding Log by their PET number.
+
+   By default, the Log file is not truncated at the start of a new run; it
+   just gets appended each time. Future functionality may include an
+   option to either truncate or append to the Log file.
+
+   In all cases where a Log is opened, a Fortran unit number is assigned
+   to a specific Log. A Log is assigned an unused unit number using the
+   algorithm described in the ESMF_IOUnitGet() method.
+
+   The user can then set or get options on how the Log should be used with
+   the ESMF_LogSet() and ESMF_LogGet() methods. These are partially
+   implemented at this time.
+
+   Depending on how the options are set, ESMF_LogWrite() either writes
+   user messages directly to a Log file or writes to a buffer that can be
+   flushed when full or by using the ESMF_LogFlush() method. The default
+   is to flush after every ten entries because maxElements is initialized
+   to ten (which means the buffer reaches its full state after every ten
+   writes and then flushes).
+
+   A message filtering option may be set with ESMF_LogSet() so that only
+   selected message types are actually written to the log. One key use of
+   this feature is to allow placing informational log write requests into
+   the code for debugging or tracing. Then, when the informational entries
+   are not needed, the messages at that level may be turned off -- leaving
+   only warning and error messages in the logs.
+
+   For every ESMF_LogWrite(), a time and date stamp is prepended to the
+   Log entry. The time is given in microsecond precision. The user can
+   call other methods to write to the Log. In every case, all methods
+   eventually make a call implicitly to ESMF_LogWrite() even though the
+   user may never explicitly call it.
+
+   When calling ESMF_LogWrite(), the user can supply an optional line,
+   file and method. These arguments can be passed in explicitly or with
+   the help of cpp macros. In the latter case, a define for an
+   ESMF_FILENAME must be placed at the beginning of a file and a define
+   for ESMF_METHOD must be placed at the beginning of each method. The
+   user can then use the ESMF_CONTEXT cpp macro in place of line, file and
+   method to insert the parameters into the method. The user does not have
+   to specify line number as it is a value supplied by cpp.
+
+   An example of Log output is given below running with logkindflag
+   property set to ESMF_LOGKIND_MULTI (default) using the default Log:
+
+   (Log file PET0.ESMF_LogFile)
+20041105 163418.472210 INFO      PET0     Running with ESMF Version 2.2.1
+
+   (Log file PET1.ESMF_LogFile)
+20041105 163419.186153 ERROR     PET1     ESMF_Field.F90             812
+ESMF_FieldGet No Grid or Bad Grid attached to Field
+
+   The first entry shows date and time stamp. The time is given in
+   microsecond precision. The next item shown is the type of message (INFO
+   in this case). Next, the PET number is added. Lastly, the content is
+   written.
+
+   The second entry shows something slightly different. In this case, we
+   have an ERROR. The method name (ESMF_Field.F90) is automatically
+   provided from the cpp macros as well as the line number (812). Then the
+   content of the message is written.
+
+   When done writing messages, the default Log is closed by calling
+   ESMF_LogFinalize() or ESMF_LogClose() for user created Logs. Both
+   methods will release the assigned unit number.
+
+! !PROGRAM: ESMF_LogErrEx - Log Error examples
+!
+! !DESCRIPTION:
+!
+! This program shows examples of Log Error writing
+!-----------------------------------------------------------------------------
+
+! Macros for cpp usage
+! File define
+#define ESMF_FILENAME "ESMF_LogErrEx.F90"
+! Method define
+#define ESMF_METHOD "program ESMF_LogErrEx"
+#include "ESMF_LogMacros.inc"
+
+    ! ESMF Framework module
+    use ESMF
+    use ESMF_TestMod
+    implicit none
+
+    ! return variables
+    integer :: rc1, rc2, rc3, rcToTest, allocRcToTest, result
+    type(ESMF_LOG) :: alog  ! a log object that is not the default log
+    type(ESMF_LogKind_Flag) :: logkindflag
+    type(ESMF_Time) :: time
+    type(ESMF_VM) :: vm
+    integer, pointer :: intptr(:)
+
+  49.3.1 Default Log
+
+   This example shows how to use the default Log. This example does not
+   use cpp macros but does use multi Logs. A separate Log will be created
+   for each PET.
+
+    ! Initialize ESMF to initialize the default Log
+    call ESMF_Initialize(vm=vm, defaultlogfilename="LogErrEx.Log", &
+                     logkindflag=ESMF_LOGKIND_MULTI, rc=rc1)
+
+    ! LogWrite
+    call ESMF_LogWrite("Log Write 2", ESMF_LOGMSG_INFO, rc=rc2)
+
+    ! LogMsgSetError
+    call ESMF_LogSetError(ESMF_RC_OBJ_BAD, msg="Convergence failure", &
+                             rcToReturn=rc2)
+
+    ! LogMsgFoundError
+    call ESMF_TimeSet(time, calkindflag=ESMF_CALKIND_NOCALENDAR)
+    call ESMF_TimeSyncToRealTime(time, rc=rcToTest)
+    if (ESMF_LogFoundError(rcToTest, msg="getting wall clock time", &
+                              rcToReturn=rc2)) then
+        ! Error getting time. The previous call will have printed the error
+        ! already into the log file.  Add any additional error handling here.
+        ! (This call is expected to provoke an error from the Time Manager.)
+    endif
+
+    ! LogMsgFoundAllocError
+    allocate(intptr(10), stat=allocRcToTest)
+    if (ESMF_LogFoundAllocError(allocRcToTest, msg="integer array", &
+                                   rcToReturn=rc2)) then
+        ! Error during allocation.  The previous call will have logged already
+        ! an error message into the log.
+    endif
+    deallocate(intptr)
+
+  49.3.2 User created Log
+
+   This example shows how to use a user created Log. This example uses cpp
+   macros.
+
+    ! Open a Log named "Testlog.txt" associated with alog.
+    call ESMF_LogOpen(alog, "TestLog.txt", rc=rc1)
+
+%/////////////////////////////////////////////////////////////
+
+ \begin{verbatim}
+    ! LogWrite
+    call ESMF_LogWrite("Log Write 2", ESMF_LOGMSG_INFO, &
+                       line=__LINE__, file=ESMF_FILENAME, &
+                       method=ESMF_METHOD, log=alog, rc=rc2)
+
+    ! LogMsgSetError
+    call ESMF_LogSetError(ESMF_RC_OBJ_BAD,  msg="Interpolation Failure", &
+                          line=__LINE__, file=ESMF_FILENAME, &
+                           method=ESMF_METHOD, rcToReturn=rc2, log=alog)
+
+  49.3.3 Get and Set
+
+   This example shows how to use Get and Set routines, on both the default
+   Log and the user created Log from the previous examples.
+
+    ! This is an example showing a query of the default Log.  Please note that
+    ! no Log is passed in the argument list, so the default Log will be used.
+    call ESMF_LogGet(logkindflag=logkindflag, rc=rc3)
+
+    ! This is an example setting a property of a Log that is not the default.
+    ! It was opened in a previous example, and the handle for it must be
+    ! passed in the argument list.
+    call ESMF_LogSet(log=alog, logmsgAbort=(/ESMF_LOGMSG_ERROR/), rc=rc2)
+
+    ! Close the user log.
+    call ESMF_LogClose(alog, rc=rc3)
+
+    ! Finalize ESMF to close the default log
+    call ESMF_Finalize(rc=rc1)
+
+49.4 Restrictions and Future Work
+
+    1. Line, file and method are only available when using the C
+       preprocessor Message writing methods are expanded using the ESMF
+       macro ESMF_CONTEXT that adds the predefined symbolic constants
+       __LINE__ and __FILE__ (or the ESMF constant ESMF_FILENAME if
+       defined) and the ESMF constant ESMF_METHOD to the argument list.
+       Using these constants, we can associate a file name, line number
+       and method name with the message. If the CPP preprocessor is not
+       used, this expansion will not be done and hence the ESMF macro
+       ESMF_CONTEXT can not be used, leaving the file name, line number
+       and method out of the Log text.
+    2. Get and set methods are partially implemented. Currently, the
+       ESMF_LogGet() and ESMF_LogSet() methods are partially implemented.
+    3. Log only appends entries. All writing to the Log is appended rather
+       than overwriting the Log. Future enhancements include the option to
+       either append to an existing Log or overwrite the existing Log.
+    4. Avoiding conflicts with the default Log. The private methods
+       ESMF_LogInitialize() and ESMF_LogFinalize() are called during
+       ESMF_Initialize() and ESMF_Finalize() respectively, so they do not
+       need to be called if the default Log is used. If a new Log is
+       required, ESMF_LogOpen() is used with a new Log object passed in so
+       that there are no conflicts with the default Log.
+    5. ESMF_LOGKIND_SINGLE does not work properly. When the
+       ESMF_LogKind_Flag is set to ESMF_LOGKIND_SINGLE, different system
+       may behave differently. The log messages from some processors may
+       be lost or overwritten by other processors. Users are advised not
+       to use this mode. The MPI-based I/O will be implemented to fix the
+       problem in the future release.
+
+49.5 Design and Implementation Notes
+
+    1. The Log class was implemented in Fortran and uses the Fortran I/O
+       libraries when the class methods are called from Fortran. The C/C++
+       Log methods use the Fortran I/O library by calling utility
+       functions that are written in Fortran. These utility functions call
+       the standard Fortran write, open and close functions. At
+       initialization an ESMF_LOG is created. The ESMF_LOG stores
+       information for a specific Log file. When working with more than
+       one Log file, multiple ESMF_LOG's are required (one ESMF_LOG for
+       each Log file). For each Log, a handle is returned through the
+       ESMF_LogInitialize method for the default log or ESMF_LogOpen for a
+       user created log. The user can specify single or multi logs by
+       setting the logkindflag property in the ESMF_LogInitialize or
+       ESMF_Open method to ESMF_LOGKIND_SINGLE or ESMF_LOGKIND_MULTI.
+       Similarly, the user can set the logkindflag property for the
+       default Log with the ESMF_Initialize method call. The logkindflag
+       is useful as the PET numbers are automatically added to the log
+       entries. A single log will put all entries, regardless of PET
+       number, into a single log while a multi log will create multiple
+       logs with the PET number prepended to the filename and all entries
+       will be written to their corresponding log by their PET number.
+       The properties for a Log are set with the ESMF_LogSet() method and
+       retrieved with the ESMF_LogGet() method.
+       Additionally, buffering is enabled. Buffering allows ESMF to manage
+       output data streams in a desired way. Writing to the buffer is
+       transparent to the user because all the Log entries are handled
+       automatically by the ESMF_LogWrite() method. All the user has to do
+       is specify the buffer size (the default is ten) by setting the
+       maxElements property. Every time the ESMF_LogWrite() method is
+       called, a LogEntry element is populated with the ESMF_LogWrite()
+       information. When the buffer is full (i.e., when all the LogEntry
+       elements are populated), the buffer will be flushed and all the
+       contents will be written to file. If buffering is not needed, that
+       is maxElements=1 or flushImmediately=ESMF_TRUE, the ESMF_LogWrite()
+       method will immediately write to the Log file(s).
+
+49.6 Object Model
+
+   The following is a simplified UML diagram showing the structure of the
+   Log class. See Appendix A, A Brief Introduction to UML, for a
+   translation table that lists the symbols in the diagram and their
+   meaning.
+
+                          \includegraphics{Log_obj}
+
+49.7 Class API
+
+  49.7.1 ESMF_LogAssignment(=) - Log assignment
+
+   INTERFACE:
+     interface assignment(=)
+     log1 = log2
+
+   ARGUMENTS:
+     type(ESMF_Log) :: log1
+     type(ESMF_Log) :: log2
+
+   DESCRIPTION:
+
+   Assign log1 as an alias to the same ESMF_Log object in memory as log2.
+   If log2 is invalid, then log1 will be equally invalid after the
+   assignment.
+
+   The arguments are:
+
+   log1
+          The ESMF_Log object on the left hand side of the assignment.
+
+   log2
+          The ESMF_Log object on the right hand side of the assignment.
+
+  49.7.2 ESMF_LogOperator(==) - Test if Log 1 is equivalent to Log 2
+
+   INTERFACE:
+       interface operator(==)
+       if (log1 == log2) then ... endif
+                    OR
+       result = (log1 == log2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Log), intent(in) :: log1
+       type(ESMF_Log), intent(in) :: log2
+
+   DESCRIPTION:
+
+   Overloads the (==) operator for the ESMF_Log class. Compare two logs
+   for equality; return .true. if equal, .false. otherwise. Comparison is
+   based on whether the objects are distinct, as with two newly created
+   logs, or are simply aliases to the same log as would be the case when
+   assignment was involved.
+
+   The arguments are:
+
+   log1
+          The ESMF_Log object on the left hand side of the equality
+          operation.
+
+   log2
+          The ESMF_Log object on the right hand side of the equality
+          operation.
+
+  49.7.3 ESMF_LogOperator(/=) - Test if Log 1 is not equivalent to Log 2
+
+   INTERFACE:
+       interface operator(/=)
+       if (log1 /= log2) then ... endif
+                    OR
+       result = (log1 /= log2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_Log), intent(in) :: log1
+       type(ESMF_Log), intent(in) :: log2
+
+   DESCRIPTION:
+
+   Overloads the (/=) operator for the ESMF_Log class. Compare two logs
+   for inequality; return .true. if equal, .false. otherwise. Comparison
+   is based on whether the objects are distinct, as with two newly created
+   logs, or are simply aliases to the same log as would be the case when
+   assignment was involved.
+
+   The arguments are:
+
+   log1
+          The ESMF_Log object on the left hand side of the non-equality
+          operation.
+
+   log2
+          The ESMF_Log object on the right hand side of the non-equality
+          operation.
+

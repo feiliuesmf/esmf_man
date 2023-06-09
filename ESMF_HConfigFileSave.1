@@ -1,0 +1,31 @@
+  48.5.21 ESMF_HConfigFileSave - Save HConfig to file
+
+   INTERFACE:
+   subroutine ESMF_HConfigFileSave(hconfig, filename, doc, rc)
+
+   ARGUMENTS:
+     type(ESMF_HConfig), intent(in)            :: hconfig
+     character(len=*),   intent(in)            :: filename
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(in),  optional :: doc
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Save HConfig into YAML file. Only localPet == 0 does the writing. The
+   hconfig must not be a map iterator.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig object.
+
+   filename
+          Name of the YAML file into which to save.
+
+   [doc]
+          The doc index inside hconfig. Defaults to all docs.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

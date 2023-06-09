@@ -1,0 +1,449 @@
+  31.6.36 ESMF_GridGet - Get object-wide Grid information
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGet()
+       subroutine ESMF_GridGetDefault(grid, coordTypeKind, &
+         dimCount, tileCount, staggerlocCount, localDECount, distgrid, &
+         distgridToGridMap, coordSys, coordDimCount, coordDimMap, arbDim, &
+         rank, arbDimCount, gridEdgeLWidth, gridEdgeUWidth, gridAlign,  &
+         indexFlag, status, name, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),            intent(in)            :: grid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_TypeKind_Flag),  intent(out), optional :: coordTypeKind
+       integer,                   intent(out), optional :: dimCount
+       integer,                   intent(out), optional :: tileCount
+       integer,                   intent(out), optional :: staggerlocCount
+       integer,                   intent(out), optional :: localDECount
+       type(ESMF_DistGrid),       intent(out), optional :: distgrid
+       integer,       target,     intent(out), optional :: distgridToGridMap(:)
+       type(ESMF_CoordSys_Flag),  intent(out), optional :: coordSys
+       integer,       target,     intent(out), optional :: coordDimCount(:)
+       integer,       target,     intent(out), optional :: coordDimMap(:,:)
+       integer,                   intent(out), optional :: arbDim
+       integer,                   intent(out), optional :: rank
+       integer,                   intent(out), optional :: arbDimCount
+       integer,       target,     intent(out), optional :: gridEdgeLWidth(:)
+       integer,       target,     intent(out), optional :: gridEdgeUWidth(:)
+       integer,       target,     intent(out), optional :: gridAlign(:)
+       type(ESMF_Index_Flag),     intent(out), optional :: indexflag
+       type(ESMF_GridStatus_Flag),intent(out), optional :: status
+       character (len=*),         intent(out), optional :: name
+       integer,                   intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets various types of information about a grid.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   [coordTypeKind]
+          The type/kind of the grid coordinate data. All numerical types
+          listed under section [1365]54.59 are supported.
+
+   [dimCount]
+          DimCount of the Grid object.
+
+   [tileCount]
+          The number of logically rectangular tiles in the grid.
+
+   [staggerlocCount]
+          The number of stagger locations.
+
+   [localDECount]
+          The number of DEs in this grid on this PET.
+
+   [distgrid]
+          The structure describing the distribution of the grid.
+
+   [distgridToGridMap]
+          List that has as many elements as the distgrid dimCount. This
+          array describes mapping between the grids dimensions and the
+          distgrid.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data.
+
+   [coordDimCount]
+          This argument needs to be of size equal to the Grid's dimCount.
+          Each entry in the argument will be filled with the dimCount of
+          the corresponding coordinate component (e.g. the dimCount of
+          coordDim=1 will be put into entry 1). This is useful because it
+          describes the factorization of the coordinate components in the
+          Grid.
+
+   [coordDimMap]
+          2D list of size grid dimCount x grid dimCount. This array
+          describes the map of each component array's dimensions onto the
+          grids dimensions.
+
+   [arbDim]
+          The distgrid dimension that is mapped by the arbitrarily
+          distributed grid dimensions.
+
+   [rank]
+          The count of the memory dimensions, it is the same as dimCount
+          for a non-arbitrarily distributed grid, and equal or less for a
+          arbitrarily distributed grid.
+
+   [arbDimCount]
+          The number of dimensions distributed arbitrarily for an
+          arbitrary grid, 0 if the grid is non-arbitrary.
+
+   [gridEdgeLWidth]
+          The padding around the lower edges of the grid. The array should
+          be of size greater or equal to the Grid dimCount.
+
+   [gridEdgeUWidth]
+          The padding around the upper edges of the grid. The array should
+          be of size greater or equal to the Grid dimCount.
+
+   [gridAlign]
+          Specification of how the stagger locations should align with the
+          cell index space. The array should be of size greater or equal
+          to the Grid dimCount.
+
+   [indexflag]
+          Flag indicating the indexing scheme being used in the Grid.
+          Please see Section [1366]54.27 for the list of options.
+
+   [status]
+          Flag indicating the status of the Grid. Please see
+          Section [1367]31.2.4 for the list of options.
+
+   [name]
+          ESMF_Grid name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.37 ESMF_GridGet - Get DE-local Grid information
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGet()
+       subroutine ESMF_GridGetPLocalDe(grid, localDE, &
+         isLBound,isUBound, arbIndexCount, arbIndexList, tile, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       integer,                intent(in)            :: localDE
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       logical,                intent(out), optional :: isLBound(:)
+       logical,                intent(out), optional :: isUBound(:)
+       integer,                intent(out), optional :: arbIndexCount
+       integer,        target, intent(out), optional :: arbIndexList(:,:)
+       integer,                intent(out), optional :: tile
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added argument tile. This new argument allows the user to
+                query the tile within which the localDE is contained.
+
+   DESCRIPTION:
+
+   This call gets information about a particular local DE in a Grid.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   localDE
+          The local DE from which to get the information.
+          [0,..,localDECount-1]
+
+   [isLBound]
+          Upon return, for each dimension this indicates if the DE is a
+          lower bound of the Grid. isLBound must be allocated to be of
+          size equal to the Grid dimCount.
+
+   [isUBound]
+          Upon return, for each dimension this indicates if the DE is an
+          upper bound of the Grid. isUBound must be allocated to be of
+          size equal to the Grid dimCount.
+
+   [arbIndexCount]
+          The number of local cells for an arbitrarily distributed grid
+
+   [arbIndexList]
+          The 2D array storing the local cell indices for an arbitrarily
+          distributed grid. The size of the array is arbIndexCount *
+          arbDimCount
+
+   [tile]
+          The number of the tile in which localDE is contained. Tile
+          numbers range from 1 to TileCount.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.38 ESMF_GridGet - Get DE-local information for a specific stagger
+  location in a Grid
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGet()
+       subroutine ESMF_GridGetPLocalDePSloc(grid, staggerloc, localDE, &
+         exclusiveLBound, exclusiveUBound, exclusiveCount,  &
+         computationalLBound, computationalUBound, computationalCount, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       type (ESMF_StaggerLoc), intent(in)            :: staggerloc
+       integer,                intent(in)            :: localDE
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,        target, intent(out), optional :: exclusiveLBound(:)
+       integer,        target, intent(out), optional :: exclusiveUBound(:)
+       integer,        target, intent(out), optional :: exclusiveCount(:)
+       integer,        target, intent(out), optional :: computationalLBound(:)
+       integer,        target, intent(out), optional :: computationalUBound(:)
+       integer,        target, intent(out), optional :: computationalCount(:)
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method gets information about the range of index space which a
+   particular stagger location occupies. This call differs from the
+   coordinate bound calls (e.g. ESMF_GridGetCoord) in that a given
+   coordinate array may only occupy a subset of the Grid's dimensions, and
+   so these calls may not give all the bounds of the stagger location. The
+   bounds from this call are the full bounds, and so for example, give the
+   appropriate bounds for allocating a Fortran array to hold data residing
+   on the stagger location. Note that unlike the output from the Array,
+   these values also include the undistributed dimensions and are ordered
+   to reflect the order of the indices in the Grid. This call will still
+   give correct values even if the stagger location does not contain
+   coordinate arrays (e.g. if ESMF_GridAddCoord hasn't yet been called on
+   the stagger location).
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   staggerloc
+          The stagger location to get the information for. Please see
+          Section [1368]31.2.6 for a list of predefined stagger locations.
+
+   localDE
+          The local DE from which to get the information.
+          [0,..,localDECount-1]
+
+   [exclusiveLBound]
+          Upon return this holds the lower bounds of the exclusive region.
+          exclusiveLBound must be allocated to be of size equal to the
+          Grid dimCount. Please see Section [1369]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [exclusiveUBound]
+          Upon return this holds the upper bounds of the exclusive region.
+          exclusiveUBound must be allocated to be of size equal to the
+          Grid dimCount. Please see Section [1370]31.3.19 for a
+          description of the regions and their associated bounds and
+          counts.
+
+   [exclusiveCount]
+          Upon return this holds the number of
+          items,exclusiveUBound-exclusiveLBound+1, in the exclusive region
+          per dimension. exclusiveCount must be allocated to be of size
+          equal to the Grid dimCount. Please see Section [1371]31.3.19 for
+          a description of the regions and their associated bounds and
+          counts.
+
+   [computationalLBound]
+          Upon return this holds the lower bounds of the computational
+          region. computationalLBound must be allocated to be of size
+          equal to the Grid dimCount. Please see Section [1372]31.3.19 for
+          a description of the regions and their associated bounds and
+          counts.
+
+   [computationalUBound]
+          Upon return this holds the upper bounds of the computational
+          region. computationalUBound must be allocated to be of size
+          equal to the Grid dimCount. Please see Section [1373]31.3.19 for
+          a description of the regions and their associated bounds and
+          counts.
+
+   [computationalCount]
+          Upon return this holds the number of items in the computational
+          region per dimension. (i.e.
+          computationalUBound-computationalLBound+1). computationalCount
+          must be allocated to be of size equal to the Grid dimCount.
+          Please see Section [1374]31.3.19 for a description of the
+          regions and their associated bounds and counts.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.39 ESMF_GridGet - Get information about a specific stagger location in a
+  Grid
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGet()
+       subroutine ESMF_GridGetPSloc(grid, staggerloc, &
+         distgrid, &
+         staggerEdgeLWidth, staggerEdgeUWidth, &
+         staggerAlign, staggerLBound, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       type (ESMF_StaggerLoc), intent(in)            :: staggerloc
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_DistGrid),    intent(out), optional :: distgrid
+       integer,                intent(out), optional :: staggerEdgeLWidth(:)
+       integer,                intent(out), optional :: staggerEdgeUWidth(:)
+       integer,                intent(out), optional :: staggerAlign(:)
+       integer,                intent(out), optional :: staggerLBound(:)
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added arguments staggerEdgeLWidth, staggerEdgeUWidth,
+                staggerAlign, and staggerLBound. These new arguments allow
+                the user to get width, alignment, and bound information
+                for the given stagger location.
+
+   DESCRIPTION:
+
+   This method gets information about a particular stagger location. This
+   information is useful for creating an ESMF Array to hold the data at
+   the stagger location.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   staggerloc
+          The stagger location to get the information for. Please see
+          Section [1375]31.2.6 for a list of predefined stagger locations.
+
+   [distgrid]
+          The structure describing the distribution of this staggerloc in
+          this grid.
+
+   [staggerEdgeLWidth]
+          This array should be the same dimCount as the grid. It specifies
+          the lower corner of the stagger region with respect to the lower
+          corner of the exclusive region.
+
+   [staggerEdgeUWidth]
+          This array should be the same dimCount as the grid. It specifies
+          the upper corner of the stagger region with respect to the upper
+          corner of the exclusive region.
+
+   [staggerAlign]
+          This array is of size grid dimCount. For this stagger location,
+          it specifies which element has the same index value as the
+          center. For example, for a 2D cell with corner stagger it
+          specifies which of the 4 corners has the same index as the
+          center.
+
+   [staggerLBound]
+          Specifies the lower index range of the memory of every DE in
+          this staggerloc in this Grid. Only used when Grid indexflag is
+          ESMF_INDEX_USER.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  31.6.40 ESMF_GridGet - Get information about a specific stagger location and
+  tile in a Grid
+
+   INTERFACE:
+   ! Private name; call using ESMF_GridGet()
+       subroutine ESMF_GridGetPSlocPTile(grid, tile, staggerloc, &
+         minIndex, maxIndex, rc)
+
+   ARGUMENTS:
+       type(ESMF_Grid),        intent(in)            :: grid
+       integer,                intent(in)            :: tile
+       type (ESMF_StaggerLoc), intent(in)            :: staggerloc
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,        target, intent(out), optional :: minIndex(:)
+       integer,        target, intent(out), optional :: maxIndex(:)
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method gets information about a particular stagger location. This
+   information is useful for creating an ESMF Array to hold the data at
+   the stagger location.
+
+   The arguments are:
+
+   grid
+          Grid to get the information from.
+
+   tile
+          The tile number to get the data from. Tile numbers range from 1
+          to TileCount.
+
+   staggerloc
+          The stagger location to get the information for. Please see
+          Section [1376]31.2.6 for a list of predefined stagger locations.
+
+   [minIndex]
+          Upon return this holds the global lower index of this stagger
+          location. minIndex must be allocated to be of size equal to the
+          grid DimCount. Note that this value is only for the first Grid
+          tile, as multigrid support is added, this interface will likely
+          be changed or moved to adapt.
+
+   [maxIndex]
+          Upon return this holds the global upper index of this stagger
+          location. maxIndex must be allocated to be of size equal to the
+          grid DimCount. Note that this value is only for the first Grid
+          tile, as multigrid support is added, this interface will likely
+          be changed or moved to adapt.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

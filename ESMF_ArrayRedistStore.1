@@ -1,0 +1,608 @@
+  28.5.30 ESMF_ArrayRedistStore - Precompute Array redistribution with local
+  factor argument
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArrayRedistStore()
+   subroutine ESMF_ArrayRedistStore<type><kind>(srcArray, dstArray, &
+     routehandle, factor, srcToDstTransposeMap, &
+     ignoreUnmatchedIndices, pipelineDepth, rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),       intent(in)              :: srcArray
+     type(ESMF_Array),       intent(inout)           :: dstArray
+     type(ESMF_RouteHandle), intent(inout)           :: routehandle
+     <type>(ESMF_KIND_<kind>),intent(in)             :: factor
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(in),    optional :: srcToDstTransposeMap(:)
+     logical,                intent(in),    optional :: ignoreUnmatchedIndices
+     integer,                intent(inout), optional :: pipelineDepth
+     integer,                intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument pipelineDepth. The new argument provide
+                access to the tuning parameter affecting the sparse matrix
+                execution.
+
+        7.0.0
+                Added argument transposeRoutehandle to allow a handle to
+                the transposed redist operation to be returned.
+                Added argument ignoreUnmatchedIndices to support
+                situations where not all elements between source and
+                destination Arrays match.
+
+        7.1.0r
+                Removed argument transposeRoutehandle and provide it via
+                interface overloading instead. This allows argument
+                srcArray to stay strictly intent(in) for this entry point.
+
+   DESCRIPTION:
+
+   ESMF_ArrayRedistStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_ArrayRedistStore() through
+   a different entry point. Restrictions apply as to which combinations
+   are sensible. All other combinations result in ESMF run time errors.
+   The complete semantics of the ESMF_ArrayRedistStore() method, as
+   provided through the separate entry points shown in [1105]28.5.30 and
+   [1106]28.5.32, is described in the following paragraphs as a whole.
+
+   Store an Array redistribution operation from srcArray to dstArray.
+   Interface [1107]28.5.30 allows PETs to specify a factor argument. PETs
+   not specifying a factor argument call into interface [1108]28.5.32. If
+   multiple PETs specify the factor argument, its type and kind, as well
+   as its value must match across all PETs. If none of the PETs specify a
+   factor argument the default will be a factor of 1. The resulting factor
+   is applied to all of the source data during redistribution, allowing
+   scaling of the data, e.g. for unit transformation.
+
+   Both srcArray and dstArray are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [1109]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source Array, destination Array, and the factor may be of different
+   <type><kind>. Further, source and destination Arrays may differ in
+   shape, however, the number of elements must match.
+
+   The default redistribution operation, when srcToDstTransposeMap is not
+   specified, corresponds to the identity mapping: each element of the
+   sequentialized source Array is copied to the sequentialized destination
+   Array element in order.
+
+   If the srcToDstTransposeMap argument is provided it must be identical
+   across all PETs. The srcToDstTransposeMap allows source and destination
+   Array dimensions to be transposed during the redistribution. To support
+   this option, the number of source and destination Array dimensions must
+   be equal and the size of the associated dimensions must match. See
+   section [1110]28.2.17 for more details about the use of the
+   srcToDstTransposeMap argument.
+
+   It is erroneous to specify the identical Array object for srcArray and
+   dstArray arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArrayRedist() on any pair of Arrays that matches srcArray and
+   dstArray in type, kind, and memory layout of the distributed
+   dimensions. However, the size, number, and index order of undistributed
+   dimensions may be different. See section [1111]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   This method is overloaded for:
+   ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   This call is collective across the current VM.
+
+   srcArray
+          ESMF_Array with source data.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   factor
+          Factor by which to multiply source data.
+
+   [srcToDstTransposeMap]
+          A list with as many entries as there are dimensions in srcArray,
+          or tileCount times this many entries. Each entry maps the
+          corresponding srcArray dimension against the specified dstArray
+          dimension. Mixing distributed and undistributed dimensions is
+          supported. Negative entries reverse the order of elements along
+          the specified dimension when going from source to destination.
+          When providing $rank \times tileCount$ elements in
+          srcToDstTransposeMap, each block of size rank is associated with
+          the corresponding tile (in order), and interpreted as the
+          tile-specific transpose map.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when not all
+          elements match between the srcArray and dstArray side. The
+          default setting is .false., indicating that it is an error when
+          such a situation is encountered. Setting ignoreUnmatchedIndices
+          to .true. ignores unmatched indices.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a redist exchange. Larger values of
+          pipelineDepth typically lead to better performance. However, on
+          some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  28.5.31 ESMF_ArrayRedistStore - Precompute Array redistribution and transpose
+  with local factor argument
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArrayRedistStore()
+   subroutine ESMF_ArrayRedistStore<type><kind>TP(srcArray, dstArray, &
+     routehandle, transposeRoutehandle, factor, &
+     srcToDstTransposeMap, ignoreUnmatchedIndices, pipelineDepth, rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),       intent(inout)           :: srcArray
+     type(ESMF_Array),       intent(inout)           :: dstArray
+     type(ESMF_RouteHandle), intent(inout)           :: routehandle
+     type(ESMF_RouteHandle), intent(inout)           :: transposeRoutehandle
+     <type>(ESMF_KIND_<kind>),intent(in)             :: factor
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(in),    optional :: srcToDstTransposeMap(:)
+     logical,                intent(in),    optional :: ignoreUnmatchedIndices
+     integer,                intent(inout), optional :: pipelineDepth
+     integer,                intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   ESMF_ArrayRedistStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_ArrayRedistStore() through
+   a different entry point. Restrictions apply as to which combinations
+   are sensible. All other combinations result in ESMF run time errors.
+   The complete semantics of the ESMF_ArrayRedistStore() method, as
+   provided through the separate entry points shown in [1112]28.5.31 and
+   [1113]28.5.33, is described in the following paragraphs as a whole.
+
+   Store an Array redistribution operation from srcArray to dstArray.
+   Interface [1114]28.5.31 allows PETs to specify a factor argument. PETs
+   not specifying a factor argument call into interface [1115]28.5.33. If
+   multiple PETs specify the factor argument, its type and kind, as well
+   as its value must match across all PETs. If none of the PETs specify a
+   factor argument the default will be a factor of 1. The resulting factor
+   is applied to all of the source data during redistribution, allowing
+   scaling of the data, e.g. for unit transformation.
+
+   Both srcArray and dstArray are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [1116]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source Array, destination Array, and the factor may be of different
+   <type><kind>. Further, source and destination Arrays may differ in
+   shape, however, the number of elements must match.
+
+   The default redistribution operation, when srcToDstTransposeMap is not
+   specified, corresponds to the identity mapping: each element of the
+   sequentialized source Array is copied to the sequentialized destination
+   Array element in order.
+
+   If the srcToDstTransposeMap argument is provided it must be identical
+   across all PETs. The srcToDstTransposeMap allows source and destination
+   Array dimensions to be transposed during the redistribution. To support
+   this option, the number of source and destination Array dimensions must
+   be equal and the size of the associated dimensions must match. See
+   section [1117]28.2.17 for more details about the use of the
+   srcToDstTransposeMap argument.
+
+   It is erroneous to specify the identical Array object for srcArray and
+   dstArray arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArrayRedist() on any pair of Arrays that matches srcArray and
+   dstArray in type, kind, and memory layout of the distributed
+   dimensions. However, the size, number, and index order of undistributed
+   dimensions may be different. See section [1118]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   This method is overloaded for:
+   ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   This call is collective across the current VM.
+
+   srcArray
+          ESMF_Array with source data. The data in this Array may be
+          destroyed by this call.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   transposeRoutehandle
+          Handle to the transposed matrix operation. The transposed
+          operation goes from dstArray to srcArray.
+
+   factor
+          Factor by which to multiply source data.
+
+   [srcToDstTransposeMap]
+          A list with as many entries as there are dimensions in srcArray,
+          or tileCount times this many entries. Each entry maps the
+          corresponding srcArray dimension against the specified dstArray
+          dimension. Mixing distributed and undistributed dimensions is
+          supported. Negative entries reverse the order of elements along
+          the specified dimension when going from source to destination.
+          When providing $rank \times tileCount$ elements in
+          srcToDstTransposeMap, each block of size rank is associated with
+          the corresponding tile (in order), and interpreted as the
+          tile-specific transpose map.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when not all
+          elements match between the srcArray and dstArray side. The
+          default setting is .false., indicating that it is an error when
+          such a situation is encountered. Setting ignoreUnmatchedIndices
+          to .true. ignores unmatched indices.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a redist exchange. Larger values of
+          pipelineDepth typically lead to better performance. However, on
+          some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  28.5.32 ESMF_ArrayRedistStore - Precompute Array redistribution without local
+  factor argument
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArrayRedistStore()
+   subroutine ESMF_ArrayRedistStoreNF(srcArray, dstArray, routehandle, &
+     srcToDstTransposeMap, ignoreUnmatchedIndices, &
+     pipelineDepth, rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),       intent(in)              :: srcArray
+     type(ESMF_Array),       intent(inout)           :: dstArray
+     type(ESMF_RouteHandle), intent(inout)           :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(in),    optional :: srcToDstTransposeMap(:)
+     logical,                intent(in),    optional :: ignoreUnmatchedIndices
+     integer,                intent(inout), optional :: pipelineDepth
+     integer,                intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        6.1.0
+                Added argument pipelineDepth. The new argument provide
+                access to the tuning parameter affecting the sparse matrix
+                execution.
+
+        7.0.0
+                Added argument transposeRoutehandle to allow a handle to
+                the transposed redist operation to be returned.
+                Added argument ignoreUnmatchedIndices to support
+                situations where not all elements between source and
+                destination Arrays match.
+
+        7.1.0r
+                Removed argument transposeRoutehandle and provide it via
+                interface overloading instead. This allows argument
+                srcArray to stay strictly intent(in) for this entry point.
+
+   DESCRIPTION:
+
+   ESMF_ArrayRedistStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_ArrayRedistStore() through
+   a different entry point. Restrictions apply as to which combinations
+   are sensible. All other combinations result in ESMF run time errors.
+   The complete semantics of the ESMF_ArrayRedistStore() method, as
+   provided through the separate entry points shown in [1119]28.5.30 and
+   [1120]28.5.32, is described in the following paragraphs as a whole.
+
+   Store an Array redistribution operation from srcArray to dstArray.
+   Interface [1121]28.5.30 allows PETs to specify a factor argument. PETs
+   not specifying a factor argument call into interface [1122]28.5.32. If
+   multiple PETs specify the factor argument, its type and kind, as well
+   as its value must match across all PETs. If none of the PETs specify a
+   factor argument the default will be a factor of 1. The resulting factor
+   is applied to all of the source data during redistribution, allowing
+   scaling of the data, e.g. for unit transformation.
+
+   Both srcArray and dstArray are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [1123]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source Array, destination Array, and the factor may be of different
+   <type><kind>. Further, source and destination Arrays may differ in
+   shape, however, the number of elements must match.
+
+   The default redistribution operation, when srcToDstTransposeMap is not
+   specified, corresponds to the identity mapping: each element of the
+   sequentialized source Array is copied to the sequentialized destination
+   Array element in order.
+
+   If the srcToDstTransposeMap argument is provided it must be identical
+   across all PETs. The srcToDstTransposeMap allows source and destination
+   Array dimensions to be transposed during the redistribution. To support
+   this option, the number of source and destination Array dimensions must
+   be equal and the size of the associated dimensions must match. See
+   section [1124]28.2.17 for more details about the use of the
+   srcToDstTransposeMap argument.
+
+   It is erroneous to specify the identical Array object for srcArray and
+   dstArray arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArrayRedist() on any pair of Arrays that matches srcArray and
+   dstArray in type, kind, and memory layout of the distributed
+   dimensions. However, the size, number, and index order of undistributed
+   dimensions may be different. See section [1125]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   srcArray
+          ESMF_Array with source data.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [srcToDstTransposeMap]
+          A list with as many entries as there are dimensions in srcArray,
+          or tileCount times this many entries. Each entry maps the
+          corresponding srcArray dimension against the specified dstArray
+          dimension. Mixing distributed and undistributed dimensions is
+          supported. Negative entries reverse the order of elements along
+          the specified dimension when going from source to destination.
+          When providing $rank \times tileCount$ elements in
+          srcToDstTransposeMap, each block of size rank is associated with
+          the corresponding tile (in order), and interpreted as the
+          tile-specific transpose map.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when not all
+          elements match between the srcArray and dstArray side. The
+          default setting is .false., indicating that it is an error when
+          such a situation is encountered. Setting ignoreUnmatchedIndices
+          to .true. ignores unmatched indices.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a redist exchange. Larger values of
+          pipelineDepth typically lead to better performance. However, on
+          some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  28.5.33 ESMF_ArrayRedistStore - Precompute Array redistribution and transpose
+  without local factor argument
+
+   INTERFACE:
+   ! Private name; call using ESMF_ArrayRedistStore()
+   subroutine ESMF_ArrayRedistStoreNFTP(srcArray, dstArray, routehandle, &
+     transposeRoutehandle, srcToDstTransposeMap, &
+     ignoreUnmatchedIndices, pipelineDepth, rc)
+
+   ARGUMENTS:
+     type(ESMF_Array),       intent(inout)           :: srcArray
+     type(ESMF_Array),       intent(inout)           :: dstArray
+     type(ESMF_RouteHandle), intent(inout)           :: routehandle
+     type(ESMF_RouteHandle), intent(inout)           :: transposeRoutehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(in),    optional :: srcToDstTransposeMap(:)
+     logical,                intent(in),    optional :: ignoreUnmatchedIndices
+     integer,                intent(inout), optional :: pipelineDepth
+     integer,                intent(out),   optional :: rc
+
+   DESCRIPTION:
+
+   ESMF_ArrayRedistStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_ArrayRedistStore() through
+   a different entry point. Restrictions apply as to which combinations
+   are sensible. All other combinations result in ESMF run time errors.
+   The complete semantics of the ESMF_ArrayRedistStore() method, as
+   provided through the separate entry points shown in [1126]28.5.31 and
+   [1127]28.5.33, is described in the following paragraphs as a whole.
+
+   Store an Array redistribution operation from srcArray to dstArray.
+   Interface [1128]28.5.31 allows PETs to specify a factor argument. PETs
+   not specifying a factor argument call into interface [1129]28.5.33. If
+   multiple PETs specify the factor argument, its type and kind, as well
+   as its value must match across all PETs. If none of the PETs specify a
+   factor argument the default will be a factor of 1. The resulting factor
+   is applied to all of the source data during redistribution, allowing
+   scaling of the data, e.g. for unit transformation.
+
+   Both srcArray and dstArray are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [1130]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source Array, destination Array, and the factor may be of different
+   <type><kind>. Further, source and destination Arrays may differ in
+   shape, however, the number of elements must match.
+
+   The default redistribution operation, when srcToDstTransposeMap is not
+   specified, corresponds to the identity mapping: each element of the
+   sequentialized source Array is copied to the sequentialized destination
+   Array element in order.
+
+   If the srcToDstTransposeMap argument is provided it must be identical
+   across all PETs. The srcToDstTransposeMap allows source and destination
+   Array dimensions to be transposed during the redistribution. To support
+   this option, the number of source and destination Array dimensions must
+   be equal and the size of the associated dimensions must match. See
+   section [1131]28.2.17 for more details about the use of the
+   srcToDstTransposeMap argument.
+
+   It is erroneous to specify the identical Array object for srcArray and
+   dstArray arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArrayRedist() on any pair of Arrays that matches srcArray and
+   dstArray in type, kind, and memory layout of the distributed
+   dimensions. However, the size, number, and index order of undistributed
+   dimensions may be different. See section [1132]37.2.5 for a more
+   detailed discussion of RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   srcArray
+          ESMF_Array with source data. The data in this Array may be
+          destroyed by this call.
+
+   dstArray
+          ESMF_Array with destination data. The data in this Array may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   transposeRoutehandle
+          Handle to the transposed matrix operation. The transposed
+          operation goes from dstArray to srcArray.
+
+   [srcToDstTransposeMap]
+          A list with as many entries as there are dimensions in srcArray,
+          or tileCount times this many entries. Each entry maps the
+          corresponding srcArray dimension against the specified dstArray
+          dimension. Mixing distributed and undistributed dimensions is
+          supported. Negative entries reverse the order of elements along
+          the specified dimension when going from source to destination.
+          When providing $rank \times tileCount$ elements in
+          srcToDstTransposeMap, each block of size rank is associated with
+          the corresponding tile (in order), and interpreted as the
+          tile-specific transpose map.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when not all
+          elements match between the srcArray and dstArray side. The
+          default setting is .false., indicating that it is an error when
+          such a situation is encountered. Setting ignoreUnmatchedIndices
+          to .true. ignores unmatched indices.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a redist exchange. Larger values of
+          pipelineDepth typically lead to better performance. However, on
+          some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_ArraySMMStore() method implements an auto-tuning scheme
+          for the pipelineDepth parameter. The intent on the pipelineDepth
+          argument is "inout" in order to support both overriding and
+          accessing the auto-tuning parameter. If an argument $>= 0$ is
+          specified, it is used for the pipelineDepth parameter, and the
+          auto-tuning phase is skipped. In this case the pipelineDepth
+          argument is not modified on return. If the provided argument is
+          $< 0$ , the pipelineDepth parameter is determined internally
+          using the auto-tuning scheme. In this case the pipelineDepth
+          argument is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional pipelineDepth argument
+          is omitted.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

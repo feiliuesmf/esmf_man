@@ -1,0 +1,27 @@
+  47.3.19 ESMF_ConfigPrint - Write content of Config object to unit
+
+   INTERFACE:
+     subroutine ESMF_ConfigPrint(config, unit, rc)
+
+   ARGUMENTS:
+       type(ESMF_Config), intent(in)  :: config
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, optional, intent(in)  :: unit
+       integer, optional, intent(out) :: rc
+
+   DESCRIPTION:
+
+   Write content of input ESMF_Config object to unit unit. If unit not
+   provided, writes to standard output.
+
+   The arguments are:
+
+   config
+          The input ESMF_Config object.
+
+   [unit]
+          Output unit.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

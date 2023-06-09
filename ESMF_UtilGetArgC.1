@@ -1,0 +1,37 @@
+  53.4.2 ESMF_UtilGetArgC - Return number of command line arguments
+
+   INTERFACE:
+   subroutine ESMF_UtilGetArgC(count, rc)
+
+   ARGUMENTS:
+     integer, intent(out)           :: count
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method returns the number of command line arguments specified when
+   the process was started.
+
+   The number of arguments returned does not include the name of the
+   command itself - which is typically returned as argument zero.
+
+   Some MPI implementations do not consistently provide command line
+   arguments on PETs other than PET 0. It is therefore recommended that
+   PET 0 call this method and broadcast the results to the other PETs by
+   using the ESMF_VMBroadcast() method.
+
+   The arguments are:
+
+   count
+          Count of command line arguments.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

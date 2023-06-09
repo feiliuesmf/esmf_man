@@ -1,0 +1,108 @@
+  46.6.9 ESMF_AlarmGet - Get Alarm properties
+
+   INTERFACE:
+       subroutine ESMF_AlarmGet(alarm, &
+         clock, ringTime, prevRingTime, ringInterval, stopTime, ringDuration, &
+         ringTimeStepCount, timeStepRingingCount, ringBegin, ringEnd, &
+         refTime, ringing, ringingOnPrevTimeStep, enabled, sticky, name, rc)
+
+   ARGUMENTS:
+       type(ESMF_Alarm),        intent(in)            :: alarm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_Clock),        intent(out), optional :: clock
+       type(ESMF_Time),         intent(out), optional :: ringTime
+       type(ESMF_Time),         intent(out), optional :: prevRingTime
+       type(ESMF_TimeInterval), intent(out), optional :: ringInterval
+       type(ESMF_Time),         intent(out), optional :: stopTime
+       type(ESMF_TimeInterval), intent(out), optional :: ringDuration
+       integer,                 intent(out), optional :: ringTimeStepCount
+       integer,                 intent(out), optional :: timeStepRingingCount
+       type(ESMF_Time),         intent(out), optional :: ringBegin
+       type(ESMF_Time),         intent(out), optional :: ringEnd
+       type(ESMF_Time),         intent(out), optional :: refTime
+       logical,                 intent(out), optional :: ringing
+       logical,                 intent(out), optional :: ringingOnPrevTimeStep
+       logical,                 intent(out), optional :: enabled
+       logical,                 intent(out), optional :: sticky
+       character (len=*),       intent(out), optional :: name
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets one or more of an ESMF_Alarm's properties.
+
+   The arguments are:
+
+   alarm
+          The object instance to query.
+
+   [clock]
+          The associated clock.
+
+   [ringTime]
+          The ring time for a one-shot alarm or the next repeating alarm.
+
+   [prevRingTime]
+          The previous ring time.
+
+   [ringInterval]
+          The ring interval for repeating (interval) alarms.
+
+   [stopTime]
+          The stop time for repeating (interval) alarms.
+
+   [ringDuration]
+          The ring duration. Mutually exclusive with ringTimeStepCount
+          (see below).
+
+   [ringTimeStepCount]
+          The number of time steps comprising the ring duration. Mutually
+          exclusive with ringDuration (see above).
+
+   [timeStepRingingCount]
+          The number of time steps for which the alarm has been ringing
+          thus far. Used internally for tracking ringTimeStepCount ring
+          durations (see above). Mutually exclusive with ringBegin (see
+          below). Increments in ESMF_DIRECTION_FORWARD and decrements in
+          ESMF_DIRECTION_REVERSE; see Section [591]45.1.
+
+   [ringBegin]
+          The time when the alarm began ringing. Used internally for
+          tracking ringDuration (see above). Mutually exclusive with
+          timeStepRingingCount (see above).
+
+   [ringEnd]
+          The time when the alarm ended ringing. Used internally for
+          re-ringing alarm in ESMF_DIRECTION_REVERSE.
+
+   [refTime]
+          The reference (i.e. base) time for an interval alarm.
+
+   [ringing]
+          The current ringing state. See also ESMF_AlarmRingerOn(),
+          ESMF_AlarmRingerOff().
+
+   [ringingOnPrevTimeStep]
+          The ringing state upon the previous time step. Same as
+          ESMF_AlarmWasPrevRinging().
+
+   [enabled]
+          The enabled state. See also ESMF_AlarmEnable(),
+          ESMF_AlarmDisable().
+
+   [sticky]
+          The sticky state. See also ESMF_AlarmSticky(),
+          ESMF_AlarmNotSticky().
+
+   [name]
+          The name of this alarm.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,32 @@
+  53.4.7 ESMF_UtilString2Double - Convert a string to floating point real
+
+   INTERFACE:
+   function ESMF_UtilString2Double(string, rc)
+
+   RETURN VALUE:
+     real(ESMF_KIND_R8) :: ESMF_UtilString2Double
+
+   ARGUMENTS:
+     character(len=*), intent(in)            :: string
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return the numerical real value represented by the string.
+
+   Leading and trailing blanks in string are ignored when directly
+   converting into integers.
+
+   This procedure may fail when used in an expression in a write statement
+   with some older, pre-Fortran 2003, compiler environments that do not
+   support re-entrant I/O calls.
+
+   The arguments are:
+
+   string
+          The string to be converted
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

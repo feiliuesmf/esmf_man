@@ -1,0 +1,301 @@
+  34.6.4 ESMF_XGridCreate - Create an XGrid from lists of Grids and Meshes
+
+   INTERFACE:
+
+ function ESMF_XGridCreate(&
+     sideAGrid,              sideAMesh, &
+     sideBGrid,              sideBMesh, &
+     sideAGridPriority,      sideAMeshPriority, &
+     sideBGridPriority,      sideBMeshPriority, &
+     sideAMaskValues,        sideBMaskValues, &
+     storeOverlay, &
+     name, rc)
+
+   RETURN VALUE:
+   type(ESMF_XGrid)                           :: ESMF_XGridCreate
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_Grid),      intent(in), optional :: sideAGrid(:)
+   type(ESMF_Mesh),      intent(in), optional :: sideAMesh(:)
+   type(ESMF_Grid),      intent(in), optional :: sideBGrid(:)
+   type(ESMF_Mesh),      intent(in), optional :: sideBMesh(:)
+   integer,              intent(in), optional :: sideAGridPriority(:)
+   integer,              intent(in), optional :: sideAMeshPriority(:)
+   integer,              intent(in), optional :: sideBGridPriority(:)
+   integer,              intent(in), optional :: sideBMeshPriority(:)
+   integer(ESMF_KIND_I4),intent(in), optional :: sideAMaskValues(:)
+   integer(ESMF_KIND_I4),intent(in), optional :: sideBMaskValues(:)
+   logical,              intent(in), optional :: storeOverlay
+   character(len=*),     intent(in), optional :: name
+   integer,              intent(out),optional :: rc
+
+   DESCRIPTION:
+
+   Create an XGrid from user supplied input: the list of Grids or Meshes
+   on side A and side B, and other optional arguments. A user can supply
+   both Grids and Meshes on one side to create the XGrid. By default, the
+   Grids have a higher priority over Meshes but the order of priority can
+   be adjusted by the optional GridPriority and MeshPriority arguments.
+   The priority order of Grids and Meshes can also be interleaved by
+   rearranging the optional GridPriority and MeshPriority arguments
+   accordingly.
+
+   Sparse matrix multiplication coefficients are internally computed and
+   uniquely determined by the Grids or Meshes provided in sideA and sideB.
+   User can supply a single ESMF_Grid or an array of ESMF_Grid on either
+   side of the ESMF_XGrid. For an array of ESMF_Grid or ESMF_Mesh in sideA
+   or sideB, a merging process concatenates all the ESMF_Grids and
+   ESMF_Meshes into a super mesh represented by ESMF_Mesh. The super mesh
+   is then used to compute the XGrid. Grid or Mesh objects in sideA and
+   sideB arguments must have coordinates defined for the corners of a Grid
+   or Mesh cell. XGrid creation can be potentially memory expensive given
+   the size of the input Grid and Mesh objects. By default, the super mesh
+   is not stored to reduce memory usage. Once communication routehandles
+   are computed using ESMF_FieldRegridStore() method through XGrid, all
+   memory can be released by destroying the XGrid.
+
+   If sideA and sideB have a single Grid or Mesh object, it's erroneous if
+   the two Grids or Meshes are spatially disjoint. It is also erroneous to
+   specify a Grid or Mesh object in sideA or sideB that is spatially
+   disjoint from the ESMF_XGrid.
+
+   This call is collective across the current VM. For more details please
+   refer to the description [1490]34.1 of the XGrid class. For an example
+   and associated documentation using this method see section [1491]34.3.1
+
+   The arguments are:
+
+   [sideAGrid]
+          Parametric 2D Grids on side A, for example, these Grids can be
+          either Cartesian 2D or Spherical.
+
+   [sideAMesh]
+          Parametric 2D Meshes on side A, for example, these Meshes can be
+          either Cartesian 2D or Spherical.
+
+   [sideBGrid]
+          Parametric 2D Grids on side B, for example, these Grids can be
+          either Cartesian 2D or Spherical.
+
+   [sideBMesh]
+          Parametric 2D Meshes on side B, for example, these Meshes can be
+          either Cartesian 2D or Spherical.
+
+   [sideAGridPriority]
+          Priority array of Grids on sideA during overlay generation. The
+          sideAGridPriority array should be the same size as the sideAGrid
+          array. The values in the array should range from 1 to
+          size(sideAGrid)+size(sideAMesh). A Grid whose corresponding
+          value in this array is lower than another side A Grid or Mesh,
+          will take precedence over that Grid or Mesh during side A
+          merging. In other words, if both have parts in the same region,
+          then the object with the lower value will win, and the other
+          Grid or Mesh part will be clipped away.
+
+   [sideAMeshPriority]
+          Priority array of Meshes on sideA during overlay generation. The
+          sideAMeshPriority array should be the same size as the sideAMesh
+          array. The values in the array should range from 1 to
+          size(sideAGrid)+size(sideAMesh). A Mesh whose corresponding
+          value in this array is lower than another side A Grid or Mesh,
+          will take precedence over that Grid or Mesh during side A
+          merging. In other words, if both have parts in the same region,
+          then the object with the lower value will win, and the other
+          Grid or Mesh part will be clipped away.
+
+   [sideBGridPriority]
+          Priority array of Grids on sideB during overlay generation. The
+          sideBGridPriority array should be the same size as the sideBGrid
+          array. The values in the array should range from 1 to
+          size(sideBGrid)+size(sideBMesh). A Grid whose corresponding
+          value in this array is lower than another side B Grid or Mesh,
+          will take precedence over that Grid or Mesh during side B
+          merging. In other words, if both have parts in the same region,
+          then the object with the lower value will win, and the other
+          Grid or Mesh part will be clipped away.
+
+   [sideBMeshPriority]
+          Priority array of Meshes on sideB during overlay generation. The
+          sideBMeshPriority array should be the same size as the sideBMesh
+          array. The values in the array should range from 1 to
+          size(sideBGrid)+size(sideBMesh). A Mesh whose corresponding
+          value in this array is lower than another side B Grid or Mesh,
+          will take precedence over that Grid or Mesh during side B
+          merging. In other words, if both have parts in the same region,
+          then the object with the lower value will win, and the other
+          Grid or Mesh part will be clipped away.
+
+   [sideAMaskValues]
+          Mask information can be set in the Grid (see [1492]31.3.17) or
+          Mesh (see [1493]33.3.11) upon which the Field is built. The
+          sideAMaskValues argument specifies the values in that mask
+          information which indicate a point should be masked out. In
+          other words, a location is masked if and only if the value for
+          that location in the mask information matches one of the values
+          listed in sideAMaskValues. If sideAMaskValues is not specified,
+          no masking on side A will occur.
+
+   [sideBMaskValues]
+          Mask information can be set in the Grid (see [1494]31.3.17) or
+          Mesh (see [1495]33.3.11) upon which the Field is built. The
+          sideBMaskValues argument specifies the values in that mask
+          information which indicate a point should be masked out. In
+          other words, a location is masked if and only if the value for
+          that location in the mask information matches one of the values
+          listed in sideBMaskValues. If sideBMaskValues is not specified,
+          no masking on side B will occur.
+
+   [storeOverlay]
+          Setting the storeOverlay optional argument to .false. (default)
+          allows a user to bypass storage of the ESMF_Mesh used to
+          represent the XGrid. Only a ESMF_DistGrid is stored to allow
+          Field to be built on the XGrid. If the temporary mesh object is
+          of interest, storeOverlay can be set to .true. so a user can
+          retrieve it for future use.
+
+   [name]
+          name of the xgrid object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS only if the ESMF_XGrid is
+          created.
+
+  34.6.5 ESMF_XGridCreateFromSparseMat an XGrid from raw input parameters
+
+   INTERFACE:
+
+ function ESMF_XGridCreateFromSparseMat(&
+     sideAGrid,              sideAMesh, &
+     sideBGrid,              sideBMesh, &
+     sideAGridPriority,      sideAMeshPriority, &
+     sideBGridPriority,      sideBMeshPriority, &
+     sparseMatA2X, sparseMatX2A, sparseMatB2X, sparseMatX2B, &
+     area, centroid, &
+     name, &
+     rc)
+
+   RETURN VALUE:
+     type(ESMF_XGrid) :: ESMF_XGridCreateFromSparseMat
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+ type(ESMF_Grid),      intent(in), optional :: sideAGrid(:)
+ type(ESMF_Mesh),      intent(in), optional :: sideAMesh(:)
+ type(ESMF_Grid),      intent(in), optional :: sideBGrid(:)
+ type(ESMF_Mesh),      intent(in), optional :: sideBMesh(:)
+ integer,              intent(in), optional :: sideAGridPriority(:)
+ integer,              intent(in), optional :: sideAMeshPriority(:)
+ integer,              intent(in), optional :: sideBGridPriority(:)
+ integer,              intent(in), optional :: sideBMeshPriority(:)
+ type(ESMF_XGridSpec), intent(in), optional :: sparseMatA2X(:)
+ type(ESMF_XGridSpec), intent(in), optional :: sparseMatX2A(:)
+ type(ESMF_XGridSpec), intent(in), optional :: sparseMatB2X(:)
+ type(ESMF_XGridSpec), intent(in), optional :: sparseMatX2B(:)
+ real(ESMF_KIND_R8),   intent(in), optional :: area(:)
+ real(ESMF_KIND_R8),   intent(in), optional :: centroid(:,:)
+ character (len=*),    intent(in), optional :: name
+ integer,              intent(out),optional :: rc
+
+   DESCRIPTION:
+
+   Create an XGrid directly from user supplied sparse matrix parameters.
+   User is responsible to supply all information necessary for
+   communication calculation. For an example and associated documentation
+   using this method see section [1496]34.3.3
+
+   The arguments are:
+
+   [sideAGrid]
+          Parametric 2D Grids on side A, for example, these Grids can be
+          either Cartesian 2D or Spherical.
+
+   [sideAMesh]
+          Parametric 2D Meshes on side A, for example, these Meshes can be
+          either Cartesian 2D or Spherical.
+
+   [sideBGrid]
+          Parametric 2D Grids on side B, for example, these Grids can be
+          either Cartesian 2D or Spherical.
+
+   [sideBMesh]
+          Parametric 2D Meshes on side B, for example, these Meshes can be
+          either Cartesian 2D or Spherical.
+
+   [sideAGridPriority]
+          Priority array of Grids on sideA during overlay generation. The
+          sideAGridPriority array should be the same size as the sideAGrid
+          array. The values in the array should range from 1 to
+          size(sideAGrid)+size(sideAMesh). A Grid whose corresponding
+          value in this array is lower than another side A Grid or Mesh,
+          will take precedence over that Grid or Mesh during side A
+          merging. In other words, if both have parts in the same region,
+          then the object with the lower value will win, and the other
+          Grid or Mesh part will be clipped away.
+
+   [sideAMeshPriority]
+          Priority array of Meshes on sideA during overlay generation. The
+          sideAMeshPriority array should be the same size as the sideAMesh
+          array. The values in the array should range from 1 to
+          size(sideAGrid)+size(sideAMesh). A Mesh whose corresponding
+          value in this array is lower than another side A Grid or Mesh,
+          will take precedence over that Grid or Mesh during side A
+          merging. In other words, if both have parts in the same region,
+          then the object with the lower value will win, and the other
+          Grid or Mesh part will be clipped away.
+
+   [sideBGridPriority]
+          Priority array of Grids on sideB during overlay generation. The
+          sideBGridPriority array should be the same size as the sideBGrid
+          array. The values in the array should range from 1 to
+          size(sideBGrid)+size(sideBMesh). A Grid whose corresponding
+          value in this array is lower than another side B Grid or Mesh,
+          will take precedence over that Grid or Mesh during side B
+          merging. In other words, if both have parts in the same region,
+          then the object with the lower value will win, and the other
+          Grid or Mesh part will be clipped away.
+
+   [sideBMeshPriority]
+          Priority array of Meshes on sideB during overlay generation. The
+          sideBMeshPriority array should be the same size as the sideBMesh
+          array. The values in the array should range from 1 to
+          size(sideBGrid)+size(sideBMesh). A Mesh whose corresponding
+          value in this array is lower than another side B Grid or Mesh,
+          will take precedence over that Grid or Mesh during side B
+          merging. In other words, if both have parts in the same region,
+          then the object with the lower value will win, and the other
+          Grid or Mesh part will be clipped away.
+
+   [sparseMatA2X]
+          indexlist from a Grid index space on side A to xgrid index
+          space; indexFactorlist from a Grid index space on side A to
+          xgrid index space.
+
+   [sparseMatX2A]
+          indexlist from xgrid index space to a Grid index space on side
+          A; indexFactorlist from xgrid index space to a Grid index space
+          on side A.
+
+   [sparseMatB2X]
+          indexlist from a Grid index space on side B to xgrid index
+          space; indexFactorlist from a Grid index space on side B to
+          xgrid index space.
+
+   [sparseMatX2B]
+          indexlist from xgrid index space to a Grid index space on side
+          B; indexFactorlist from xgrid index space to a Grid index space
+          on side B.
+
+   [area]
+          area of the xgrid cells.
+
+   [centroid]
+          coordinates at the area weighted center of the xgrid cells.
+
+   [name]
+          name of the xgrid object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS only if the ESMF_XGrid is
+          created.
+

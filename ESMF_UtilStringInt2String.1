@@ -1,0 +1,30 @@
+  53.4.10 ESMF_UtilStringInt2String - convert integer to character string
+
+   INTERFACE:
+     function ESMF_UtilStringInt2String (i, rc)
+
+   ARGUMENTS:
+       integer, intent(in) :: i
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, intent(out), optional  :: rc
+
+   RETURN VALUE:
+       character(int2str_len (i)) :: ESMF_UtilStringInt2String
+
+   DESCRIPTION:
+
+   Converts given an integer to string representation. The returned string
+   is sized such that it does not contain leading or trailing blanks.
+
+   This procedure may fail when used in an expression in a write statement
+   with some older, pre-Fortran 2003, compiler environments that do not
+   support re-entrant I/O calls.
+
+   The arguments are:
+
+   i
+          An integer.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

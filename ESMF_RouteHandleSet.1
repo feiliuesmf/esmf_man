@@ -1,0 +1,27 @@
+  37.5.7 ESMF_RouteHandleSet - Set values in a RouteHandle
+
+   INTERFACE:
+   ! Private name; call using ESMF_RouteHandleSet()
+   subroutine ESMF_RouteHandleSetP(routehandle, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_RouteHandle), intent(inout)         :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len = *),     intent(in),  optional :: name
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set an ESMF_RouteHandle attribute with the given value.
+
+   The arguments are:
+
+   routehandle
+          ESMF_RouteHandle to be modified.
+
+   [name]
+          The RouteHandle name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

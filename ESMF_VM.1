@@ -1,0 +1,472 @@
+          + [377]51 VM Class
+               o [378]51.1 Description
+               o [379]51.2 Constants
+                    # [380]51.2.1 ESMF_VMEPOCH
+               o [381]51.3 Use and Examples
+                    # [382]51.3.1 Global VM
+                    # [383]51.3.2 VM and Components
+                    # [384]51.3.3 Accessing the MPI Communicator from an
+                      VM object
+                    # [385]51.3.4 Using the MPI Communicator with the
+                      Fortran 2008 MPI binding
+                    # [386]51.3.5 Nesting ESMF inside a user MPI
+                      application
+                    # [387]51.3.6 Nesting ESMF inside a user MPI
+                      application on a subset of MPI ranks
+                    # [388]51.3.7 Multiple concurrent instances of ESMF
+                      under separate MPI communicators
+                                  51 VM Class
+
+51.1 Description
+
+   The ESMF VM (Virtual Machine) class is a generic representation of
+   hardware and system software resources. There is exactly one VM object
+   per ESMF Component, providing the execution environment for the
+   Component code. The VM class handles all resource management tasks for
+   the Component class and provides a description of the underlying
+   configuration of the compute resources used by a Component.
+
+   In addition to resource description and management, the VM class offers
+   the lowest level of ESMF communication methods. The VM communication
+   calls are very similar to MPI. Data references in VM communication
+   calls must be provided as raw, language-specific, one-dimensional,
+   contiguous data arrays. The similarity between VM and MPI communication
+   calls is striking and there are many equivalent point-to-point and
+   collective communication calls. However, unlike MPI, the VM
+   communication calls support communication between threaded PETs in a
+   completely transparent fashion.
+
+   Many ESMF applications do not interact with the VM class directly very
+   much. The resource management aspect is wrapped completely transparent
+   into the ESMF Component concept. Often the only reason that user code
+   queries a Component object for the associated VM object is to inquire
+   about resource information, such as the localPet or the petCount.
+   Further, for most applications the use of higher level communication
+   APIs, such as provided by Array and Field, are much more convenient
+   than using the low level VM communication calls.
+
+   The basic elements of a VM are called PETs, which stands for Persistent
+   Execution Threads. These are equivalent to OS threads with a lifetime
+   of at least that of the associated component. All VM functionality is
+   expressed in terms of PETs. In the simplest, and most common case, a
+   PET is equivalent to an MPI process. However, ESMF also supports
+   multi-threading, where multiple PETs run as Pthreads inside the same
+   virtual address space (VAS).
+
+   The resource management functions of the VM class become visible when a
+   component, or the driver code, creates sub-components. Section
+   [607]16.4.8 discusses this aspect from the Superstructure perspective
+   and provides links to the relevant Component examples in the
+   documentation.
+
+   There are two parts to resource management, the parent and the child.
+   When the parent component creates a child component, the parent VM
+   object provides the resources on which the child is created with
+   ESMF_GridCompCreate() or ESMF_CplCompCreate(). The optional petList
+   argument to these calls limits the resources that the parent gives to a
+   specific child. The child component, may specify - during its optional
+   ESMF_<Grid/Cpl>CompSetVM() method - how it wants to arrange the
+   inherited resources in its own VM. After this, all standard ESMF
+   methods of the Component, including ESMF_<Grid/Cpl>CompSetServices(),
+   will execute in the child VM. Notice that the
+   ESMF_<Grid/Cpl>CompSetVM() routine, although part of the child
+   Component, must execute before the child VM has been started up. It
+   runs in the parent VM context. The child VM is created and started up
+   just before the user-written set services routine, specified as an
+   argument to ESMF_<Grid/Cpl>CompSetServices(), is entered.
+
+51.2 Constants
+
+  51.2.1 ESMF_VMEPOCH
+
+   DESCRIPTION:
+   Specifies the kind of VM Epoch being entered.
+
+   The type of this flag is:
+
+   type(ESMF_VMEpoch_Flag)
+
+   The valid values are:
+
+   ESMF_VMEPOCH_NONE
+          An epoch wihout special behavior.
+
+   ESMF_VMEPOCH_BUFFER
+          This option must only be used for parts of the code with
+          distinct sending and receiving PETs, i.e. where no PETs are both
+          sender and receiver. All non-blocking messages are being
+          buffered. A single message is sent between unique pairs of
+          src-dst PETs. This can significantly improve performance for
+          cases with a large imbalance in the number of sending versus
+          receiving PETs. The extra buffering also improves the overall
+          asynchronous behavior between the sending and receiving side.
+
+51.3 Use and Examples
+
+   The concept of the ESMF Virtual Machine (VM) is so fundamental to the
+   framework that every ESMF application uses it. However, for many user
+   applications the VM class is transparently hidden behind the ESMF
+   Component concept and higher data classes (e.g. Array, Field). The
+   interaction between user code and VM is often only indirect. The
+   following examples provide an overview of where the VM class can come
+   into play in user code.
+
+  51.3.1 Global VM
+
+   This complete example program demonstrates the simplest ESMF
+   application, consisting of only a main program without any Components.
+   The global VM, which is automatically created during the
+   ESMF_Initialize() call, is obtained using two different methods. First
+   the global VM will be returned by ESMF_Initialize() if the optional vm
+   argument is specified. The example uses the VM object obtained this way
+   to call the VM print method. Second, the global VM can be obtained
+   anywhere in the user application using the ESMF_VMGetGlobal() call. The
+   identical VM is returned and several VM query methods are called to
+   inquire about the associated resources.
+
+program ESMF_VMDefaultBasicsEx
+#include "ESMF.h"
+
+  use ESMF
+  use ESMF_TestMod
+
+  implicit none
+
+  ! local variables
+  integer:: rc
+  type(ESMF_VM):: vm
+  integer:: localPet, petCount, peCount, ssiId, vas
+
+  call ESMF_Initialize(vm=vm, defaultlogfilename="VMDefaultBasicsEx.Log", &
+                    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+  ! Providing the optional vm argument to ESMF_Initialize() is one way of
+  ! obtaining the global VM.
+
+  call ESMF_VMPrint(vm, rc=rc)
+
+  call ESMF_VMGetGlobal(vm=vm, rc=rc)
+  ! Calling ESMF_VMGetGlobal() anywhere in the user application is the other
+  ! way to obtain the global VM object.
+
+  call ESMF_VMGet(vm, localPet=localPet, petCount=petCount, peCount=peCount, &
+    rc=rc)
+  ! The VM object contains information about the associated resources. If the
+  ! user code requires this information it must query the VM object.
+
+  print *, "This PET is localPet: ", localPet
+  print *, "of a total of ",petCount," PETs in this VM."
+  print *, "There are ", peCount," PEs referenced by this VM"
+
+  call ESMF_VMGet(vm, localPet, peCount=peCount, ssiId=ssiId, vas=vas, rc=rc)
+
+  print *, "This PET is executing in virtual address space (VAS) ", vas
+  print *, "located on single system image (SSI) ", ssiId
+  print *, "and is associated with ", peCount, " PEs."
+
+end program
+
+  51.3.2 VM and Components
+
+   The following example shows the role that the VM plays in connection
+   with ESMF Components. A single Component is created in the main
+   program. Through the optional petList argument the driver code
+   specifies that only resources associated with PET 0 are given to the
+   gcomp object.
+
+   When the Component code is invoked through the standard ESMF Component
+   methods Initialize, Run, or Finalize the Component's VM is
+   automatically entered. Inside of the user-written Component code the
+   Component VM can be obtained by querying the Component object. The VM
+   object will indicate that only a single PET is executing the Component
+   code.
+
+module ESMF_VMComponentEx_gcomp_mod
+
+  recursive subroutine mygcomp_init(gcomp, istate, estate, clock, rc)
+    type(ESMF_GridComp)   :: gcomp
+    type(ESMF_State)      :: istate, estate
+    type(ESMF_Clock)      :: clock
+    integer, intent(out)  :: rc
+
+    ! local variables
+    type(ESMF_VM):: vm
+
+    ! get this Component's vm
+    call ESMF_GridCompGet(gcomp, vm=vm)
+
+    ! the VM object contains information about the execution environment of
+    ! the Component
+
+    call ESMF_VMPrint(vm, rc=rc)
+
+    rc = 0
+  end subroutine !--------------------------------------------------------------
+
+
+  recursive subroutine mygcomp_run(gcomp, istate, estate, clock, rc)
+    type(ESMF_GridComp)   :: gcomp
+    type(ESMF_State)      :: istate, estate
+    type(ESMF_Clock)      :: clock
+    integer, intent(out)  :: rc
+
+    ! local variables
+    type(ESMF_VM):: vm
+
+    ! get this Component's vm
+    call ESMF_GridCompGet(gcomp, vm=vm)
+
+    ! the VM object contains information about the execution environment of
+    ! the Component
+
+    call ESMF_VMPrint(vm, rc=rc)
+
+    rc = 0
+  end subroutine !--------------------------------------------------------------
+
+  recursive subroutine mygcomp_final(gcomp, istate, estate, clock, rc)
+    type(ESMF_GridComp)   :: gcomp
+    type(ESMF_State)      :: istate, estate
+    type(ESMF_Clock)      :: clock
+    integer, intent(out)  :: rc
+
+    ! local variables
+    type(ESMF_VM):: vm
+
+    ! get this Component's vm
+    call ESMF_GridCompGet(gcomp, vm=vm)
+
+    ! the VM object contains information about the execution environment of
+    ! the Component
+
+    call ESMF_VMPrint(vm, rc=rc)
+
+    rc = 0
+  end subroutine !--------------------------------------------------------------
+
+end module
+
+program ESMF_VMComponentEx
+#include "ESMF.h"
+  use ESMF
+  use ESMF_TestMod
+  use ESMF_VMComponentEx_gcomp_mod
+  implicit none
+
+  ! local variables
+
+  gcomp = ESMF_GridCompCreate(petList=(/0/), rc=rc)
+
+  call ESMF_GridCompSetServices(gcomp, userRoutine=mygcomp_register, rc=rc)
+
+  call ESMF_GridCompInitialize(gcomp, rc=rc)
+
+  call ESMF_GridCompRun(gcomp, rc=rc)
+
+  call ESMF_GridCompFinalize(gcomp, rc=rc)
+
+  call ESMF_GridCompDestroy(gcomp, rc=rc)
+
+  call ESMF_Finalize(rc=rc)
+
+end program
+
+  51.3.3 Accessing the MPI Communicator from an VM object
+
+   Sometimes user code requires access to the MPI communicator, e.g. to
+   support legacy code that contains explict MPI communication calls. The
+   correct way of wrapping such code into ESMF is to obtain the MPI
+   intra-communicator out of the VM object. In order not to interfere with
+   ESMF communications it is advisable to duplicate the communicator
+   before using it in user-level MPI calls. In this example the duplicated
+   communicator is used for a user controlled MPI_Barrier().
+
+  integer:: mpic
+
+  integer:: mpic2
+
+  call ESMF_VMGet(vm, mpiCommunicator=mpic, rc=rc)
+  ! The returned MPI communicator spans the same MPI processes that the VM
+  ! is defined on.
+
+  call MPI_Comm_dup(mpic, mpic2, ierr)
+  ! Duplicate the MPI communicator not to interfere with ESMF communications.
+  ! The duplicate MPI communicator can be used in any MPI call in the user
+  ! code. Here the MPI_Barrier() routine is called.
+  call MPI_Barrier(mpic2, ierr)
+
+  51.3.4 Using the MPI Communicator with the Fortran 2008 MPI binding
+
+   The Fortran 2008 MPI language binding defines type MPI_Comm to
+   represent the MPI communicator. The following example demonstrates how
+   the MPI communicator queried from the VM object can be used with the
+   Fortran 2008 MPI binding.
+
+  use mpi_f08
+
+  integer       :: int_mpic
+  type(MPI_Comm):: mpic
+
+  type(MPI_Comm):: mpic2
+
+  call ESMF_VMGet(vm, mpiCommunicator=int_mpic, rc=rc)
+  ! The returned MPI communicator spans the same MPI processes that the VM
+  ! is defined on.
+
+  mpic%mpi_val = int_mpic ! integer version of communicator -> type(MPI_Comm)
+
+  ! Now mpic can be used in the Fortran 2008 MPI binding interfaces
+
+  call MPI_Comm_dup(mpic, mpic2, ierr)
+  ! Duplicate the MPI communicator not to interfere with ESMF communications.
+  ! The duplicate MPI communicator can be used in any MPI call in the user
+  ! code. Here the MPI_Barrier() routine is called.
+  call MPI_Barrier(mpic2, ierr)
+
+  51.3.5 Nesting ESMF inside a user MPI application
+
+   It is possible to nest an ESMF application inside a user application
+   that explicitly calls MPI_Init() and MPI_Finalize(). The
+   ESMF_Initialize() call automatically checks whether MPI has already
+   been initialized, and if so does not call MPI_Init() internally. On the
+   finalize side, ESMF_Finalize() can be instructed to not call
+   MPI_Finalize(), making it the responsibility of the outer code to
+   finalize MPI.
+
+  ! For cases where ESMF resource management is desired (e.g. for threading),
+  ! ESMF_InitializePreMPI() must be called before MPI_Init().
+  call ESMF_InitializePreMPI(rc=rc)
+
+  ! User code initializes MPI.
+  call MPI_Init(ierr)
+
+  ! ESMF_Initialize() does not call MPI_Init() if it finds MPI initialized.
+  call ESMF_Initialize(defaultlogfilename="VMUserMpiEx.Log", &
+    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+  ! Use ESMF here...
+
+  ! Calling ESMF_Finalize() with endflag=ESMF_END_KEEPMPI instructs ESMF
+  ! to keep MPI active.
+  call ESMF_Finalize(endflag=ESMF_END_KEEPMPI, rc=rc)
+
+  ! It is the responsibility of the outer user code to finalize MPI.
+  call MPI_Finalize(ierr)
+
+  51.3.6 Nesting ESMF inside a user MPI application on a subset of MPI ranks
+
+   The previous example demonstrated that it is possible to nest an ESMF
+   application, i.e. ESMF_Initialize()...ESMF_Finalize() inside
+   MPI_Init()...MPI_Finalize(). It is not necessary that all MPI ranks
+   enter the ESMF application. The following example shows how the user
+   code can pass an MPI communicator to ESMF_Initialize(), and enter the
+   ESMF application on a subset of MPI ranks.
+
+  ! User code initializes MPI.
+  call MPI_Init(ierr)
+
+  ! User code determines the local rank.
+  call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
+
+  ! User code prepares MPI communicator "esmfComm", that allows rank 0 and 1
+  ! to be grouped together.
+  if (rank < 2) then
+    ! first communicator split with color=0
+    call MPI_Comm_split(MPI_COMM_WORLD, 0, 0, esmfComm, ierr)
+  else
+    ! second communicator split with color=1
+    call MPI_Comm_split(MPI_COMM_WORLD, 1, 0, esmfComm, ierr)
+  endif
+
+  if (rank < 2) then
+    ! Only call ESMF_Initialize() on rank 0 and 1, passing the prepared MPI
+    ! communicator that spans these ranks.
+    call ESMF_Initialize(mpiCommunicator=esmfComm, &
+      defaultlogfilename="VMUserMpiCommEx.Log", &
+      logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+    ! Use ESMF here...
+
+    ! Calling ESMF_Finalize() with endflag=ESMF_END_KEEPMPI instructs ESMF
+    ! to keep MPI active.
+    call ESMF_Finalize(endflag=ESMF_END_KEEPMPI, rc=rc)
+
+  else
+    ! Ranks 2 and above do non-ESMF work...
+
+  endif
+
+  ! Free the MPI communicator before finalizing MPI.
+  call MPI_Comm_free(esmfComm, ierr)
+
+  ! It is the responsibility of the outer user code to finalize MPI.
+  call MPI_Finalize(ierr)
+
+  51.3.7 Multiple concurrent instances of ESMF under separate MPI communicators
+
+   Multiple instances of ESMF can run concurrently under the same user
+   main program on separate MPI communicators. The user program first
+   splits MPI_COMM_WORLD into separate MPI communicators. Each
+   communicator is then used to run a separate ESMF instance by passing it
+   into ESMF_Initialize() on the appropriate MPI ranks.
+
+   Care must be taken to set the defaultlogfilename to be unique on each
+   ESMF instances. This prevents concurrent ESMF instances from writing to
+   the same log file. Further, each ESMF instances must call
+   ESMF_Finalize() with the endflag=ESMF_END_KEEPMPI option in order to
+   hand MPI control back to the user program. The outer user program is
+   ultimately responsible for destroying the MPI communicators and to
+   cleanly shut down MPI.
+
+  ! User code initializes MPI.
+  call MPI_Init(ierr)
+
+  ! User code determines the local rank and overall size of MPI_COMM_WORLD
+  call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
+  call MPI_Comm_size(MPI_COMM_WORLD, size, ierr)
+
+  ! User code prepares different MPI communicators.
+  ! Here a single MPI_Comm_split() call is used to split MPI_COMM_WORLD
+  ! into two non-overlapping communicators:
+  ! One communicator for ranks 0 and 1, and the other for ranks 2 and above.
+  if (rank < 2) then
+    ! first communicator split with color=0
+    call MPI_Comm_split(MPI_COMM_WORLD, 0, 0, esmfComm, ierr)
+  else
+    ! second communicator split with color=1
+    call MPI_Comm_split(MPI_COMM_WORLD, 1, 0, esmfComm, ierr)
+  endif
+
+  if (rank < 2) then
+    ! Ranks 0 and 1 enter ESMF_Initialize() with the prepared communicator.
+    ! Care is taken to set a unique log file name.
+    call ESMF_Initialize(mpiCommunicator=esmfComm, &
+      defaultlogfilename="VMUserMpiCommMultiEx1.Log", &
+      logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+    ! Use ESMF here...
+
+    ! Finalize ESMF without finalizing MPI. The user application will call
+    ! MPI_Finalize() on all ranks.
+    call ESMF_Finalize(endflag=ESMF_END_KEEPMPI, rc=rc)
+
+  else
+    ! Ranks 2 and above enter ESMF_Initialize() with the prepared communicator.
+    ! Care is taken to set a unique log file name.
+    call ESMF_Initialize(mpiCommunicator=esmfComm, &
+      defaultlogfilename="VMUserMpiCommMultiEx2.Log", &
+      logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+    ! Use ESMF here...
+
+    ! Finalize ESMF without finalizing MPI. The user application will call
+    ! MPI_Finalize() on all ranks.
+    call ESMF_Finalize(endflag=ESMF_END_KEEPMPI, rc=rc)
+
+  endif
+
+  ! Free the MPI communicator(s) before finalizing MPI.
+  call MPI_Comm_free(esmfComm, ierr)
+
+  ! It is the responsibility of the outer user code to finalize MPI.
+  call MPI_Finalize(ierr)
+

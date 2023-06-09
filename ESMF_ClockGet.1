@@ -1,0 +1,109 @@
+  45.5.8 ESMF_ClockGet - Get a Clock's properties
+
+   INTERFACE:
+       subroutine ESMF_ClockGet(clock, &
+         timeStep, startTime, stopTime, &
+         runDuration, runTimeStepCount, refTime, currTime, prevTime, &
+         currSimTime, prevSimTime, calendar, calkindflag, timeZone, &
+         advanceCount, alarmCount, direction, name, rc)
+
+   ARGUMENTS:
+       type(ESMF_Clock),        intent(in)            :: clock
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_TimeInterval), intent(out), optional :: timeStep
+       type(ESMF_Time),         intent(out), optional :: startTime
+       type(ESMF_Time),         intent(out), optional :: stopTime
+       type(ESMF_TimeInterval), intent(out), optional :: runDuration
+       real(ESMF_KIND_R8),      intent(out), optional :: runTimeStepCount
+       type(ESMF_Time),         intent(out), optional :: refTime
+       type(ESMF_Time),         intent(out), optional :: currTime
+       type(ESMF_Time),         intent(out), optional :: prevTime
+       type(ESMF_TimeInterval), intent(out), optional :: currSimTime
+       type(ESMF_TimeInterval), intent(out), optional :: prevSimTime
+       type(ESMF_Calendar),     intent(out), optional :: calendar
+       type(ESMF_CalKind_Flag), intent(out), optional :: calkindflag
+       integer,                 intent(out), optional :: timeZone
+       integer(ESMF_KIND_I8),   intent(out), optional :: advanceCount
+       integer,                 intent(out), optional :: alarmCount
+       type(ESMF_Direction_Flag),    intent(out), optional :: direction
+       character (len=*),       intent(out), optional :: name
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets one or more of the properties of an ESMF_Clock.
+
+   The arguments are:
+
+   clock
+          The object instance to query.
+
+   [timeStep]
+          The ESMF_Clock's time step interval.
+
+   [startTime]
+          The ESMF_Clock's starting time.
+
+   [stopTime]
+          The ESMF_Clock's stopping time.
+
+   [runDuration]
+          Alternative way to get ESMF_Clock's stopping time; runDuration =
+          stopTime - startTime.
+
+   [runTimeStepCount]
+          Alternative way to get ESMF_Clock's stopping time;
+          runTimeStepCount = (stopTime - startTime) / timeStep.
+
+   [refTime]
+          The ESMF_Clock's reference time.
+
+   [currTime]
+          The ESMF_Clock's current time.
+
+   [prevTime]
+          The ESMF_Clock's previous time. Equals currTime at the previous
+          time step.
+
+   [currSimTime]
+          The current simulation time (currTime - refTime).
+
+   [prevSimTime]
+          The previous simulation time. Equals currSimTime at the previous
+          time step.
+
+   [calendar]
+          The Calendar on which all the Clock's times are defined.
+
+   [calkindflag]
+          The CalKind_Flag on which all the Clock's times are defined.
+
+   [timeZone]
+          The timezone within which all the Clock's times are defined.
+
+   [advanceCount]
+          The number of times the ESMF_Clock has been advanced. Increments
+          in ESMF_DIRECTION_FORWARD and decrements in
+          ESMF_DIRECTION_REVERSE; see "direction" argument below and in
+          ESMF_ClockSet().
+
+   [alarmCount]
+          The number of ESMF_Alarms in the ESMF_Clock's ESMF_Alarm list.
+
+   [direction]
+          The ESMF_Clock's time stepping direction. See also
+          ESMF_ClockIsReverse(), an alternative for convenient use in "if"
+          and "do while" constructs.
+
+   [name]
+          The name of this clock.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

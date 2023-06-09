@@ -1,0 +1,101 @@
+  26.7.4 ESMF_XGridGetFieldBounds - Get precomputed DE-local Fortran data array
+  bounds for creating a Field from an XGrid and a Fortran array
+
+   INTERFACE:
+     subroutine ESMF_XGridGetFieldBounds(xgrid, &
+         xgridside, gridindex, localDe, gridToFieldMap, &
+         ungriddedLBound, ungriddedUBound, &
+         totalLBound, totalUBound, totalCount, rc)
+
+   ARGUMENTS:
+     type(ESMF_XGrid),          intent(in)            :: xgrid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_XGridSide_Flag), intent(in),  optional :: xgridside
+     integer,                   intent(in),  optional :: gridindex
+     integer,                   intent(in),  optional :: localDe
+     integer,                   intent(in),  optional :: gridToFieldMap(:)
+     integer,                   intent(in),  optional :: ungriddedLBound(:)
+     integer,                   intent(in),  optional :: ungriddedUBound(:)
+     integer,                   intent(out), optional :: totalLBound(:)
+     integer,                   intent(out), optional :: totalUBound(:)
+     integer,                   intent(out), optional :: totalCount(:)
+     integer,                   intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Compute the lower and upper bounds of Fortran data array that can later
+   be used in FieldCreate interface to create a ESMF_Field from a
+   ESMF_XGrid and the Fortran data array. For an example and associated
+   documentation using this method see section [1038]26.3.9.
+
+   The arguments are:
+
+   xgrid
+          ESMF_XGrid object.
+
+   [xgridside]
+          Which side of the XGrid to create the Field on (either
+          ESMF_XGRIDSIDE_A, ESMF_XGRIDSIDE_B, or ESMF_XGRIDSIDE_BALANCED).
+          If not passed in then defaults to ESMF_XGRIDSIDE_BALANCED.
+
+   [gridindex]
+          If xgridside is ESMF_XGRIDSIDE_A or ESMF_XGRIDSIDE_B then this
+          index tells which Grid on that side to create the Field on. If
+          not provided, defaults to 1.
+
+   [localDe]
+          Local DE for which information is requested.
+          [0,..,localDeCount-1]. For localDeCount==1 the localDe argument
+          may be omitted, in which case it will default to localDe=0.
+
+   [gridToFieldMap]
+          List with number of elements equal to 1. The list elements map
+          the dimension of the locstream to a dimension in the field by
+          specifying the appropriate field dimension index. The default is
+          to map the locstream|s dimension against the lowest dimension of
+          the field in sequence, i.e. gridToFieldMap = (/1/). The values
+          of all gridToFieldMap entries must be greater than or equal to
+          one and smaller than or equal to the field rank. The total
+          ungridded dimensions in the field are the total field dimensions
+          less the dimensions in the grid. Ungridded dimensions must be in
+          the same order they are stored in the field.
+
+   [ungriddedLBound]
+          Lower bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedLBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than 1, both ungriddedLBound and ungriddedUBound must
+          be specified. When both are specified the values are checked for
+          consistency. Note that the the ordering of these ungridded
+          dimensions is the same as their order in the field.
+
+   [ungriddedUBound]
+          Upper bounds of the ungridded dimensions of the field. The
+          number of elements in the ungriddedUBound is equal to the number
+          of ungridded dimensions in the field. All ungridded dimensions
+          of the field are also undistributed. When field dimension count
+          is greater than 1, both ungriddedLBound and ungriddedUBound must
+          be specified. When both are specified the values are checked for
+          consistency. Note that the the ordering of these ungridded
+          dimensions is the same as their order in the field.
+
+   [totalLBound]
+          The relative lower bounds of Fortran data array to be used later
+          in ESMF_FieldCreate from ESMF_LocStream and Fortran data array.
+          This is an output variable from this user interface.
+
+   [totalUBound]
+          The relative upper bounds of Fortran data array to be used later
+          in ESMF_FieldCreate from ESMF_LocStream and Fortran data array.
+          This is an output variable from this user interface.
+
+   [totalCount]
+          Number of elements need to be allocated for Fortran data array
+          to be used later in ESMF_FieldCreate from ESMF_LocStream and
+          Fortran data array. This is an output variable from this user
+          interface.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

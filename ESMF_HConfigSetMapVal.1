@@ -1,0 +1,53 @@
+  48.5.45 ESMF_HConfigSetMapVal - Set <Type> content in HConfig MapVal object
+
+   INTERFACE:
+    subroutine ESMF_HConfigSet(hconfig, content, &
+      index, keyString, doc, rc)
+
+   ARGUMENTS:
+      type(ESMF_HConfigIter), intent(in)        :: hconfig
+      <Type>,             intent(in)            :: content[(:}]
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,            intent(in),  optional :: index
+      character(*),       intent(in),  optional :: keyString
+      integer,            intent(in),  optional :: doc
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set the content of type <Type> to the hconfig map value, at the current
+   location, or as specified by index or keyString (mutually exclusive!).
+   Most <Type> options support the sequence array variant (:) in addition
+   to the scalar variant.
+
+   The supported <Type> options are:
+     * type(HConfig) (scalar only variant!)
+     * integer(ESMF_KIND_I4)
+     * integer(ESMF_KIND_I8)
+     * logical
+     * real(ESMF_KIND_R4)
+     * real(ESMF_KIND_R8)
+     * character(*)
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig or ESMF_HConfigIter object.
+
+   content
+          The content to be set.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          keyString.
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index.
+
+   [doc]
+          The doc index. Defaults to the first document.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

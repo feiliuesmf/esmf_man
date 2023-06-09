@@ -1,0 +1,59 @@
+  25.5.19 ESMF_FieldBundleRead - Read Fields to a FieldBundle from file(s)
+
+   INTERFACE:
+   subroutine ESMF_FieldBundleRead(fieldbundle, fileName, &
+     singleFile, timeslice, iofmt, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(inout) :: fieldbundle
+     character(*), intent(in) :: fileName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical, intent(in), optional :: singleFile
+     integer, intent(in), optional :: timeslice
+     type(ESMF_IOFmt_Flag), intent(in), optional :: iofmt
+     integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Read field data to a FieldBundle object from file(s). For this API to
+   be functional, the environment variable ESMF_PIO should be set to
+   either "internal" or "external" when the ESMF library is built. Please
+   see the section on Data I/O, [739]38.2.
+
+   Limitations:
+     * For multi-tile Fields, all Fields in the FieldBundle must contain
+       the same number of tiles.
+     * Not supported in ESMF_COMM=mpiuni mode.
+
+   The arguments are:
+
+   fieldbundle
+          An ESMF_FieldBundle object.
+
+   fileName
+          The name of the file from which FieldBundle data is read. If the
+          FieldBundle contains multi-tile Arrays, then fileName must
+          contain exactly one instance of "*"; this is a placeholder that
+          will be replaced by the tile number, with each tile being read
+          from a separate file. (For example, for a fileName of
+          "myfile*.nc", tile 1 will be read from "myfile1.nc", tile 2 from
+          "myfile2.nc", etc.) (This handling of the fileName for
+          multi-tile I/O is subject to change.)
+
+   [singleFile]
+          A logical flag, the default is .true., i.e., all Fields in the
+          bundle are stored in one single file. If .false., each field is
+          stored in separate files; these files are numbered with the name
+          based on the argument "file". That is, a set of files are named:
+          [file_name]001, [file_name]002, [file_name]003,...
+
+   [timeslice]
+          The time-slice number of the variable read from file.
+
+   [iofmt]
+          The I/O format. Please see Section [740]54.28 for the list of
+          options. If not present, defaults to ESMF_IOFMT_NETCDF.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,141 @@
+  22.4.13 ESMF_MethodExecute - Execute user method attached to CplComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodExecute()
+   recursive subroutine ESMF_MethodCplCompExecute(cplcomp, label, index, existfl
+ag, &
+     userRc, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp)                      :: cplcomp
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     logical,          intent(out), optional :: existflag
+     integer,          intent(out), optional :: userRc
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Execute attached method.
+
+   The arguments are:
+
+   cplcomp
+          The ESMF_CplComp object holding the attachable method.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   [existflag]
+          Returned .true. indicates that the method specified by label
+          exists and was executed. A return value of .false. indicates
+          that the method does not exist and consequently was not
+          executed. By default, i.e. if existflag was not specified, the
+          latter condition will lead to rc not equal ESMF_SUCCESS being
+          returned. However, if existflag was specified, a method not
+          existing is not an error condition.
+
+   [userRc]
+          Return code set by attached method before returning.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.14 ESMF_MethodExecute - Execute user method attached to GridComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodExecute()
+   recursive subroutine ESMF_MethodGridCompExecute(gcomp, label, index, existfla
+g, &
+     userRc, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp)                     :: gcomp
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     logical,          intent(out), optional :: existflag
+     integer,          intent(out), optional :: userRc
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Execute attached method.
+
+   The arguments are:
+
+   gcomp
+          The ESMF_GridComp object holding the attachable method.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   [existflag]
+          Returned .true. indicates that the method specified by label
+          exists and was executed. A return value of .false. indicates
+          that the method does not exist and consequently was not
+          executed. By default, i.e. if existflag was not specified, the
+          latter condition will lead to rc not equal ESMF_SUCCESS being
+          returned. However, if existflag was specified, a method not
+          existing is not an error condition.
+
+   [userRc]
+          Return code set by attached method before returning.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.15 ESMF_MethodExecute - Execute user method attached to State
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodExecute()
+   recursive subroutine ESMF_MethodStateExecute(state, label, index, existflag,
+&
+     userRc, rc)
+
+   ARGUMENTS:
+     type(ESMF_State)                        :: state
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     logical,          intent(out), optional :: existflag
+     integer,          intent(out), optional :: userRc
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Execute attached method.
+
+   The arguments are:
+
+   state
+          The ESMF_State object holding the attachable method.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   [existflag]
+          Returned .true. indicates that the method specified by label
+          exists and was executed. A return value of .false. indicates
+          that the method does not exist and consequently was not
+          executed. By default, i.e. if existflag was not specified, the
+          latter condition will lead to rc not equal ESMF_SUCCESS being
+          returned. However, if existflag was specified, a method not
+          existing is not an error condition.
+
+   [userRc]
+          Return code set by attached method before returning.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

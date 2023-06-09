@@ -1,0 +1,29 @@
+  43.4.17 ESMF_TimeSyncToRealTime - Get system real time (wall clock time)
+
+   INTERFACE:
+       subroutine ESMF_TimeSyncToRealTime(time, rc)
+
+   ARGUMENTS:
+       type(ESMF_Time), intent(inout) :: time
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets the system real time (wall clock time), and returns it as an
+   ESMF_Time. Accurate to the nearest second.
+
+   The arguments are:
+
+   time
+          The object instance to receive the real time.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

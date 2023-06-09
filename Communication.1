@@ -1,0 +1,833 @@
+                    # [389]51.3.8 Communication - Send and Recv
+                    # [390]51.3.9 Communication - Scatter and Gather
+                    # [391]51.3.10 Communication - AllReduce and
+                      AllFullReduce
+                    # [392]51.3.11 Communication - Non-blocking option and
+                      VMEpochs
+                    # [393]51.3.12 Using VM communication methods with
+                      data of rank greater than one
+               o [394]51.4 Restrictions and Future Work
+               o [395]51.5 Design and Implementation Notes
+               o [396]51.6 Class API
+                    # [397]51.6.1 ESMF_VMAssignment(=)
+                    # [398]51.6.2 ESMF_VMOperator(==)
+                    # [399]51.6.3 ESMF_VMOperator(/=)
+                    # [400]51.6.4 ESMF_VMAllFullReduce
+                    # [401]51.6.5 ESMF_VMAllGather
+                    # [402]51.6.6 ESMF_VMAllGatherV
+                    # [403]51.6.7 ESMF_VMAllReduce
+                    # [404]51.6.8 ESMF_VMAllToAll
+                    # [405]51.6.9 ESMF_VMAllToAllV
+                    # [406]51.6.10 ESMF_VMBarrier
+                    # [407]51.6.11 ESMF_VMBroadcast
+                    # [408]51.6.12 ESMF_VMCommWait
+                    # [409]51.6.13 ESMF_VMCommWaitAll
+                    # [410]51.6.14 ESMF_VMEpochEnter
+                    # [411]51.6.15 ESMF_VMEpochExit
+                    # [412]51.6.16 ESMF_VMGather
+                    # [413]51.6.17 ESMF_VMGatherV
+                    # [414]51.6.18 ESMF_VMGet
+                    # [415]51.6.19 ESMF_VMGet
+                    # [416]51.6.20 ESMF_VMGetGlobal
+                    # [417]51.6.21 ESMF_VMGetCurrent
+                    # [418]51.6.22 ESMF_VMIsCreated
+                    # [419]51.6.23 ESMF_VMLog
+                    # [420]51.6.24 ESMF_VMLogSystem
+                    # [421]51.6.25 ESMF_VMPrint
+                    # [422]51.6.26 ESMF_VMRecv
+                    # [423]51.6.27 ESMF_VMReduce
+                    # [424]51.6.28 ESMF_VMScatter
+                    # [425]51.6.29 ESMF_VMScatterV
+                    # [426]51.6.30 ESMF_VMSend
+                    # [427]51.6.31 ESMF_VMSendRecv
+                    # [428]51.6.32 ESMF_VMValidate
+                    # [429]51.6.33 ESMF_VMWtime
+                    # [430]51.6.34 ESMF_VMWtimeDelay
+                    # [431]51.6.35 ESMF_VMWtimePrec
+          + [432]52 Profiling and Tracing
+               o [433]52.1 Description
+                    # [434]52.1.1 Profiling
+                    # [435]52.1.2 Tracing
+               o [436]52.2 Use and Examples
+                    # [437]52.2.1 Output a Timing Profile to Text
+                    # [438]52.2.2 Summarize Timings across Multiple PETs
+                    # [439]52.2.3 Limit the Set of Profiled PETs
+                    # [440]52.2.4 Include MPI Communication in the Profile
+                    # [441]52.2.5 Output a Detailed Trace for Analysis
+                    # [442]52.2.6 Set the Clock used for Profiling/Tracing
+                    # [443]52.2.7 Tracing a simple ESMF application
+                    # [444]52.2.8 Profiling/Tracing User-defined Code
+                      Regions
+               o [445]52.3 Restrictions and Future Work
+               o [446]52.4 Class API
+                    # [447]52.4.1 ESMF_TraceRegionEnter
+                    # [448]52.4.2 ESMF_TraceRegionExit
+          + [449]53 Fortran I/O and System Utilities
+               o [450]53.1 Description
+               o [451]53.2 Use and Examples
+                    # [452]53.2.1 Fortran unit number management
+                    # [453]53.2.2 Flushing output
+               o [454]53.3 Design and Implementation Notes
+                    # [455]53.3.1 Fortran unit number management
+                    # [456]53.3.2 Flushing output
+                    # [457]53.3.3 Sorting algorithms
+               o [458]53.4 Utility API
+                    # [459]53.4.1 ESMF_UtilGetArg
+                    # [460]53.4.2 ESMF_UtilGetArgC
+                    # [461]53.4.3 ESMF_UtilGetArgIndex
+                    # [462]53.4.4 ESMF_UtilIOGetCWD
+                    # [463]53.4.5 ESMF_UtilIOMkDir
+                    # [464]53.4.6 ESMF_UtilIORmDir
+                    # [465]53.4.7 ESMF_UtilString2Double
+                    # [466]53.4.8 ESMF_UtilString2Int
+                    # [467]53.4.9 ESMF_UtilString2Real
+                    # [468]53.4.10 ESMF_UtilStringInt2String
+                    # [469]53.4.11 ESMF_UtilStringLowerCase
+                    # [470]53.4.12 ESMF_UtilStringUpperCase
+                    # [471]53.4.13 ESMF_UtilIOUnitFlush
+                    # [472]53.4.14 ESMF_UtilIOUnitGet
+                    # [473]53.4.15 ESMF_UtilSort
+     __________________________________________________________________
+
+                          5 Infrastructure: Utilities
+
+                 39 Overview of Infrastructure Utility Classes
+
+   The ESMF utilities are a set of tools for quickly assembling modeling
+   applications.
+
+   The ESMF Info class enables models to be self-describing via metadata,
+   which are instances of JSON-compatible key-value pairs.
+
+   The Time Management Library provides utilities for time and time
+   interval representation and calculation, and higher-level utilities
+   that control model time stepping, via clocks, as well as alarming.
+
+   The ESMF Config class provides configuration management based on NASA
+   DAO's Inpak package, a collection of methods for accessing files
+   containing input parameters stored in an ASCII format.
+
+   The ESMF LogErr class consists of a variety of methods for writing
+   error, warning, and informational messages to log files. A default Log
+   is created during ESMF initialization. Other Logs can be created later
+   in the code by the user.
+
+   The DELayout class provides a layer of abstraction on top of the
+   Virtual Machine (VM) layer. DELayout does this by introducing DEs
+   (Decomposition Elements) as logical resource units. The DELayout object
+   keeps track of the relationship between its DEs and the resources of
+   the associated VM object. A DELayout can be shaped by the user at
+   creation time to best match the computational problem or other design
+   criteria.
+
+   The ESMF VM (Virtual Machine) class is a generic representation of
+   hardware and system software resources. There is exactly one VM object
+   per ESMF Component, providing the execution environment for the
+   Component code. The VM class handles all resource management tasks for
+   the Component class and provides a description of the underlying
+   configuration of the compute resources used by a Component. In addition
+   to resource description and management, the VM class offers the lowest
+   level of ESMF communication methods.
+
+   The ESMF Fortran I/O utilities provide portable methods to access
+   capabilities which are often implemented in different ways amongst
+   different environments. Currently, two utility methods are implemented:
+   one to find an unopened unit number, and one to flush an I/O buffer.
+
+  51.3.8 Communication - Send and Recv
+
+   The VM layer provides MPI-like point-to-point communication. Use
+   ESMF_VMSend() and ESMF_VMRecv() to pass data between two PETs. The
+   following code sends data from PET 'src' and receives it on PET 'dst'.
+   Both PETs must be part of the same VM.
+
+   Set up the localData array.
+
+  count = 10
+  allocate(localData(count))
+  do i=1, count
+    localData(i) = localPet*100 + i
+  enddo
+
+   Carry out the data transfer between src PET and dst PET.
+
+  if (localPet==src) then
+    call ESMF_VMSend(vm, sendData=localData, count=count, dstPet=dst, rc=rc)
+  endif
+
+  if (localPet==dst) then
+    call ESMF_VMRecv(vm, recvData=localData, count=count, srcPet=src, rc=rc)
+  endif
+
+   Finally, on dst PET, test the received data for correctness.
+
+  if (localPet==dst) then
+    do i=1, count
+      if (localData(i) /= src*100 + i) then
+        finalrc = ESMF_RC_VAL_WRONG
+      endif
+    enddo
+  endif
+
+  51.3.9 Communication - Scatter and Gather
+
+   The VM layer provides MPI-like collective communication.
+   ESMF_VMScatter() scatters data located on root PET across all the PETs
+   of the VM. ESMF_VMGather() provides the opposite operation, gathering
+   data from all the PETs of the VM onto root PET.
+
+  integer, allocatable:: array1(:), array2(:)
+
+  ! allocate data arrays
+  nsize = 2
+  nlen = nsize * petCount
+  allocate(array1(nlen))
+  allocate(array2(nsize))
+
+  ! prepare data array1
+  do i=1, nlen
+    array1(i) = localPet * 100 + i
+  enddo
+
+  call ESMF_VMScatter(vm, sendData=array1, recvData=array2, count=nsize, &
+    rootPet=scatterRoot, rc=rc)
+
+  call ESMF_VMGather(vm, sendData=array2, recvData=array1, count=nsize, &
+    rootPet=gatherRoot, rc=rc)
+
+  51.3.10 Communication - AllReduce and AllFullReduce
+
+   Use ESMF_VMAllReduce() to reduce data distributed across the PETs of a
+   VM into a result vector, returned on all the PETs. Further, use
+   ESMF_VMAllFullReduce() to reduce the data into a single scalar returned
+   on all PETs.
+
+  integer, allocatable:: array1(:), array2(:)
+
+  ! allocate data arrays
+  nsize = 2
+  allocate(array1(nsize))
+  allocate(array2(nsize))
+
+  ! prepare data array1
+  do i=1, nsize
+    array1(i) = localPet * 100 + i
+  enddo
+
+  call ESMF_VMAllReduce(vm, sendData=array1, recvData=array2, count=nsize, &
+    reduceflag=ESMF_REDUCE_SUM, rc=rc)
+  ! Reduce distributed sendData, element by element into recvData and
+  ! return it on all the PETs.
+
+  call ESMF_VMAllFullReduce(vm, sendData=array1, recvData=result, &
+    count=nsize, reduceflag=ESMF_REDUCE_SUM, rc=rc)
+  ! Fully reduce the distributed sendData into a single scalar and
+  ! return it in recvData on all PETs.
+
+  51.3.11 Communication - Non-blocking option and VMEpochs
+
+   The VM communication methods offer the option to execute in
+   non-blocking mode. In this mode, both sending and receving calls return
+   immediatly on each local PET. A separate synchronization call is needed
+   to assure completion of the data transfer.
+
+   The separation of initiation and completion of the data transfer
+   provides the opportunity for the underlying communication system to
+   progress concurrently with other operations on the same PET. This can
+   be leveraged to have profound impact on the performance of an algorithm
+   that requires both computation and communication.
+
+   Another critical application of the non-blocking communication mode is
+   the prevention of deadlocks. In the default blocking mode, a receiving
+   method will not return until the data transfer has completed. Sending
+   methods may also not return, especially if the message being sent is
+   above the implementation dependent internal buffer size. This behavior
+   makes it often hard, if not impossible, to write safe algorithms that
+   guarantee to not deadlock when communicating between a group of PETs.
+   Using the communication calls in non-blocking mode simplifies this
+   problem immensely.
+
+   The following code shows how ESMF_VMSend() and ESMF_VMRecv() are used
+   in non-blocking mode by passing in the ESMF_SYNC_NONBLOCKING argument.
+
+   Set up the localData array.
+
+  do i=1, count
+    localData(i) = localPet*100 + i
+  enddo
+
+   Initiate the data transfer between src PET and dst PET.
+
+  if (localPet==src) then
+    call ESMF_VMSend(vm, sendData=localData, count=count, dstPet=dst, &
+      syncflag=ESMF_SYNC_NONBLOCKING, rc=rc)
+  endif
+
+  if (localPet==dst) then
+    call ESMF_VMRecv(vm, recvData=localData, count=count, srcPet=src, &
+      syncflag=ESMF_SYNC_NONBLOCKING, rc=rc)
+  endif
+
+   There is no garantee at this point that the data transfer has actually
+   started, let along completed. For this reason it is unsafe to overwrite
+   the data in the localData array on src PET, or to access the localData
+   array on dst PET. However both PETs are free to engage in other work
+   while the data transfer may proceed concurrently.
+
+  ! local computational work here, or other communications
+
+   Wait for the completion of all outstanding non-blocking communication
+   calls by issuing the ESMF_VMCommWaitAll() call.
+
+  call ESMF_VMCommWaitAll(vm, rc=rc)
+
+   Finally, on dst PET, test the received data for correctness.
+
+  if (localPet==dst) then
+    do i=1, count
+      if (localData(i) /= src*100 + i) then
+        finalrc = ESMF_RC_VAL_WRONG
+      endif
+    enddo
+  endif
+
+   Sometimes it is necessary to wait for individual outstanding
+   communications specifically. This can be accomplished by using
+   ESMF_CommHandle objects. To demonstrate this, first re-initialize the
+   localData array.
+
+  do i=1, count
+    localData(i) = localPet*100 + i
+    localData2(i) = localPet*1000 + i
+  enddo
+
+   Initiate the data transfer between src PET and dst PET, but this time
+   also pass the commhandle variable of type ESMF_CommHandle. Here send
+   two message between src and dst in order to have different outstanding
+   messages to wait for.
+
+  if (localPet==src) then
+    call ESMF_VMSend(vm, sendData=localData, count=count, dstPet=dst, &
+      syncflag=ESMF_SYNC_NONBLOCKING, commhandle=commhandle(1), rc=rc)
+    call ESMF_VMSend(vm, sendData=localData2, count=count, dstPet=dst, &
+      syncflag=ESMF_SYNC_NONBLOCKING, commhandle=commhandle(2), rc=rc)
+  endif
+
+  if (localPet==dst) then
+    call ESMF_VMRecv(vm, recvData=localData, count=count, srcPet=src, &
+      syncflag=ESMF_SYNC_NONBLOCKING, commhandle=commhandle(1), rc=rc)
+    call ESMF_VMRecv(vm, recvData=localData2, count=count, srcPet=src, &
+      syncflag=ESMF_SYNC_NONBLOCKING, commhandle=commhandle(2), rc=rc)
+  endif
+
+   Now it is possible to specifically wait for the first data transfer,
+   e.g. on the dst PET.
+
+  if (localPet==dst) then
+    call ESMF_VMCommWait(vm, commhandle=commhandle(1), rc=rc)
+  endif
+
+   At this point there are still 2 outstanding communications on the src
+   PET, and one outstanding communication on the dst PET. However, having
+   returned from the specific ESMF_VMCommWait() call guarantees that the
+   first communication on the dst PET has completed, i.e. the data has
+   been received from the src PET, and can now be accessed in the
+   localData array.
+
+  if (localPet==dst) then
+    do i=1, count
+      if (localData(i) /= src*100 + i) then
+        finalrc = ESMF_RC_VAL_WRONG
+      endif
+    enddo
+  endif
+
+   Before accessing data from the second transfer, it is necessary to wait
+   on the associated commhandle for completion.
+
+  if (localPet==dst) then
+    call ESMF_VMCommWait(vm, commhandle=commhandle(2), rc=rc)
+  endif
+
+  if (localPet==dst) then
+    do i=1, count
+      if (localData2(i) /= src*1000 + i) then
+        finalrc = ESMF_RC_VAL_WRONG
+      endif
+    enddo
+  endif
+
+   Finally the commhandle elements on the src side need to be cleared by
+   waiting for them. This could be done using specific ESMF_VMCommWait()
+   calls, similar to the dst side, or simply by waiting for all/any
+   outstanding communications using ESMF_VMCommWaitAll() as in the
+   previous example. This call can be issued without commhandle on all of
+   the PETs.
+
+  call ESMF_VMCommWaitAll(vm, rc=rc)
+
+   For cases where multiple messages are being sent between the same
+   src-dst pairs using non-blocking communications, performance can often
+   be improved by aggregating individual messages. An extra buffer is
+   needed to hold the collected messages. The result is a single data
+   transfer for each PET pair. In many cases this can significantly reduce
+   the time spent in communications. The ESMF VM class provides access to
+   such a buffering technique through the ESMF_VMEpoch API.
+
+   The ESMF_VMEpoch API consists of two interfaces: ESMF_VMEpochEnter()
+   and ESMF_VMEpochExit(). When entering an epoch, the user specifies the
+   type of epoch that is to be entered. Currently only ESMF_VMEPOCH_BUFFER
+   is available. Inside this epoch, non-blocking communication calls are
+   aggregated and data transfers on the src side are not issued until the
+   epoch is exited. On the dst side a single data transfer is received,
+   and then divided over the actual non-blocking receive calls.
+
+   The following code repeates the previous example with two messages
+   between src and dst. It is important that every PET only must act
+   either as sender or receiver. A sending PET can send to many different
+   PETs, and a receiving PET can receive from many PETs, but no PET must
+   send and receive within the same epoch!
+
+   First re-initialize the localData array.
+
+  do i=1, count
+    localData(i) = localPet*100 + i
+    localData2(i) = localPet*1000 + i
+  enddo
+
+   Enter the ESMF_VMEPOCH_BUFFER.
+
+  call ESMF_VMEpochEnter(epoch=ESMF_VMEPOCH_BUFFER, rc=rc)
+
+   Now issue non-blocking send and receive calls as usual.
+
+  if (localPet==src) then
+    call ESMF_VMSend(vm, sendData=localData, count=count, dstPet=dst, &
+      syncflag=ESMF_SYNC_NONBLOCKING, commhandle=commhandle(1), rc=rc)
+
+    call ESMF_VMSend(vm, sendData=localData2, count=count, dstPet=dst, &
+      syncflag=ESMF_SYNC_NONBLOCKING, commhandle=commhandle(2), rc=rc)
+
+  endif
+  if (localPet==dst) then
+    call ESMF_VMRecv(vm, recvData=localData, count=count, srcPet=src, &
+      syncflag=ESMF_SYNC_NONBLOCKING, commhandle=commhandle(1), rc=rc)
+
+    call ESMF_VMRecv(vm, recvData=localData2, count=count, srcPet=src, &
+      syncflag=ESMF_SYNC_NONBLOCKING, commhandle=commhandle(2), rc=rc)
+
+  endif
+
+   No data transfer has been initiated at this point due to the fact that
+   this code is inside the ESMF_VMEPOCH_BUFFER. On the dst side the same
+   methods are used to wait for the data transfer. However, it is not
+   until the exit of the epoch on the src side that data is transferred to
+   the dst side.
+
+  if (localPet==dst) then
+    call ESMF_VMCommWait(vm, commhandle=commhandle(1), rc=rc)
+
+  endif
+
+  if (localPet==dst) then
+    do i=1, count
+      if (localData(i) /= src*100 + i) then
+        finalrc = ESMF_RC_VAL_WRONG
+      endif
+    enddo
+  endif
+
+  if (localPet==dst) then
+    call ESMF_VMCommWait(vm, commhandle=commhandle(2), rc=rc)
+
+  endif
+
+  if (localPet==dst) then
+    do i=1, count
+      if (localData2(i) /= src*1000 + i) then
+        finalrc = ESMF_RC_VAL_WRONG
+      endif
+    enddo
+  endif
+
+   Now exit the epoch, to trigger the data transfer on the src side.
+
+  call ESMF_VMEpochExit(rc=rc)
+
+   Finally clear the outstanding communication handles on the src side.
+   This needs to happen first inside the next ESMF_VMEPOCH_BUFFER. As
+   before, waits could be issued either for the specific commhandle
+   elements not yet explicitly cleared, or a general call to
+   ESMF_VMCommWaitAll() can be used for simplicity.
+
+  call ESMF_VMEpochEnter(epoch=ESMF_VMEPOCH_BUFFER, rc=rc)
+
+  call ESMF_VMCommWaitAll(vm, rc=rc)
+
+  call ESMF_VMEpochExit(rc=rc)
+
+  51.3.12 Using VM communication methods with data of rank greater than one
+
+   In the current implementation of the VM communication methods all the
+   data array arguments are declared as assumed shape dummy arrays of rank
+   one. The assumed shape flavor was chosen in order to minimize the
+   chance of copy in/out problems, associated with the other options for
+   declaring the dummy data arguments. However, currently the interfaces
+   are not overloaded for higher ranks. This restriction requires that
+   users that need to communicate data arrays with rank greater than one,
+   must only pass the first dimension of the data array into the VM
+   communication calls. Specifying the full size of the data arrays
+   (considering all dimensions) ensure that the complete data is
+   transferred in or out of the contiguous array memory.
+
+  integer, allocatable:: sendData(:,:)
+  integer, allocatable:: recvData(:,:,:,:)
+
+  count1 = 5
+  count2 = 8
+  allocate(sendData(count1,count2)) ! 5 x 8 = 40 elements
+  do j=1, count2
+    do i=1, count1
+      sendData(i,j) = localPet*100 + i + (j-1)*count1
+    enddo
+  enddo
+
+  count1 = 2
+  count2 = 5
+  count3 = 1
+  count4 = 4
+  allocate(recvData(count1,count2,count3,count4)) ! 2 x 5 x 1 x 4 = 40 elements
+  do l=1, count4
+    do k=1, count3
+      do j=1, count2
+        do i=1, count1
+          recvData(i,j,k,l) = 0
+        enddo
+      enddo
+    enddo
+  enddo
+
+  if (localPet==src) then
+    call ESMF_VMSend(vm, &
+      sendData=sendData(:,1), & ! 1st dimension as contiguous array section
+      count=count1*count2, &    ! total count of elements
+      dstPet=dst, rc=rc)
+  endif
+
+  if (localPet==dst) then
+    call ESMF_VMRecv(vm, &
+      recvData=recvData(:,1,1,1), & ! 1st dimension as contiguous array section
+      count=count1*count2*count3*count4, &  ! total count of elements
+      srcPet=src, rc=rc)
+  endif
+
+51.4 Restrictions and Future Work
+
+    1. Only array section syntax that leads to contiguous sub sections is
+       supported. The source and destination arguments in VM communication
+       calls must reference contiguous data arrays. Fortran array sections
+       are not guaranteed to be contiguous in all cases.
+    2. Non-blocking Reduce() operations not implemented. None of the
+       reduce communication calls have an implementation for the
+       non-blocking feature. This affects:
+          + ESMF_VMAllFullReduce(),
+          + ESMF_VMAllReduce(),
+          + ESMF_VMReduce().
+    3. Limitations when using mpiuni mode. In mpiuni mode non-blocking
+       communications are limited to one outstanding message per
+       source-destination PET pair. Furthermore, in mpiuni mode the
+       message length must be smaller than the internal ESMF buffer size.
+    4. Alternative communication paths not accessible. All user accessible
+       VM communication calls are currently implemented using MPI-1.2.
+       VM's implementation of alternative communication techniques, such
+       as shared memory between threaded PETs and POSIX IPC between PETs
+       located on the same single system image, are currently inaccessible
+       to the user. (One exception to this is the mpiuni case for which
+       the VM automatically utilizes a shared memory path.)
+    5. Data arrays in VM comm calls are assumed shape with rank=1.
+       Currently all dummy arrays in VM comm calls are defined as assumed
+       shape arrays of rank=1. The motivation for this choice is that the
+       use of assumed shape dummy arrays guards against the Fortran copy
+       in/out problem. However it may not be as flexible as desired from
+       the user perspective. Alternatively all dummy arrays could be
+       defined as assumed size arrays, as it is done in most MPI
+       implementations, allowing arrays of various rank to be passed into
+       the comm methods. Arrays of higher rank can be passed into the
+       current interfaces using Fortran array syntax. This approach is
+       explained in section [608]51.3.12.
+
+51.5 Design and Implementation Notes
+
+   The VM class provides an additional layer of abstraction on top of the
+   POSIX machine model, making it suitable for HPC applications. There are
+   four key aspects the VM class deals with.
+
+    1. Encapsulation of hardware and operating system details within the
+       concept of Persistent Execution Threads (PETs).
+    2. Resource management in terms of PETs with a guard against
+       over-subscription.
+    3. Topological description of the underlying configuration of the
+       compute resources in terms of PETs.
+    4. Transparent communication API for point-to-point and collective
+       PET-based primitives, hiding the many different communication
+       channels and offering best possible performance.
+
+                 \scalebox{0.6}{\includegraphics{VM_design}}
+
+   Definition of terms used in the diagram
+
+     * PE: A processing element (PE) is an alias for the smallest physical
+       processing unit available on a particular hardware platform. In the
+       language of today's microprocessor architecture technology a PE is
+       identical to a core, however, if future microprocessor designs
+       change the smallest physical processing unit the mapping of the PE
+       to actual hardware will change accordingly. Thus the PE layer
+       separates the hardware specific part of the VM from the
+       hardware-independent part. Each PE is labeled with an id number
+       which identifies it uniquely within all of the VM instances of an
+       ESMF application.
+     * Core: A Core is the smallest physical processing unit which
+       typically comprises a register set, an integer arithmetic unit, a
+       floating-point unit and various control units. Each Core is labeled
+       with an id number which identifies it uniquely within all of the VM
+       instances of an ESMF application.
+     * CPU: The central processing unit (CPU) houses single or multiple
+       cores, providing them with the interface to system memory,
+       interconnects and I/O. Typically the CPU provides some level of
+       caching for the instruction and data streams in and out of the
+       Cores. Cores in a multi-core CPU typically share some caches. Each
+       CPU is labeled with an id number which identifies it uniquely
+       within all of the VM instances of an ESMF application.
+     * SSI: A single system image (SSI) spans all the CPUs controlled by a
+       single running instance of the operating system. SMP and NUMA are
+       typical multi-CPU SSI architectures. Each SSI is labeled with an id
+       number which identifies it uniquely within all of the VM instances
+       of an ESMF application.
+     * TOE: A thread of execution (TOE) executes an instruction sequence.
+       TOE's come in two flavors: PET and TET.
+     * PET: A persistent execution thread (PET) executes an instruction
+       sequence on an associated set of data. The PET has a lifetime at
+       least as long as the associated data set. In ESMF the PET is the
+       central concept of abstraction provided by the VM class. The PETs
+       of an VM object are labeled from 0 to N-1 where N is the total
+       number of PETs in the VM object.
+     * TET: A transient execution thread (TET) executes an instruction
+       sequence on an associated set of data. A TET's lifetime might be
+       shorter than that of the associated data set.
+     * OS-Instance: The OS-Instance of a TOE describes how a particular
+       TOE is instantiated on the OS level. Using POSIX terminology a TOE
+       will run as a single thread within a single- or multi-threaded
+       process.
+     * Pthreads: Communication via the POSIX Thread interface.
+     * MPI-1, MPI-2: Communication via MPI standards 1 and 2.
+     * armci: Communication via the aggregate remote memory copy
+       interface.
+     * SHMEM: Communication via the SHMEM interface.
+     * OS-IPC: Communication via the operating system's inter process
+       communication interface. Either POSIX IPC or System V IPC.
+     * InterCon-lib: Communication via the interconnect's library native
+       interface. An example is the Elan library for Quadrics.
+
+   The POSIX machine abstraction, while a very powerful concept, needs
+   augmentation when applied to HPC applications. Key elements of the
+   POSIX abstraction are processes, which provide virtually unlimited
+   resources (memory, I/O, sockets, ...) to possibly multiple threads of
+   execution. Similarly POSIX threads create the illusion that there is
+   virtually unlimited processing power available to each POSIX process.
+   While the POSIX abstraction is very suitable for many
+   multi-user/multi-tasking applications that need to share limited
+   physical resources, it does not directly fit the HPC workload where
+   over-subscription of resources is one of the most expensive modes of
+   operation.
+
+   ESMF's virtual machine abstraction is based on the POSIX machine model
+   but holds additional information about the available physical
+   processing units in terms of Processing Elements (PEs). A PE is the
+   smallest physical processing unit and encapsulates the hardware details
+   (Cores, CPUs and SSIs).
+
+   There is exactly one physical machine layout for each application, and
+   all VM instances have access to this information. The PE is the
+   smallest processing unit which, in today's microprocessor technology,
+   corresponds to a single Core. Cores are arranged in CPUs which in turn
+   are arranged in SSIs. The setup of the physical machine layout is part
+   of the ESMF initialization process.
+
+   On top of the PE concept the key abstraction provided by the VM is the
+   PET. All user code is executed by PETs while OS and hardware details
+   are hidden. The VM class contains a number of methods which allow the
+   user to prescribe how the PETs of a desired virtual machine should be
+   instantiated on the OS level and how they should map onto the hardware.
+   This prescription is kept in a private virtual machine plan object
+   which is created at the same time the associated component is being
+   created. Each time component code is entered through one of the
+   component's registered top-level methods (Initialize/Run/Finalize), the
+   virtual machine plan along with a pointer to the respective user
+   function is used to instantiate the user code on the PETs of the
+   associated VM in form of single- or multi-threaded POSIX processes.
+
+   The process of starting, entering, exiting and shutting down a VM is
+   very transparent, all spawning and joining of threads is handled by VM
+   methods "behind the scenes". Furthermore, fundamental synchronization
+   and communication primitives are provided on the PET level through a
+   uniform API, hiding details related to the actual instantiation of the
+   participating PETs.
+
+   Within a VM object each PE of the physical machine maps to 0 or 1 PETs.
+   Allowing unassigned PEs provides a means to prevent over-subscription
+   between multiple concurrently running virtual machines. Similarly a
+   maximum of one PET per PE prevents over-subscription within a single VM
+   instance. However, over-subscription is possible by subscribing PETs
+   from different virtual machines to the same PE. This type of
+   over-subscription can be desirable for PETs associated with I/O
+   workloads expected to be used infrequently and to block often on I/O
+   requests.
+
+   On the OS level each PET of a VM object is represented by a POSIX
+   thread (Pthread) either belonging to a single- or multi-threaded
+   process and maps to at least 1 PE of the physical machine, ensuring its
+   execution. Mapping a single PET to multiple PEs provides resources for
+   user-level multi-threading, in which case the user code inquires how
+   many PEs are associated with its PET and if there are multiple PEs
+   available the user code can spawn an equal number of threads (e.g.
+   OpenMP) without risking over-subscription. Typically these user spawned
+   threads are short-lived and used for fine-grained parallelization in
+   form of TETs. All PEs mapped against a single PET must be part of a
+   unique SSI in order to allow user-level multi-threading!
+
+   In addition to discovering the physical machine the ESMF initialization
+   process sets up the default global virtual machine. This VM object,
+   which is the ultimate parent of all VMs created during the course of
+   execution, contains as many PETs as there are PEs in the physical
+   machine. All of its PETs are instantiated in form of single-threaded
+   MPI processes and a 1:1 mapping of PETs to PEs is used for the default
+   global VM.
+
+   The VM design and implementation is based on the POSIX process and
+   thread model as well as the MPI-1.2 standard. As a consequence of the
+   latter standard the number of processes is static during the course of
+   execution and is determined at start-up. The VM implementation further
+   requires that the user starts up the ESMF application with as many MPI
+   processes as there are PEs in the available physical machine using the
+   platform dependent mechanism to ensure proper process placement.
+
+   All MPI processes participating in a VM are grouped together by means
+   of an MPI_Group object and their context is defined via an MPI_Comm
+   object (MPI intra-communicator). The PET local process id within each
+   virtual machine is equal to the MPI_Comm_rank in the local MPI_Comm
+   context whereas the PET process id is equal to the MPI_Comm_rank in
+   MPI_COMM_WORLD. The PET process id is used within the VM methods to
+   determine the virtual memory space a PET is operating in.
+
+   In order to provide a migration path for legacy MPI-applications the VM
+   offers accessor functions to its MPI_Comm object. Once obtained this
+   object may be used in explicit user-code MPI calls within the same
+   context.
+
+51.6 Class API
+
+  51.6.1 ESMF_VMAssignment(=) - VM assignment
+
+   INTERFACE:
+     interface assignment(=)
+     vm1 = vm2
+
+   ARGUMENTS:
+     type(ESMF_VM) :: vm1
+     type(ESMF_VM) :: vm2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign vm1 as an alias to the same ESMF VM object in memory as vm2. If
+   vm2 is invalid, then vm1 will be equally invalid after the assignment.
+
+   The arguments are:
+
+   vm1
+          The ESMF_VM object on the left hand side of the assignment.
+
+   vm2
+          The ESMF_VM object on the right hand side of the assignment.
+
+  51.6.2 ESMF_VMOperator(==) - VM equality operator
+
+   INTERFACE:
+   interface operator(==)
+     if (vm1 == vm2) then ... endif
+               OR
+     result = (vm1 == vm2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_VM), intent(in) :: vm1
+     type(ESMF_VM), intent(in) :: vm2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether vm1 and vm2 are valid aliases to the same ESMF VM object
+   in memory. For a more general comparison of two ESMF VMs, going beyond
+   the simple alias test, the ESMF_VMMatch() function (not yet
+   implemented) must be used.
+
+   The arguments are:
+
+   vm1
+          The ESMF_VM object on the left hand side of the equality
+          operation.
+
+   vm2
+          The ESMF_VM object on the right hand side of the equality
+          operation.
+
+  51.6.3 ESMF_VMOperator(/=) - VM not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (vm1 /= vm2) then ... endif
+               OR
+     result = (vm1 /= vm2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_VM), intent(in) :: vm1
+     type(ESMF_VM), intent(in) :: vm2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether vm1 and vm2 are not valid aliases to the same ESMF VM
+   object in memory. For a more general comparison of two ESMF VMs, going
+   beyond the simple alias test, the ESMF_VMMatch() function (not yet
+   implemented) must be used.
+
+   The arguments are:
+
+   vm1
+          The ESMF_VM object on the left hand side of the non-equality
+          operation.
+
+   vm2
+          The ESMF_VM object on the right hand side of the non-equality
+          operation.
+

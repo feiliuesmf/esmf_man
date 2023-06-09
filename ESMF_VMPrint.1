@@ -1,0 +1,28 @@
+  51.6.25 ESMF_VMPrint - Print VM information
+
+   INTERFACE:
+   subroutine ESMF_VMPrint(vm, rc)
+
+   ARGUMENTS:
+     type(ESMF_VM),  intent(in)            :: vm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,        intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Print internal information about the specified ESMF_VM to stdout.
+
+   The arguments are:
+
+   vm
+          Specified ESMF_VM object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

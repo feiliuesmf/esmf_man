@@ -1,0 +1,478 @@
+  24.3.1 ESMF_RegridWeightGen - Generate regrid weight file from grid files
+
+   INTERFACE:
+   ! Private name; call using ESMF_RegridWeightGen()
+   subroutine ESMF_RegridWeightGenFile(srcFile, dstFile, &
+     weightFile, rhFile, regridmethod, polemethod, regridPoleNPnts, lineType, no
+rmType, &
+     extrapMethod, extrapNumSrcPnts, extrapDistExponent, extrapNumLevels, &
+     unmappedaction, ignoreDegenerate, srcFileType, dstFileType, &
+     srcRegionalFlag, dstRegionalFlag, srcMeshname, dstMeshname,  &
+     srcMissingvalueFlag, srcMissingvalueVar, &
+     dstMissingvalueFlag, dstMissingvalueVar, &
+     useSrcCoordFlag, srcCoordinateVars, &
+     useDstCoordFlag, dstCoordinateVars, &
+     useSrcCornerFlag, useDstCornerFlag, &
+     useUserAreaFlag, largefileFlag, &
+     netcdf4fileFlag, weightOnlyFlag, &
+     tileFilePath, &
+     verboseFlag, checkFlag, rc)
+
+   ARGUMENTS:
+
+   character(len=*),             intent(in)            :: srcFile
+   character(len=*),             intent(in)            :: dstFile
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   character(len=*),             intent(in),  optional :: weightFile
+   character(len=*),             intent(in),  optional :: rhFile
+   type(ESMF_RegridMethod_Flag), intent(in),  optional :: regridmethod
+   type(ESMF_PoleMethod_Flag),   intent(in),  optional :: polemethod
+   integer,                      intent(in),  optional :: regridPoleNPnts
+   type(ESMF_LineType_Flag),     intent(in),  optional :: lineType
+   type(ESMF_NormType_Flag),     intent(in),  optional :: normType
+   type(ESMF_ExtrapMethod_Flag),   intent(in),    optional :: extrapMethod
+   integer,                        intent(in),    optional :: extrapNumSrcPnts
+   real,                           intent(in),    optional :: extrapDistExponent
+   integer,                      intent(in), optional :: extrapNumLevels
+   type(ESMF_UnmappedAction_Flag),intent(in), optional :: unmappedaction
+   logical,                      intent(in),  optional :: ignoreDegenerate
+   type(ESMF_FileFormat_Flag),   intent(in),  optional :: srcFileType
+   type(ESMF_FileFormat_Flag),   intent(in),  optional :: dstFileType
+   logical,                      intent(in),  optional :: srcRegionalFlag
+   logical,                      intent(in),  optional :: dstRegionalFlag
+   character(len=*),             intent(in),  optional :: srcMeshname
+   character(len=*),             intent(in),  optional :: dstMeshname
+   logical,                      intent(in),  optional :: srcMissingValueFlag
+   character(len=*),             intent(in),  optional :: srcMissingValueVar
+   logical,                      intent(in),  optional :: dstMissingValueFlag
+   character(len=*),             intent(in),  optional :: dstMissingValueVar
+   logical,                      intent(in),  optional :: useSrcCoordFlag
+   character(len=*),             intent(in),  optional :: srcCoordinateVars(:)
+   logical,                      intent(in),  optional :: useDstCoordFlag
+   character(len=*),             intent(in),  optional :: dstCoordinateVars(:)
+   logical,                      intent(in),  optional :: useSrcCornerFlag
+   logical,                      intent(in),  optional :: useDstCornerFlag
+   logical,                      intent(in),  optional :: useUserAreaFlag
+   logical,                      intent(in),  optional :: largefileFlag
+   logical,                      intent(in),  optional :: netcdf4fileFlag
+   logical,                      intent(in),  optional :: weightOnlyFlag
+   character(len=*),             intent(in),  optional :: tileFilePath
+   logical,                      intent(in),  optional :: verboseFlag
+   logical,                      intent(in),  optional :: checkFlag
+   integer,                      intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This subroutine provides the same function as the ESMF_RegridWeightGen
+   application described in Section [688]12. It takes two grid files in
+   NetCDF format and writes out an interpolation weight file also in
+   NetCDF format. The interpolation weights can be generated with the
+   bilinear ([689]24.2.1), higher-order patch ([690]24.2.2), or first
+   order conservative ([691]24.2.5) methods. The grid files can be in one
+   of the following four formats:
+     * The SCRIP format ([692]12.8.1)
+     * The native ESMF format for an unstructured grid ([693]12.8.2)
+     * The CF Convention Single Tile File format ([694]12.8.3)
+     * The proposed CF Unstructured grid (UGRID) format ([695]12.8.4)
+     * The GRIDSPEC Mosaic File format ([696]12.8.5)
+
+   The weight file is created in SCRIP format ([697]12.9). The optional
+   arguments allow users to specify various options to control the regrid
+   operation, such as which pole option to use, whether to use
+   user-specified area in the conservative regridding, or whether ESMF
+   should generate masks using a given variable's missing value. There are
+   also optional arguments specific to a certain type of the grid file.
+   All the optional arguments are similar to the command line arguments
+   for the ESMF_RegridWeightGen application ([698]12.6). The acceptable
+   values and the default value for the optional arguments are listed
+   below.
+
+   The arguments are:
+
+   srcFile
+          The source grid file name.
+
+   dstFile
+          The destination grid file name.
+
+   weightFile
+          The interpolation weight file name.
+
+   [rhFile]
+          The RouteHandle file name.
+
+   [regridmethod]
+          The type of interpolation. Please see Section [699]54.49 for a
+          list of valid options. If not specified, defaults to
+          ESMF_REGRIDMETHOD_BILINEAR.
+
+   [polemethod]
+          A flag to indicate which type of artificial pole to construct on
+          the source Grid for regridding. Please see Section [700]54.46
+          for a list of valid options. The default value varies depending
+          on the regridding method and the grid type and format.
+
+   [regridPoleNPnts]
+          If polemethod is set to ESMF_POLEMETHOD_NPNTAVG, this argument
+          is required to specify how many points should be averaged over
+          at the pole.
+
+   [lineType]
+          This argument controls the path of the line which connects two
+          points on a sphere surface. This in turn controls the path along
+          which distances are calculated and the shape of the edges that
+          make up a cell. Both of these quantities can influence how
+          interpolation weights are calculated. As would be expected, this
+          argument is only applicable when srcField and dstField are built
+          on grids which lie on the surface of a sphere.
+          Section [701]54.34 shows a list of valid options for this
+          argument. If not specified, the default depends on the regrid
+          method. Section [702]54.34 has the defaults by line type.
+          Figure [703]24.2.16 shows which line types are supported for
+          each regrid method as well as showing the default line type by
+          regrid method.
+
+   [normType]
+          This argument controls the type of normalization used when
+          generating conservative weights. This option only applies to
+          weights generated with regridmethod=ESMF_REGRIDMETHOD_CONSERVE.
+          Please see Section [704]54.43 for a list of valid options. If
+          not specified normType defaults to ESMF_NORMTYPE_DSTAREA.
+
+   [extrapMethod]
+          The type of extrapolation. Please see Section [705]54.17 for a
+          list of valid options. If not specified, defaults to
+          ESMF_EXTRAPMETHOD_NONE.
+
+   [extrapNumSrcPnts]
+          The number of source points to use for the extrapolation methods
+          that use more than one source point (e.g.
+          ESMF_EXTRAPMETHOD_NEAREST_IDAVG). If not specified, defaults to
+          8.
+
+   [extrapDistExponent]
+          The exponent to raise the distance to when calculating weights
+          for the ESMF_EXTRAPMETHOD_NEAREST_IDAVG extrapolation method. A
+          higher value reduces the influence of more distant points. If
+          not specified, defaults to 2.0.
+
+   [unmappedaction]
+          Specifies what should happen if there are destination points
+          that can't be mapped to a source cell. Please see
+          Section [706]54.60 for a list of valid options. If not
+          specified, unmappedaction defaults to ESMF_UNMAPPEDACTION_ERROR.
+
+   [ignoreDegenerate]
+          Ignore degenerate cells when checking the input Grids or Meshes
+          for errors. If this is set to true, then the regridding
+          proceeds, but degenerate cells will be skipped. If set to false,
+          a degenerate cell produces an error. If not specified,
+          ignoreDegenerate defaults to false.
+
+   [srcFileType]
+          The file format of the source grid. Please see
+          Section [707]54.19 for a list of valid options. If not specifed,
+          the program will determine the file format automatically.
+
+   [dstFileType]
+          The file format of the destination grid. Please see
+          Section [708]54.19 for a list of valid options. If not specifed,
+          the program will determine the file format automatically.
+
+   [srcRegionalFlag]
+          If .TRUE., the source grid is a regional grid, otherwise, it is
+          a global grid. The default value is .FALSE.
+
+   [dstRegionalFlag]
+          If .TRUE., the destination grid is a regional grid, otherwise,
+          it is a global grid. The default value is .FALSE.
+
+   [srcMeshname]
+          If the source file is in UGRID format, this argument is required
+          to define the dummy variable name in the grid file that contains
+          the mesh topology info.
+
+   [dstMeshname]
+          If the destination file is in UGRID format, this argument is
+          required to define the dummy variable name in the grid file that
+          contains the mesh topology info.
+
+   [srcMissingValueFlag]
+          If .TRUE., the source grid mask will be constructed using the
+          missing values of the variable defined in srcMissingValueVar.
+          This flag is only used for the grid defined in the GRIDSPEC or
+          the UGRID file formats. The default value is .FALSE..
+
+   [srcMissingValueVar]
+          If srcMissingValueFlag is .TRUE., the argument is required to
+          define the variable name whose missing values will be used to
+          construct the grid mask. It is only used for the grid defined in
+          the GRIDSPEC or the UGRID file formats.
+
+   [dstMissingValueFlag]
+          If .TRUE., the destination grid mask will be constructed using
+          the missing values of the variable defined in
+          dstMissingValueVar. This flag is only used for the grid defined
+          in the GRIDSPEC or the UGRID file formats. The default value is
+          .FALSE..
+
+   [dstMissingValueVar]
+          If dstMissingValueFlag is .TRUE., the argument is required to
+          define the variable name whose missing values will be used to
+          construct the grid mask. It is only used for the grid defined in
+          the GRIDSPEC or the UGRID file formats.
+
+   [useSrcCoordFlag]
+          If .TRUE., the coordinate variables defined in srcCoordinateVars
+          will be used as the longitude and latitude variables for the
+          source grid. This flag is only used for the GRIDSPEC file
+          format. The default is .FALSE.
+
+   [srcCoordinateVars]
+          If useSrcCoordFlag is .TRUE., this argument defines the
+          longitude and ! latitude variables in the source grid file to be
+          used for the regrid. This argument is only used when the grid
+          file is in GRIDSPEC format. srcCoordinateVars should be a array
+          of 2 elements.
+
+   [useDstCoordFlag]
+          If .TRUE., the coordinate variables defined in dstCoordinateVars
+          will be used as the longitude and latitude variables for the
+          destination grid. This flag is only used for the GRIDSPEC file
+          format. The default is .FALSE.
+
+   [dstCoordinateVars]
+          If useDstCoordFlag is .TRUE., this argument defines the
+          longitude and latitude variables in the destination grid file to
+          be used for the regrid. This argument is only used when the grid
+          file is in GRIDSPEC format. dstCoordinateVars should be a array
+          of 2 elements.
+
+   [useSrcCornerFlag]
+          If useSrcCornerFlag is .TRUE., the corner coordinates of the
+          source file will be used for regridding. Otherwise, the center
+          coordinates will be us ed. The default is .FALSE. The corner
+          stagger is not supported for the SCRIP formatted input grid or
+          multi-tile GRIDSPEC MOSAIC input grid.
+
+   [useDstCornerFlag]
+          If useDstCornerFlag is .TRUE., the corner coordinates of the
+          destination file will be used for regridding. Otherwise, the
+          center coordinates will be used. The default is .FALSE. The
+          corner stagger is not supported for the SCRIP formatted input
+          grid or multi-tile GRIDSPEC MOSAIC input grid.
+
+   [useUserAreaFlag]
+          If .TRUE., the element area values defined in the grid files are
+          used. Only the SCRIP and ESMF format grid files have user
+          specified areas. This flag is only used for conservative
+          regridding. The default is .FALSE..
+
+   [largefileFlag]
+          If .TRUE., the output weight file is in NetCDF 64bit offset
+          format. The default is .FALSE..
+
+   [netcdf4fileFlag]
+          If .TRUE., the output weight file is in NetCDF4 file format. The
+          default is .FALSE..
+
+   [weightOnlyFlag]
+          If .TRUE., the output weight file only contains factorList and
+          factorIndexList. The default is .FALSE..
+
+   [tileFilePath]
+          Optional argument to define the path where the tile files
+          reside. If it is given, it overwrites the path defined in
+          gridlocation variable in the mosaic file.
+
+   [verboseFlag]
+          If .TRUE., it will print summary information about the regrid
+          parameters, default to .FALSE..
+
+   [checkFlag]
+          checkFlag value to pass into ESMF_FieldRegridStore(), if not
+          provided has same default as ESMF_FieldRegridStore() which is
+          false.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  24.3.2 ESMF_RegridWeightGen - Generate regrid routeHandle and an optional
+  weight file from grid files with user-specified distribution
+
+   INTERFACE:
+   ! Private name; call using ESMF_RegridWeightGen()
+   subroutine ESMF_RegridWeightGenDG(srcFile, dstFile, regridRouteHandle, &
+     srcElementDistgrid, dstElementDistgrid, &
+     srcNodalDistgrid, dstNodalDistgrid, &
+     weightFile, regridmethod, lineType, normType, &
+     extrapMethod, extrapNumSrcPnts, extrapDistExponent, extrapNumLevels,&
+     unmappedaction, ignoreDegenerate, useUserAreaFlag, &
+     largefileFlag, netcdf4fileFlag, &
+     weightOnlyFlag, verboseFlag, rc)
+
+   ARGUMENTS:
+
+   character(len=*),             intent(in)            :: srcFile
+   character(len=*),             intent(in)            :: dstFile
+   type(ESMF_RouteHandle),       intent(out)           :: regridRouteHandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DistGrid),          intent(in),  optional :: srcElementDistgrid
+   type(ESMF_DistGrid),          intent(in),  optional :: dstElementDistgrid
+   character(len=*),             intent(in),  optional :: weightFile
+   type(ESMF_DistGrid),          intent(in),  optional :: srcNodalDistgrid
+   type(ESMF_DistGrid),          intent(in),  optional :: dstNodalDistgrid
+   type(ESMF_RegridMethod_Flag), intent(in),  optional :: regridmethod
+   type(ESMF_LineType_Flag),     intent(in),  optional :: lineType
+   type(ESMF_NormType_Flag),     intent(in),  optional :: normType
+   type(ESMF_ExtrapMethod_Flag),   intent(in),    optional :: extrapMethod
+   integer,                        intent(in),    optional :: extrapNumSrcPnts
+   real,                           intent(in),    optional :: extrapDistExponent
+   integer,                      intent(in),  optional :: extrapNumLevels
+   type(ESMF_UnmappedAction_Flag),intent(in), optional :: unmappedaction
+   logical,                      intent(in),  optional :: ignoreDegenerate
+   logical,                      intent(in),  optional :: useUserAreaFlag
+   logical,                      intent(in),  optional :: largefileFlag
+   logical,                      intent(in),  optional :: netcdf4fileFlag
+   logical,                      intent(in),  optional :: weightOnlyFlag
+   logical,                      intent(in),  optional :: verboseFlag
+   integer,                      intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This subroutine does online regridding weight generation from files
+   with user specified distribution. The main differences between this API
+   and the one in [709]24.3.1 are listed below:
+     * The input grids are always represented as ESMF_Mesh whether they
+       are logically rectangular or unstructured.
+     * The input grids will be decomposed using a user-specified
+       distribution instead of a fixed decomposition in the other
+       subroutine if srcElementDistgrid and dstElementDistgrid are
+       specified.
+     * The source and destination grid files have to be in the SCRIP grid
+       file format.
+     * This subroutine has one additional required argument
+       regridRouteHandle and four additional optional arguments:
+       srcElementDistgrid, dstElementDistgrid, srcNodelDistgrid and
+       dstNodalDistgrid. These four arguments are of type ESMF_DistGrid,
+       they are used to define the distribution of the source and
+       destination grid elements and nodes. The output regridRouteHandle
+       allows users to regrid the field values later in the application.
+     * The weightFile argument is optional. When it is given, a weightfile
+       will be generated as well.
+
+   The arguments are:
+
+   srcFile
+          The source grid file name in SCRIP grid file format
+
+   dstFile
+          The destination grid file name in SCRIP grid file format
+
+   regridRouteHandle
+          The regrid RouteHandle returned by ESMF_FieldRegridStore()
+
+   srcElementDistgrid
+          An optional distGrid that specifies the distribution of the
+          source grid's elements. If not specified, a system-defined block
+          decomposition is used.
+
+   dstElementDistgrid
+          An optional distGrid that specifies the distribution of the
+          destination grid's elements. If not specified, a system-defined
+          block decomposition is used.
+
+   weightFile
+          The interpolation weight file name. If present, an output weight
+          file will be generated.
+
+   srcNodalDistgrid
+          An optional distGrid that specifies the distribution of the
+          source grid's nodes
+
+   dstNodalDistgrid
+          An optional distGrid that specifies the distribution of the
+          destination grid's nodes
+
+   [regridmethod]
+          The type of interpolation. Please see Section [710]54.49 for a
+          list of valid options. If not specified, defaults to
+          ESMF_REGRIDMETHOD_BILINEAR.
+
+   [lineType]
+          This argument controls the path of the line which connects two
+          points on a sphere surface. This in turn controls the path along
+          which distances are calculated and the shape of the edges that
+          make up a cell. Both of these quantities can influence how
+          interpolation weights are calculated. As would be expected, this
+          argument is only applicable when srcField and dstField are built
+          on grids which lie on the surface of a sphere.
+          Section [711]54.34 shows a list of valid options for this
+          argument. If not specified, the default depends on the regrid
+          method. Section [712]54.34 has the defaults by line type.
+          Figure [713]24.2.16 shows which line types are supported for
+          each regrid method as well as showing the default line type by
+          regrid method.
+
+   [normType]
+          This argument controls the type of normalization used when
+          generating conservative weights. This option only applies to
+          weights generated with regridmethod=ESMF_REGRIDMETHOD_CONSERVE.
+          Please see Section [714]54.43 for a list of valid options. If
+          not specified normType defaults to ESMF_NORMTYPE_DSTAREA.
+
+   [extrapMethod]
+          The type of extrapolation. Please see Section [715]54.17 for a
+          list of valid options. If not specified, defaults to
+          ESMF_EXTRAPMETHOD_NONE.
+
+   [extrapNumSrcPnts]
+          The number of source points to use for the extrapolation methods
+          that use more than one source point (e.g.
+          ESMF_EXTRAPMETHOD_NEAREST_IDAVG). If not specified, defaults to
+          8..
+
+   [extrapDistExponent]
+          The exponent to raise the distance to when calculating weights
+          for the ESMF_EXTRAPMETHOD_NEAREST_IDAVG extrapolation method. A
+          higher value reduces the influence of more distant points. If
+          not specified, defaults to 2.0.
+
+   [unmappedaction]
+          Specifies what should happen if there are destination points
+          that can't be mapped to a source cell. Please see
+          Section [716]54.60 for a list of valid options. If not
+          specified, unmappedaction defaults to ESMF_UNMAPPEDACTION_ERROR.
+
+   [ignoreDegenerate]
+          Ignore degenerate cells when checking the input Grids or Meshes
+          for errors. If this is set to true, then the regridding
+          proceeds, but degenerate cells will be skipped. If set to false,
+          a degenerate cell produces an error. If not specified,
+          ignoreDegenerate defaults to false.
+
+   [useUserAreaFlag]
+          If .TRUE., the element area values defined in the grid files are
+          used. Only the SCRIP and ESMF format grid files have user
+          specified areas. This flag is only used for conservative
+          regridding. The default is .FALSE.
+
+   [largefileFlag]
+          If .TRUE., the output weight file is in NetCDF 64bit offset
+          format. The default is .FALSE.
+
+   [netcdf4fileFlag]
+          If .TRUE., the output weight file is in NetCDF4 file format. The
+          default is .FALSE.
+
+   [weightOnlyFlag]
+          If .TRUE., the output weight file only contains factorList and
+          factorIndexList. The default is .FALSE.
+
+   [verboseFlag]
+          If .TRUE., it will print summary information about the regrid
+          parameters, default to .FALSE.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

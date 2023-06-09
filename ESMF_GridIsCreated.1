@@ -1,0 +1,27 @@
+  31.6.51 ESMF_GridIsCreated - Check whether a Grid object has been created
+
+   INTERFACE:
+   function ESMF_GridIsCreated(grid, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_GridIsCreated
+
+   ARGUMENTS:
+     type(ESMF_Grid), intent(in)            :: grid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the grid has been created. Otherwise return .false..
+   If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return
+   value of the function will also be .false..
+
+   The arguments are:
+
+   grid
+          ESMF_Grid queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

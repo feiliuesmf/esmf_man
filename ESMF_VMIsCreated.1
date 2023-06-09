@@ -1,0 +1,27 @@
+  51.6.22 ESMF_VMIsCreated - Check whether a VM object has been created
+
+   INTERFACE:
+   function ESMF_VMIsCreated(vm, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_VMIsCreated
+
+   ARGUMENTS:
+     type(ESMF_VM), intent(in)            :: vm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,       intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the vm has been created. Otherwise return .false.. If
+   an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return value
+   of the function will also be .false..
+
+   The arguments are:
+
+   vm
+          ESMF_VM queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

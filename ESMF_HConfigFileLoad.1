@@ -1,0 +1,32 @@
+  48.5.20 ESMF_HConfigFileLoad - Load file into HConfig
+
+   INTERFACE:
+   subroutine ESMF_HConfigFileLoad(hconfig, filename, doc, rc)
+
+   ARGUMENTS:
+     type(ESMF_HConfig), intent(in)            :: hconfig
+     character(len=*),   intent(in)            :: filename
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(in),  optional :: doc
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Load YAML file into hconfig.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig object.
+
+   filename
+          Name of the YAML file to be loaded.
+
+   [doc]
+          The doc index inside the file. If specified, only this single
+          document is loaded from file, resulting in a single document
+          hconfig object. Defaults to all docs.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

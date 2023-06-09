@@ -1,0 +1,181 @@
+  32.4.18 ESMF_LocStreamGetKey - Get an Array associated with a key
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocStreamGetKey()
+   subroutine ESMF_LocStreamGetKeyArray(locstream, keyName, keyArray, &
+        rc)
+
+   ARGUMENTS:
+     type(ESMF_Locstream), intent(in)            :: locstream
+     character (len=*),    intent(in)            :: keyName
+     type(ESMF_Array),     intent(out)           :: keyArray
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,              intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get ESMF Array associated with key.
+
+   The arguments are:
+
+   locstream
+          The ESMF_LocStream object to get key from.
+
+   keyName
+          The name of the key to get.
+
+   keyArray
+          Array associated with key.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.19 ESMF_LocStreamGetKey - Get info associated with a key
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocStreamGetKey()
+   subroutine ESMF_LocStreamGetKeyInfo(locstream, keyName, &
+        keyUnits, keyLongName, typekind, isPresent, rc)
+
+   ARGUMENTS:
+     type(ESMF_Locstream),     intent(in)            :: locstream
+     character (len=*),        intent(in)            :: keyName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character (len=*),        intent(out), optional :: keyUnits
+     character (len=*),        intent(out), optional :: keyLongName
+     type(ESMF_TypeKind_Flag), intent(out), optional :: typekind
+     logical,                  intent(out), optional :: isPresent
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get ESMF Array associated with key.
+
+   The arguments are:
+
+   locstream
+          The ESMF_LocStream object to get key from.
+
+   keyName
+          The name of the key to get.
+
+   [keyUnits]
+          The units of the key data. If not specified, then the item
+          remains blank.
+
+   [keyLongName]
+          The long name of the key data. If not specified, then the item
+          remains blank.
+
+   [typekind]
+          The typekind of the key data
+
+   [isPresent]
+          Whether or not the keyname is present
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  32.4.20 ESMF_LocStreamGetKey - Get a DE-local Fortran array pointer to key
+  values
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocStreamGetKey()
+        subroutine ESMF_LocStreamGetKey(locstream, keyName, &
+            localDE, exclusiveLBound, exclusiveUBound, exclusiveCount,       &
+            computationalLBound, computationalUBound, computationalCount,    &
+            totalLBound, totalUBound, totalCount,                            &
+            farray, datacopyflag, rc)
+
+   ARGUMENTS:
+        type(ESMF_LocStream),   intent(in)            :: locstream
+        character (len=*),      intent(in)            :: keyName
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+        integer,                intent(in),  optional :: localDE
+        integer,                intent(out), optional :: exclusiveLBound
+        integer,                intent(out), optional :: exclusiveUBound
+        integer,                intent(out), optional :: exclusiveCount
+        integer,                intent(out), optional :: computationalLBound
+        integer,                intent(out), optional :: computationalUBound
+        integer,                intent(out), optional :: computationalCount
+        integer,                intent(out), optional :: totalLBound
+        integer,                intent(out), optional :: totalUBound
+        integer,                intent(out), optional :: totalCount
+        <farray>
+        type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+        integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This method gets a Fortran pointer to the piece of memory which holds
+   the key data for a particular key on the given local DE. This is
+   useful, for example, for setting the key values in a LocStream, or for
+   reading the values.
+
+   Supported values for <farray> are:
+
+          integer(ESMF_KIND_I4), pointer :: farray(:)
+
+          real(ESMF_KIND_R4), pointer :: farray(:)
+
+          real(ESMF_KIND_R8), pointer :: farray(:)
+
+   The arguments are:
+
+   locstream
+          LocStream to get the information from.
+
+   keyName
+          The key to get the information from.
+
+   [localDE]
+          The local DE for which information is requested.
+          [0,..,localDECount-1]. For localDECount==1 the localDE argument
+          may be omitted, in which case it will default to localDE=0.
+
+   [exclusiveLBound]
+          Upon return this holds the lower bounds of the exclusive region.
+
+   [exclusiveUBound]
+          Upon return this holds the upper bounds of the exclusive region.
+
+   [exclusiveCount]
+          Upon return this holds the number of items in the exclusive
+          region
+          (i.e. exclusiveUBound-exclusiveLBound+1). exclusiveCount.
+
+   [computationalLBound]
+          Upon return this holds the lower bounds of the computational
+          region.
+
+   [computationalUBound]
+          Upon return this holds the upper bounds of the computational
+          region.
+
+   [computationalCount]
+          Upon return this holds the number of items in the computational
+          region
+          (i.e. computationalUBound-computationalLBound+1).
+
+   [totalLBound]
+          Upon return this holds the lower bounds of the total region.
+
+   [totalUBound]
+          Upon return this holds the upper bounds of the total region.
+
+   [totalCount]
+          Upon return this holds the number of items in the total region
+          (i.e. totalUBound-totalLBound+1).
+
+   farray
+          The pointer to the coordinate data.
+
+   [datacopyflag]
+          If not specified, default to ESMF_DATACOPY_REFERENCE, in this
+          case farray is a reference to the data in the Grid coordinate
+          arrays. Please see Section [1448]54.12 for further description
+          and a list of valid values.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

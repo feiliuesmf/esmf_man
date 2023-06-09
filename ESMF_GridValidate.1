@@ -1,0 +1,41 @@
+  31.6.56 ESMF_GridValidate - Validate Grid internals
+
+   INTERFACE:
+   subroutine ESMF_GridValidate(grid, rc)
+
+   ARGUMENTS:
+     type(ESMF_Grid), intent(in)              :: grid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,         intent(out),  optional  :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Validates that the Grid is internally consistent. Note that one of the
+   checks that the Grid validate does is the Grid status. Currently, the
+   validate will return an error if the grid is not at least
+   ESMF_GRIDSTATUS_COMPLETE. This means that if a Grid was created with
+   the ESMF_GridEmptyCreate method, it must also have been finished with
+   ESMF_GridEmptyComplete() to be valid. If a Grid was created with
+   another create call it should automatically have the correct status
+   level to pass the status part of the validate. The Grid validate at
+   this time doesn't check for the presence or consistency of the Grid
+   coordinates. The method returns an error code if problems are found.
+
+   The arguments are:
+
+   grid
+          Specified ESMF_Grid object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+31.7 Class API: StaggerLoc Methods
+
+
+

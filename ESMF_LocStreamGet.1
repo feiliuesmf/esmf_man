@@ -1,0 +1,56 @@
+  32.4.16 ESMF_LocStreamGet - Return object-wide information from a LocStream
+
+   INTERFACE:
+   subroutine ESMF_LocStreamGet(locstream, &
+        distgrid, keyCount, keyNames, localDECount, indexflag, &
+        coordSys, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_Locstream),         intent(in)            :: locstream
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_DistGrid),          intent(out), optional :: distgrid
+     integer,                      intent(out), optional :: keyCount
+     character(len=ESMF_MAXSTR),                optional :: keyNames(:)
+     integer,                      intent(out), optional :: localDECount
+     type(ESMF_Index_Flag),        intent(out), optional :: indexflag
+     type(ESMF_CoordSys_Flag),     intent(out), optional :: coordSys
+     character(len=*),             intent(out), optional :: name
+     integer,                      intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Query an ESMF_LocStream for various information. All arguments after
+   the locstream are optional.
+
+   The arguments are:
+
+   locstream
+          The ESMF_LocStream object to query.
+
+   [distgrid]
+          The ESMF_DistGrid object that describes
+
+   [keyCount]
+          Number of keys in the locstream.
+
+   [keyNames]
+          The names of the keys in the locstream. Keynames should be an
+          array of character strings. The character strings should be of
+          length ESMF_MAXSTR and the array's length should be at least
+          keyCount.
+
+   [localDECount]
+          Number of DEs on this PET in the locstream.
+
+   [indexflag]
+          The indexflag for this indexflag.
+
+   [coordSys]
+          The coordinate system for this location stream.
+
+   [name]
+          Name of queried item.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,347 @@
+          + [227]27 ArrayBundle Class
+               o [228]27.1 Description
+               o [229]27.2 Use and Examples
+                    # [230]27.2.1 Creating an ArrayBundle from a list of
+                      Arrays
+                    # [231]27.2.2 Adding, removing, replacing Arrays in
+                      the ArrayBundle
+                    # [232]27.2.3 Accessing Arrays inside the ArrayBundle
+                    # [233]27.2.4 Destroying an ArrayBundle and its
+                      constituents
+                    # [234]27.2.5 Halo communication
+               o [235]27.3 Restrictions and Future Work
+               o [236]27.4 Design and Implementation Notes
+               o [237]27.5 Class API
+                    # [238]27.5.1 ESMF_ArrayBundleAssignment(=)
+                    # [239]27.5.2 ESMF_ArrayBundleOperator(==)
+                    # [240]27.5.3 ESMF_ArrayBundleOperator(/=)
+                    # [241]27.5.4 ESMF_ArrayBundleAdd
+                    # [242]27.5.5 ESMF_ArrayBundleAddReplace
+                    # [243]27.5.6 ESMF_ArrayBundleCreate
+                    # [244]27.5.7 ESMF_ArrayBundleDestroy
+                    # [245]27.5.8 ESMF_ArrayBundleGet
+                    # [246]27.5.9 ESMF_ArrayBundleGet
+                    # [247]27.5.10 ESMF_ArrayBundleGet
+                    # [248]27.5.11 ESMF_ArrayBundleHalo
+                    # [249]27.5.12 ESMF_ArrayBundleHaloRelease
+                    # [250]27.5.13 ESMF_ArrayBundleHaloStore
+                    # [251]27.5.14 ESMF_ArrayBundleIsCreated
+                    # [252]27.5.15 ESMF_ArrayBundlePrint
+                    # [253]27.5.16 ESMF_ArrayBundleRead
+                    # [254]27.5.17 ESMF_ArrayBundleRedist
+                    # [255]27.5.18 ESMF_ArrayBundleRedistRelease
+                    # [256]27.5.19 ESMF_ArrayBundleRedistStore
+                    # [257]27.5.20 ESMF_ArrayBundleRedistStore
+                    # [258]27.5.21 ESMF_ArrayBundleRemove
+                    # [259]27.5.22 ESMF_ArrayBundleReplace
+                    # [260]27.5.23 ESMF_ArrayBundleSMM
+                    # [261]27.5.24 ESMF_ArrayBundleSMMRelease
+                    # [262]27.5.25 ESMF_ArrayBundleSMMStore
+                    # [263]27.5.26 ESMF_ArrayBundleSMMStore
+                    # [264]27.5.27 ESMF_ArrayBundleWrite
+                              27 ArrayBundle Class
+
+27.1 Description
+
+   The ESMF_ArrayBundle class allows a set of Arrays to be bundled into a
+   single object. The Arrays in an ArrayBundle may be of different type,
+   kind, rank and distribution. Besides ease of use resulting from
+   bundling, the ArrayBundle class offers the opportunity for performance
+   optimization when operating on a bundle of Arrays as a single entity.
+   Communication methods are especially good candidates for performance
+   optimization. Best optimization results are expected for ArrayBundles
+   that contain Arrays that share a common distribution, i.e. DistGrid,
+   and are of same type, kind and rank.
+
+   ArrayBundles are one of the data objects that can be added to States,
+   which are used for providing to or receiving data from other
+   Components.
+
+27.2 Use and Examples
+
+   Examples of creating, destroying and accessing ArrayBundles and their
+   constituent Arrays are provided in this section, along with some notes
+   on ArrayBundle methods.
+
+  27.2.1 Creating an ArrayBundle from a list of Arrays
+
+   An ArrayBundle is created from a list of ESMF_Array objects.
+
+  call ESMF_ArraySpecSet(arrayspec, typekind=ESMF_TYPEKIND_R8, rank=2, rc=rc)
+
+  distgrid = ESMF_DistGridCreate(minIndex=(/1,1/), maxIndex=(/5,5/), &
+    regDecomp=(/2,3/), rc=rc)
+
+  allocate(arrayList(2))
+  arrayList(1) = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, &
+                 rc=rc)
+
+  arrayList(2) = ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, &
+                 rc=rc)
+
+   Now arrayList is used to create an ArrayBundle object.
+
+  arraybundle = ESMF_ArrayBundleCreate(arrayList=arrayList, &
+    name="MyArrayBundle", rc=rc)
+
+   Here the temporary arrayList can be deallocated. This will not affect
+   the ESMF Array objects inside the ArrayBundle. However, the Array
+   objects must not be deallocated while the ArrayBundle references them.
+
+  deallocate(arrayList)
+
+  27.2.2 Adding, removing, replacing Arrays in the ArrayBundle
+
+   Individual Arrays can be added using the Fortran array constructor
+   syntax (/ ... /). Here an ESMF_Array is created on the fly and
+   immediately added to the ArrayBundle.
+
+  call ESMF_ArrayBundleAdd(arraybundle, arrayList=(/ &
+    ESMF_ArrayCreate(arrayspec=arrayspec, distgrid=distgrid, name="AonFly")/), &
+    rc=rc)
+
+   Items in the ArrayBundle can be replaced by items with the same name.
+
+  call ESMF_ArraySpecSet(arrayspec2, typekind=ESMF_TYPEKIND_R4, rank=2, rc=rc)
+
+  call ESMF_ArrayBundleReplace(arraybundle, arrayList=(/ &
+    ESMF_ArrayCreate(arrayspec=arrayspec2, distgrid=distgrid, name="AonFly")/),
+&
+    rc=rc)
+
+   Items can be removed from the ArrayBundle by providing their name.
+
+  call ESMF_ArrayBundleRemove(arraybundle, arrayNameList=(/"AonFly"/), rc=rc)
+
+   The ArrayBundle AddReplace() method can be used to conveniently add an
+   item to the ArrayBundle, or replacing an existing item of the same
+   name.
+
+  call ESMF_ArrayBundleAddReplace(arraybundle, arrayList=(/ &
+    ESMF_ArrayCreate(arrayspec=arrayspec2, distgrid=distgrid, name="AonFly")/),
+&
+    rc=rc)
+
+   The ArrayBundle object can be printed at any time to list its contents
+   by name.
+
+  call ESMF_ArrayBundlePrint(arraybundle, rc=rc)
+
+  27.2.3 Accessing Arrays inside the ArrayBundle
+
+   Individual items in the ArrayBundle can be accessed directly by their
+   name.
+
+  call ESMF_ArrayBundleGet(arraybundle, arrayName="AonFly", array=arrayOut, &
+    rc=rc)
+
+   A list containing all of the Arrays in the ArrayBundle can also be
+   requested in a single call. This requires that a large enough list
+   argument is passed into the ESMF_ArrayBundleGet() method. The exact
+   number of items in the ArrayBundle can be queried using the arrayCount
+   argument first.
+
+  call ESMF_ArrayBundleGet(arraybundle, arrayCount=arrayCount, rc=rc)
+
+   Then use arrayCount to correctly allocate the arrayList variable for a
+   second call to ESMF_ArrayBundleGet().
+
+  allocate(arrayList(arrayCount))
+  call ESMF_ArrayBundleGet(arraybundle, arrayList=arrayList, rc=rc)
+
+   Now the arrayList variable can be used to access the individual Arrays,
+   e.g. to print them.
+
+  do i=1, arrayCount
+    call ESMF_ArrayPrint(arrayList(i), rc=rc)
+    if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+  enddo
+
+   By default the arrayList returned by ESMF_ArrayBundleGet() contains the
+   items in alphabetical order. To instead return the items in the same
+   order in which they were added to the ArrayBundle, the itemorderflag
+   argument is passed with a value of ESMF_ITEMORDER_ADDORDER.
+
+  call ESMF_ArrayBundleGet(arraybundle, arrayList=arrayList, &
+    itemorderflag=ESMF_ITEMORDER_ADDORDER, rc=rc)
+
+  27.2.4 Destroying an ArrayBundle and its constituents
+
+   Destroying an ArrayBundle does not destroy the Arrays. In fact, it
+   leaves the Arrays totally unchanged.
+
+  call ESMF_ArrayBundleDestroy(arraybundle, rc=rc)
+
+   The Arrays must be destroyed separately.
+
+  call ESMF_ArrayDestroy(arrayList(1), rc=rc)
+
+  call ESMF_ArrayDestroy(arrayList(2), rc=rc)
+
+  deallocate(arrayList)
+
+  call ESMF_DistGridDestroy(distgrid, rc=rc)
+
+  27.2.5 Halo communication
+
+   One of the most fundamental communication pattern in domain
+   decomposition codes is the halo operation. The ESMF Array class
+   supports halos by allowing memory for extra elements to be allocated on
+   each DE. See section [1039]28.2.15 for a discussion of the Array level
+   halo operation. The ArrayBundle level extents the Array halo operation
+   to bundles of Arrays.
+
+   First create an ESMF_ArrayBundle object containing a set of ESMF
+   Arrays.
+
+  arraybundle = ESMF_ArrayBundleCreate(arrayList=arrayList, &
+    name="MyArrayBundle", rc=rc)
+
+   The ArrayBundle object can be treated as a single entity. The
+   ESMF_ArrayBundleHaloStore() call determines the most efficient halo
+   exchange pattern for all Arrays that are part of arraybundle.
+
+  call ESMF_ArrayBundleHaloStore(arraybundle=arraybundle, &
+    routehandle=haloHandle, rc=rc)
+
+   The halo exchange pattern stored in haloHandle can now be applied to
+   the arraybundle object, or any other ArrayBundle that is compatible to
+   the one used during the ESMF_ArrayBundleHaloStore() call.
+
+  call ESMF_ArrayBundleHalo(arraybundle=arraybundle, routehandle=haloHandle, &
+    rc=rc)
+
+   Finally, when no longer needed, the resources held by haloHandle need
+   to be returned to the system by calling ESMF_ArrayBundleHaloRelease().
+
+  call ESMF_ArrayBundleHaloRelease(routehandle=haloHandle, rc=rc)
+
+   Finally the ArrayBundle object can be destroyed.
+
+  call ESMF_ArrayBundleDestroy(arraybundle, rc=rc)
+
+27.3 Restrictions and Future Work
+
+     * Non-blocking ArrayBundle communications option is not yet
+       implemented. In the future this functionality will be provided via
+       the routesyncflag option.
+
+27.4 Design and Implementation Notes
+
+   The following is a list of implementation specific details about the
+   current ESMF ArrayBundle.
+
+     * Implementation language is C++.
+     * All precomputed communication methods are based on sparse matrix
+       multiplication.
+
+27.5 Class API
+
+  27.5.1 ESMF_ArrayBundleAssignment(=) - ArrayBundle assignment
+
+   INTERFACE:
+     interface assignment(=)
+     arraybundle1 = arraybundle2
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle) :: arraybundle1
+     type(ESMF_ArrayBundle) :: arraybundle2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign arraybundle1 as an alias to the same ESMF ArrayBundle object in
+   memory as arraybundle2. If arraybundle2 is invalid, then arraybundle1
+   will be equally invalid after the assignment.
+
+   The arguments are:
+
+   arraybundle1
+          The ESMF_ArrayBundle object on the left hand side of the
+          assignment.
+
+   arraybundle2
+          The ESMF_ArrayBundle object on the right hand side of the
+          assignment.
+
+  27.5.2 ESMF_ArrayBundleOperator(==) - ArrayBundle equality operator
+
+   INTERFACE:
+   interface operator(==)
+     if (arraybundle1 == arraybundle2) then ... endif
+               OR
+     result = (arraybundle1 == arraybundle2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle), intent(in) :: arraybundle1
+     type(ESMF_ArrayBundle), intent(in) :: arraybundle2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether arraybundle1 and arraybundle2 are valid aliases to the
+   same ESMF ArrayBundle object in memory. For a more general comparison
+   of two ESMF ArrayBundles, going beyond the simple alias test, the
+   ESMF_ArrayBundleMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   arraybundle1
+          The ESMF_ArrayBundle object on the left hand side of the
+          equality operation.
+
+   arraybundle2
+          The ESMF_ArrayBundle object on the right hand side of the
+          equality operation.
+
+  27.5.3 ESMF_ArrayBundleOperator(/=) - ArrayBundle not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (arraybundle1 /= arraybundle2) then ... endif
+               OR
+     result = (arraybundle1 /= arraybundle2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle), intent(in) :: arraybundle1
+     type(ESMF_ArrayBundle), intent(in) :: arraybundle2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether arraybundle1 and arraybundle2 are not valid aliases to the
+   same ESMF ArrayBundle object in memory. For a more general comparison
+   of two ESMF ArrayBundles, going beyond the simple alias test, the
+   ESMF_ArrayBundleMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   arraybundle1
+          The ESMF_ArrayBundle object on the left hand side of the
+          non-equality operation.
+
+   arraybundle2
+          The ESMF_ArrayBundle object on the right hand side of the
+          non-equality operation.
+

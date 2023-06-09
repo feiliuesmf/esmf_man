@@ -1,0 +1,47 @@
+  46.6.15 ESMF_AlarmPrint - Print Alarm information
+
+   INTERFACE:
+       subroutine ESMF_AlarmPrint(alarm, options, rc)
+
+   ARGUMENTS:
+       type(ESMF_Alarm),  intent(in)            :: alarm
+       character (len=*), intent(in),  optional :: options
+       integer,           intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Prints out an ESMF_Alarm's properties to stdout, in support of testing
+   and debugging. The options control the type of information and level of
+   detail.
+
+   The arguments are:
+
+   alarm
+          ESMF_Alarm to be printed out.
+
+   [options]
+          Print options. If none specified, prints all alarm property
+          values.
+          "clock" - print the associated clock's name.
+          "enabled" - print the alarm's ability to ring.
+          "name" - print the alarm's name.
+          "prevRingTime" - print the alarm's previous ring time.
+          "ringBegin" - print time when the alarm actually begins to ring.
+          "ringDuration" - print how long this alarm is to remain ringing.
+          "ringEnd" - print time when the alarm actually ends ringing.
+          "ringing" - print the alarm's current ringing state.
+          "ringingOnPrevTimeStep" - print whether the alarm was ringing
+          immediately after the previous clock time step.
+          "ringInterval" - print the alarm's periodic ring interval.
+          "ringTime" - print the alarm's next time to ring.
+          "ringTimeStepCount" - print how long this alarm is to remain
+          ringing, in terms of a number of clock time steps.
+          "refTime" - print the alarm's interval reference (base) time.
+          "sticky" - print whether the alarm must be turned off manually.
+          "stopTime" - print when alarm intervals end.
+          "timeStepRingingCount" - print the number of time steps the
+          alarm has been ringing thus far.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

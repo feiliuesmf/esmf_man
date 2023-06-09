@@ -1,0 +1,235 @@
+  51.6.18 ESMF_VMGet - Get information from a VM
+
+   INTERFACE:
+   ! Private name; call using ESMF_VMGet()
+   recursive subroutine ESMF_VMGetDefault(vm, localPet, &
+     currentSsiPe, petCount, peCount, ssiCount, ssiMap, ssiMinPetCount, ssiMaxPe
+tCount, &
+     ssiLocalPetCount, mpiCommunicator, pthreadsEnabledFlag, openMPEnabledFlag,
+&
+     ssiSharedMemoryEnabledFlag, esmfComm, rc)
+
+   ARGUMENTS:
+     type(ESMF_VM),        intent(in)            :: vm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,              intent(out), optional :: localPet
+     integer,              intent(out), optional :: currentSsiPe
+     integer,              intent(out), optional :: petCount
+     integer,              intent(out), optional :: peCount
+     integer,              intent(out), optional :: ssiCount
+     integer, allocatable, intent(out), optional :: ssiMap(:)
+     integer,              intent(out), optional :: ssiMinPetCount
+     integer,              intent(out), optional :: ssiMaxPetCount
+     integer,              intent(out), optional :: ssiLocalPetCount
+     integer,              intent(out), optional :: mpiCommunicator
+     logical,              intent(out), optional :: pthreadsEnabledFlag
+     logical,              intent(out), optional :: openMPEnabledFlag
+     logical,              intent(out), optional :: ssiSharedMemoryEnabledFlag
+     character(:), allocatable, intent(out), optional :: esmfComm
+     integer,              intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        8.0.0
+                Added arguments ssiCount, ssiMinPetCount, ssiMaxPetCount,
+                and ssiLocalPetCount to provide access to information
+                about how the VM is mapped across the single system images
+                (SSIs) - typically synonymous to nodes - of the compute
+                environment. This information is useful when constructing
+                custom petLists.
+                Added argument ssiSharedMemoryEnabledFlag that allows the
+                user to query whether ESMF was compiled with support for
+                shared memory access between PETs on the same SSI.
+
+        8.1.0
+                Added argument currentSsiPe for easy query of the current
+                PE within the local SSI that is executing the request.
+                Added argument ssiMap for a convenient way to obtain a
+                view of the mapping of PETs to single system images across
+                the entire VM.
+
+        8.2.0
+                Added argument esmfComm to provide easy access to the
+                ESMF_COMM setting used by the ESMF installation.
+
+   DESCRIPTION:
+
+   Get internal information about the specified ESMF_VM object.
+
+   The arguments are:
+
+   vm
+          Queried ESMF_VM object.
+
+   [localPet]
+          Upon return this holds the id of the local PET that issued this
+          call. The valid range of localPet is $[0..petCount-1]$ . A value
+          of $-1$ is returned on PETs that are not active under the
+          specified vm.
+
+   [currentSsiPe]
+          Upon return this holds the id of the PE within the local SSI on
+          which the calling PET (i.e. localPet) is currently executing. If
+          the PET is associated with a set of PEs, or PETs are not pinned,
+          the returned value might change each time the call is made.
+
+   [petCount]
+          Upon return this holds the number of PETs running under vm.
+
+   [peCount]
+          Upon return this holds the number of PEs referenced by vm.
+
+   [ssiCount]
+          Upon return this holds the number of single system images
+          referenced by vm.
+
+   [ssiMap]
+          Upon return this array is allocated and holds the single system
+          image id for each PET across the vm. The size of ssiMap is equal
+          to petCount, with lower bound 0 and upper bound petCount-1.
+
+   [ssiMinPetCount]
+          Upon return this holds the smallest number of PETs running in
+          the same single system images under vm.
+
+   [ssiMaxPetCount]
+          Upon return this holds the largest number of PETs running in the
+          same single system images under vm.
+
+   [ssiLocalPetCount]
+          Upon return this holds the number of PETs running in the same
+          single system as localPet.
+
+   [mpiCommunicator]
+          Upon return this holds the MPI intra-communicator used by the
+          specified ESMF_VM object. This communicator may be used for
+          user-level MPI communications. It is recommended that the user
+          duplicates the communicator via MPI_Comm_Dup() in order to
+          prevent any interference with ESMF communications. MPI_COMM_NULL
+          is returned on PETs that are not active under the specified vm.
+
+   [pthreadsEnabledFlag]
+
+        .TRUE.
+                ESMF has been compiled with Pthreads, and the MPI
+                environment supports threading.
+
+        .FALSE.
+                ESMF has not been compiled with Pthreads, or the MPI
+                environment does not support threading.
+
+   [openMPEnabledFlag]
+
+        .TRUE.
+                ESMF has been compiled with OpenMP.
+
+        .FALSE.
+                ESMF has not been compiled with OpenMP.
+
+   [ssiSharedMemoryEnabledFlag]
+
+        .TRUE.
+                ESMF has been compiled to support shared memory access
+                between PETs that are on the same single system image
+                (SSI).
+
+        .FALSE.
+                ESMF has not been compiled to support shared memory access
+                between PETs that are on the same single system image
+                (SSI).
+
+   [esmfComm]
+          Upon return this string is allocated to the appropriate size and
+          holds the exact value of the ESMF_COMM build environment
+          variable used by the ESMF installation. This provides a
+          convenient way for the user to determine the underlying MPI
+          implementation.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  51.6.19 ESMF_VMGet - Get PET specific VM information
+
+   INTERFACE:
+   ! Private name; call using ESMF_VMGet()
+   subroutine ESMF_VMGetPetSpecific(vm, pet, peCount, &
+     accDeviceCount, ssiId, threadCount, threadId, vas, rc)
+
+   ARGUMENTS:
+     type(ESMF_VM), intent(in)            :: vm
+     integer,       intent(in)            :: pet
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,       intent(out), optional :: peCount
+     integer,       intent(out), optional :: accDeviceCount
+     integer,       intent(out), optional :: ssiId
+     integer,       intent(out), optional :: threadCount
+     integer,       intent(out), optional :: threadId
+     integer,       intent(out), optional :: vas
+     integer,       intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.0.0
+                Added argument accDeviceCount. The argument provides
+                access to the number of available accelerator devices.
+
+   DESCRIPTION:
+
+   Get internal information about a specific PET within an ESMF_VM object.
+
+   The arguments are:
+
+   vm
+          Queried ESMF_VM object.
+
+   pet
+          Queried PET id within the specified ESMF_VM object.
+
+   [peCount]
+          Upon return this holds the number of PEs associated with the
+          specified PET in the ESMF_VM object.
+
+   [accDeviceCount]
+          Upon return this holds the number of accelerated devices
+          accessible from the specified PET in the ESMF_VM object.
+
+   [ssiId]
+          Upon return this holds the id of the single-system image (SSI)
+          the specified PET is running on.
+
+   [threadCount]
+          Upon return this holds the number of PETs in the specified PET"s
+          thread group.
+
+   [threadId]
+          Upon return this holds the thread id of the specified PET within
+          the PET"s thread group.
+
+   [vas]
+          Virtual address space in which this PET operates.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

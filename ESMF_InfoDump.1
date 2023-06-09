@@ -1,0 +1,35 @@
+  40.4.10 ESMF_InfoDump - Dump Info contents to string
+
+   INTERFACE:
+ function ESMF_InfoDump(info, key, indent, rc) result(output)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(in) :: info
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   character(*), intent(in), optional :: key
+   integer, intent(in), optional :: indent
+   integer, intent(out), optional :: rc
+   RESULT:
+   character(:), allocatable :: output
+
+   DESCRIPTION:
+
+   Dump the contents of an ESMF_Info object as a JSON string.
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   [key]
+          String key to access in ESMF_Info storage. See section [489]40.2
+          for an overview of the key format.
+
+   [indent]
+          Default is 0. Specifying an indentation greater than 0 will
+          result in a "pretty print" for JSON output string (string
+          includes new line breaks).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

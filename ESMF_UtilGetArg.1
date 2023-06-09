@@ -1,0 +1,53 @@
+  53.4.1 ESMF_UtilGetArg - Return a command line argument
+
+   INTERFACE:
+   subroutine ESMF_UtilGetArg(argindex, argvalue, arglength, rc)
+
+   ARGUMENTS:
+     integer,      intent(in)            :: argindex
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(*), intent(out), optional :: argvalue
+     integer,      intent(out), optional :: arglength
+     integer,      intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   This method returns a copy of a command line argument specified when
+   the process was started. This argument is the same as an equivalent C++
+   program would find in the argv array.
+
+   Some MPI implementations do not consistently provide command line
+   arguments on PETs other than PET 0. It is therefore recommended that
+   PET 0 call this method and broadcast the results to the other PETs by
+   using the ESMF_VMBroadcast() method.
+
+   The arguments are:
+
+   argindex
+          A non-negative index into the command line argument argv array.
+          If argindex is negative or greater than the number of
+          user-specified arguments, ESMF_RC_ARG_VALUE is returned in the
+          rc argument.
+
+   [argvalue]
+          Returns a copy of the desired command line argument. If the
+          provided character string is longer than the command line
+          argument, the string will be blank padded. If the string is too
+          short, truncation will occur and ESMF_RC_ARG_SIZE is returned in
+          the rc argument.
+
+   [arglength]
+          Returns the length of the desired command line argument in
+          characters. The length result does not depend on the length of
+          the value string. It may be used to query the length of the
+          argument.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

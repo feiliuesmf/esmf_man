@@ -1,0 +1,47 @@
+  50.6.11 ESMF_DELayoutServiceOffer - Offer service for a DE in DELayout
+
+   INTERFACE:
+   recursive function ESMF_DELayoutServiceOffer(delayout, de, rc)
+
+   RETURN VALUE:
+     type(ESMF_ServiceReply_Flag) :: ESMF_DELayoutServiceOffer
+
+   ARGUMENTS:
+     type(ESMF_DELayout),  intent(in)            :: delayout
+     integer,              intent(in)            :: de
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,              intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Offer service for a DE in the ESMF_DELayout object. This call together
+   with ESMF_DELayoutServiceComplete() provides the synchronization
+   primitives between the PETs of an ESMF multi-threaded VM necessary for
+   dynamic load balancing via a work queue approach.
+
+   The calling PET will either receive ESMF_SERVICEREPLY_ACCEPT if the
+   service offer has been accepted by DELayout or ESMF_SERVICEREPLY_DENY
+   if the service offer was denied. The service offer paradigm is
+   different from a simple mutex approach in that the DELayout keeps track
+   of the number of service offers issued for each DE by each PET and
+   accepts only one PET's offer for each offer increment. This requires
+   that all PETs use ESMF_DELayoutServiceOffer() in unison. See section
+   [606]50.2.2 for the potential return values.
+
+   The arguments are:
+
+   delayout
+          Specified ESMF_DELayout object.
+
+   de
+          DE for which service is offered by the calling PET.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

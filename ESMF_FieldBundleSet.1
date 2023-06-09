@@ -1,0 +1,114 @@
+  25.5.29 ESMF_FieldBundleSet - Associate a Grid with an empty FieldBundle
+
+   INTERFACE:
+       ! Private name; call using ESMF_FieldBundleSet()
+       subroutine ESMF_FieldBundleSetGrid(fieldbundle, grid, rc)
+
+   ARGUMENTS:
+       type(ESMF_FieldBundle), intent(inout) :: fieldbundle
+       type(ESMF_Grid), intent(in) :: grid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Sets the grid for a fieldbundle.
+
+   The arguments are:
+
+   fieldbundle
+          An ESMF_FieldBundle object.
+
+   grid
+          The ESMF_Grid which all ESMF_Fields added to this
+          ESMF_FieldBundle must have.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  25.5.30 ESMF_FieldBundleSet - Associate a Mesh with an empty FieldBundle
+
+   INTERFACE:
+       ! Private name; call using ESMF_FieldBundleSet()
+       subroutine ESMF_FieldBundleSetMesh(fieldbundle, mesh, rc)
+
+   ARGUMENTS:
+       type(ESMF_FieldBundle), intent(inout) :: fieldbundle
+       type(ESMF_Mesh), intent(in) :: mesh
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Sets the mesh for a fieldbundle.
+
+   The arguments are:
+
+   fieldbundle
+          An ESMF_FieldBundle object.
+
+   mesh
+          The ESMF_Mesh which all ESMF_Fields added to this
+          ESMF_FieldBundle must have.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  25.5.31 ESMF_FieldBundleSet - Associate a LocStream with an empty FieldBundle
+
+   INTERFACE:
+       ! Private name; call using ESMF_FieldBundleSet()
+       subroutine ESMF_FieldBundleSetLS(fieldbundle, locstream, &
+         rc)
+
+   ARGUMENTS:
+       type(ESMF_FieldBundle), intent(inout) :: fieldbundle
+       type(ESMF_LocStream), intent(in) :: locstream
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Sets the locstream for a fieldbundle.
+
+   The arguments are:
+
+   fieldbundle
+          An ESMF_FieldBundle object.
+
+   locstream
+          The ESMF_LocStream which all ESMF_Fields added to this
+          ESMF_FieldBundle must have.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  25.5.32 ESMF_FieldBundleSet - Associate a XGrid with an empty FieldBundle
+
+   INTERFACE:
+       ! Private name; call using ESMF_FieldBundleSet()
+       subroutine ESMF_FieldBundleSetXGrid(fieldbundle, xgrid, &
+         rc)
+
+   ARGUMENTS:
+       type(ESMF_FieldBundle), intent(inout) :: fieldbundle
+       type(ESMF_XGrid), intent(in) :: xgrid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Sets the xgrid for a fieldbundle
+
+   The arguments are:
+
+   fieldbundle
+          An ESMF_FieldBundle object.
+
+   xgrid
+          The ESMF_XGrid which all ESMF_Fields added to this
+          ESMF_FieldBundle must have.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,34 @@
+  33.4.15 ESMF_MeshEmptyCreate - Create a Mesh to hold Distgrid information
+
+   INTERFACE:
+     function ESMF_MeshEmptyCreate(nodalDistgrid, elementDistgrid, name, rc)
+
+   RETURN VALUE:
+     type(ESMF_Mesh)         :: ESMF_MeshEmptyCreate
+
+   ARGUMENTS:
+     type(ESMF_DistGrid),      intent(in),  optional :: elementdistgrid
+     type(ESMF_DistGrid),      intent(in),  optional :: nodalDistgrid
+     character(len=*),         intent(in),  optional :: name
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Create a Mesh to hold distribution information (i.e. Distgrids). Such a
+   mesh will have no coordinate or connectivity information stored. Aside
+   from holding distgrids the Mesh created by this call can't be used in
+   other ESMF functionality (e.g. it can't be used to create a Field or in
+   regridding).
+
+   [nodalDistgrid]
+          The nodal distgrid.
+
+   [elementDistgrid]
+          The elemental distgrid.
+
+   [name]
+          The name of the Mesh.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

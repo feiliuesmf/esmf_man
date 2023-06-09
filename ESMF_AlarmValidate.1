@@ -1,0 +1,30 @@
+  46.6.20 ESMF_AlarmValidate - Validate an Alarm's properties
+
+   INTERFACE:
+       subroutine ESMF_AlarmValidate(alarm, rc)
+
+   ARGUMENTS:
+       type(ESMF_Alarm),  intent(in)            :: alarm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,           intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Performs a validation check on an ESMF_Alarm's properties. Must have a
+   valid ringTime, set either directly or indirectly via ringInterval. See
+   ESMF_AlarmCreate().
+
+   The arguments are:
+
+   alarm
+          ESMF_Alarm to be validated.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

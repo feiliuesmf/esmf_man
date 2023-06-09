@@ -1,0 +1,67 @@
+  51.6.11 ESMF_VMBroadcast - Broadcast data across VM
+
+   INTERFACE:
+    subroutine ESMF_VMBroadcast(vm, bcstData, count, rootPet, &
+      syncflag, commhandle, rc)
+
+   ARGUMENTS:
+      type(ESMF_VM),                    intent(in)            :: vm
+      <type>(ESMF_KIND_<kind>), target, intent(inout)         :: bcstData(:)
+      integer,                          intent(in)            :: count
+      integer,                          intent(in)            :: rootPet
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      type(ESMF_Sync_Flag),             intent(in),  optional :: syncflag
+      type(ESMF_CommHandle),            intent(out), optional :: commhandle
+      integer,                          intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Collective ESMF_VM communication call that broadcasts a contiguous data
+   array of <type><kind> from rootPet to all other PETs of the ESMF_VM
+   object. When the call returns, the bcstData array on all PETs contains
+   the same data as on rootPet.
+
+   This method is overloaded for: ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8, ESMF_TYPEKIND_LOGICAL,
+   ESMF_TYPEKIND_CHARACTER.
+
+   The arguments are:
+
+   vm
+          ESMF_VM object.
+
+   bcstData
+          Contiguous data array. On rootPet bcstData holds data that is to
+          be broadcasted to all other PETs. On all other PETs bcstData is
+          used to receive the broadcasted data and must be large enough to
+          accommodate the received data.
+
+   count
+          Number of elements in /bcstData. Must be the same on all PETs.
+
+   rootPet
+          PET that holds data that is being broadcast.
+
+   [syncflag]
+          Flag indicating whether this call behaves blocking or
+          non-blocking. The default is ESMF_SYNC_BLOCKING. See section
+          [617]54.57 for a complete list of options.
+
+   [commhandle]
+          If present, a communication handle will be returned in case of a
+          non-blocking request (see argument syncflag). The commhandle can
+          be used in ESMF_VMCommWait() to block the calling PET until the
+          communication call has finished PET-locally. If no commhandle
+          was supplied to a non-blocking call the VM method
+          ESMF_VMCommWaitAll() may be used to block on all currently
+          queued communication calls of the VM context.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,31 @@
+  46.6.16 ESMF_AlarmRingerOff - Turn off an Alarm
+
+   INTERFACE:
+       subroutine ESMF_AlarmRingerOff(alarm, rc)
+
+   ARGUMENTS:
+       type(ESMF_Alarm), intent(inout)         :: alarm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,          intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Turn off an ESMF_Alarm; unsets ringing state. For a sticky alarm, this
+   method must be called to turn off its ringing state. This is true for
+   either ESMF_DIRECTION_FORWARD (default) or ESMF_DIRECTION_REVERSE. See
+   Section [592]45.1.
+
+   The arguments are:
+
+   alarm
+          The object instance to turn off.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

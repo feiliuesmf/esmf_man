@@ -1,0 +1,44 @@
+  31.6.52 ESMF_GridMatch - Check if two Grid objects match
+
+   INTERFACE:
+   function ESMF_GridMatch(grid1, grid2, globalflag, rc)
+
+   RETURN VALUE:
+     type(ESMF_GridMatch_Flag) :: ESMF_GridMatch
+
+   ARGUMENTS:
+     type(ESMF_Grid),  intent(in)              :: grid1
+     type(ESMF_Grid),  intent(in)              :: grid2
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical,          intent(in),   optional  :: globalflag
+     integer,          intent(out),  optional  :: rc
+
+   DESCRIPTION:
+
+   Check if grid1 and grid2 match. Returns a range of values of type
+   ESMF_GridMatch indicating how closely the Grids match. For a
+   description of the possible return values, please see [1425]31.2.3.
+   Please also note that by default this call is not collective and only
+   returns the match for the piece of the Grids on the local PET. In this
+   case, it is possible for this call to return a different match on
+   different PETs for the same Grids. To do a global match operation set
+   the globalflag argument to .true.. In this case, the call becomes
+   collective across the current VM, ensuring the same result is returned
+   on all PETs.
+
+   The arguments are:
+
+   grid1
+          ESMF_Grid object.
+
+   grid2
+          ESMF_Grid object.
+
+   [globalflag]
+          By default this flag is set to false. When it's set to true, the
+          function performs the match check globally. In this case, the
+          method becomes collective across the current VM.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

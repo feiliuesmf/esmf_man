@@ -1,0 +1,650 @@
+          + [36]17 GridComp Class
+               o [37]17.1 Description
+               o [38]17.2 Use and Examples
+                    # [39]17.2.1 Implement a user-code SetServices routine
+                    # [40]17.2.2 Implement a user-code Initialize routine
+                    # [41]17.2.3 Implement a user-code Run routine
+                    # [42]17.2.4 Implement a user-code Finalize routine
+                    # [43]17.2.5 Implement a user-code SetVM routine
+                    # [44]17.2.6 Set and Get the Internal State
+               o [45]17.3 Restrictions and Future Work
+               o [46]17.4 Class API
+                    # [47]17.4.1 ESMF_GridCompAssignment(=)
+                    # [48]17.4.2 ESMF_GridCompOperator(==)
+                    # [49]17.4.3 ESMF_GridCompOperator(/=)
+                    # [50]17.4.4 ESMF_GridCompCreate
+                    # [51]17.4.5 ESMF_GridCompDestroy
+                    # [52]17.4.6 ESMF_GridCompFinalize
+                    # [53]17.4.7 ESMF_GridCompGet
+                    # [54]17.4.8 ESMF_GridCompGetInternalState
+                    # [55]17.4.9 ESMF_GridCompInitialize
+                    # [56]17.4.10 ESMF_GridCompIsCreated
+                    # [57]17.4.11 ESMF_GridCompIsPetLocal
+                    # [58]17.4.12 ESMF_GridCompPrint
+                    # [59]17.4.13 ESMF_GridCompReadRestart
+                    # [60]17.4.14 ESMF_GridCompRun
+                    # [61]17.4.15 ESMF_GridCompServiceLoop
+                    # [62]17.4.16 ESMF_GridCompSet
+                    # [63]17.4.17 ESMF_GridCompSetEntryPoint
+                    # [64]17.4.18 ESMF_GridCompSetInternalState
+                    # [65]17.4.19 ESMF_GridCompSetServices
+                    # [66]17.4.20 ESMF_GridCompSetServices
+                    # [67]17.4.21 ESMF_GridCompSetServices
+                    # [68]17.4.22 ESMF_GridCompSetServices
+                    # [69]17.4.23 ESMF_GridCompSetVM
+                    # [70]17.4.24 ESMF_GridCompSetVM
+                    # [71]17.4.25 ESMF_GridCompSetVMMaxPEs
+                    # [72]17.4.26 ESMF_GridCompSetVMMaxThreads
+                    # [73]17.4.27 ESMF_GridCompSetVMMinThreads
+                    # [74]17.4.28 ESMF_GridCompValidate
+                    # [75]17.4.29 ESMF_GridCompWait
+                    # [76]17.4.30 ESMF_GridCompWriteRestart
+                               17 GridComp Class
+
+17.1 Description
+
+   In Earth system modeling, the most natural way to think about an ESMF
+   Gridded Component, or ESMF_GridComp, is as a piece of code representing
+   a particular physical domain, such as an atmospheric model or an ocean
+   model. Gridded Components may also represent individual processes, such
+   as radiation or chemistry. It's up to the application writer to decide
+   how deeply to “componentize.”
+
+   Earth system software components tend to share a number of basic
+   features. Most ingest and produce a variety of physical fields, refer
+   to a (possibly noncontiguous) spatial region and a grid that is
+   partitioned across a set of computational resources, and require a
+   clock for things like stepping a governing set of PDEs forward in time.
+   Most can also be divided into distinct initialize, run, and finalize
+   computational phases. These common characteristics are used within ESMF
+   to define a Gridded Component data structure that is tailored for Earth
+   system modeling and yet is still flexible enough to represent a variety
+   of domains.
+
+   A well designed Gridded Component does not store information internally
+   about how it couples to other Gridded Components. That allows it to be
+   used in different contexts without changes to source code. The idea
+   here is to avoid situations in which slightly different versions of the
+   same model source are maintained for use in different contexts -
+   standalone vs. coupled versions, for example. Data is passed in and out
+   of Gridded Components using an ESMF State, this is described in
+   Section [262]21.1.
+
+   An ESMF Gridded Component has two parts, one which is user-written and
+   another which is part of the framework. The user-written part is
+   software that represents a physical domain or performs some other
+   computational function. It forms the body of the Gridded Component. It
+   may be a piece of legacy code, or it may be developed expressly for use
+   with ESMF. It must contain routines with standard ESMF interfaces that
+   can be called to initialize, run, and finalize the Gridded Component.
+   These routines can have separate callable phases, such as distinct
+   first and second initialization steps.
+
+   ESMF provides the Gridded Component derived type, ESMF_GridComp. An
+   ESMF_GridComp must be created for every portion of the application that
+   will be represented as a separate component. For example, in a climate
+   model, there may be Gridded Components representing the land, ocean,
+   sea ice, and atmosphere. If the application contains an ensemble of
+   identical Gridded Components, every one has its own associated
+   ESMF_GridComp. Each Gridded Component has its own name and is allocated
+   a set of computational resources, in the form of an ESMF Virtual
+   Machine, or VM.
+
+   The user-written part of a Gridded Component is associated with an
+   ESMF_GridComp derived type through a routine called ESMF_SetServices().
+   This is a routine that the user must write, and declare public. Inside
+   the SetServices routine the user must call ESMF_SetEntryPoint() methods
+   that associate a standard ESMF operation with the name of the
+   corresponding Fortran subroutine in their user code.
+
+17.2 Use and Examples
+
+   A Gridded Component is a computational entity which consumes and
+   produces data. It uses a State object to exchange data between itself
+   and other Components. It uses a Clock object to manage time, and a VM
+   to describe its own and its child components' computational resources.
+
+   This section shows how to create Gridded Components. For demonstrations
+   of the use of Gridded Components, see the system tests that are bundled
+   with the ESMF software distribution. These can be found in the
+   directory esmf/src/system_tests.
+
+  17.2.1 Implement a user-code SetServices routine
+
+   Every ESMF_GridComp is required to provide and document a public set
+   services routine. It can have any name, but must follow the declaration
+   below: a subroutine which takes an ESMF_GridComp as the first argument,
+   and an integer return code as the second. Both arguments are required
+   and must not be declared as optional. If an intent is specified in the
+   interface it must be intent(inout) for the first and intent(out) for
+   the second argument.
+
+   The set services routine must call the ESMF method
+   ESMF_GridCompSetEntryPoint() to register with the framework what
+   user-code subroutines should be called to initialize, run, and finalize
+   the component. There are additional routines which can be registered as
+   well, for checkpoint and restart functions.
+
+   Note that the actual subroutines being registered do not have to be
+   public to this module; only the set services routine itself must be
+   available to be used by other code.
+
+    ! Example Gridded Component
+    module ESMF_GriddedCompEx
+
+    ! ESMF Framework module
+    use ESMF
+    implicit none
+    public GComp_SetServices
+    public GComp_SetVM
+
+    contains
+
+    subroutine GComp_SetServices(comp, rc)
+      type(ESMF_GridComp)   :: comp   ! must not be optional
+      integer, intent(out)  :: rc     ! must not be optional
+
+      ! Set the entry points for standard ESMF Component methods
+      call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_INITIALIZE, &
+                                userRoutine=GComp_Init, rc=rc)
+      call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_RUN, &
+                                userRoutine=GComp_Run, rc=rc)
+      call ESMF_GridCompSetEntryPoint(comp, ESMF_METHOD_FINALIZE, &
+                                userRoutine=GComp_Final, rc=rc)
+
+      rc = ESMF_SUCCESS
+
+    end subroutine
+
+  17.2.2 Implement a user-code Initialize routine
+
+   When a higher level component is ready to begin using an ESMF_GridComp,
+   it will call its initialize routine.
+
+   The component writer must supply a subroutine with the exact interface
+   shown below. Arguments must not be declared as optional, and the types
+   and order must match.
+
+   At initialization time the component can allocate data space, open data
+   files, set up initial conditions; anything it needs to do to prepare to
+   run.
+
+   The rc return code should be set if an error occurs, otherwise the
+   value ESMF_SUCCESS should be returned.
+
+    subroutine GComp_Init(comp, importState, exportState, clock, rc)
+      type(ESMF_GridComp)   :: comp                   ! must not be optional
+      type(ESMF_State)      :: importState            ! must not be optional
+      type(ESMF_State)      :: exportState            ! must not be optional
+      type(ESMF_Clock)      :: clock                  ! must not be optional
+      integer, intent(out)  :: rc                     ! must not be optional
+
+      print *, "Gridded Comp Init starting"
+
+      ! This is where the model specific setup code goes.
+
+      ! If the initial Export state needs to be filled, do it here.
+      !call ESMF_StateAdd(exportState, field, rc)
+      !call ESMF_StateAdd(exportState, bundle, rc)
+      print *, "Gridded Comp Init returning"
+
+      rc = ESMF_SUCCESS
+
+    end subroutine GComp_Init
+
+  17.2.3 Implement a user-code Run routine
+
+   During the execution loop, the run routine may be called many times.
+   Each time it should read data from the importState, use the clock to
+   determine what the current time is in the calling component, compute
+   new values or process the data, and produce any output and place it in
+   the exportState.
+
+   When a higher level component is ready to use the ESMF_GridComp it will
+   call its run routine.
+
+   The component writer must supply a subroutine with the exact interface
+   shown below. Arguments must not be declared as optional, and the types
+   and order must match.
+
+   It is expected that this is where the bulk of the model computation or
+   data analysis will occur.
+
+   The rc return code should be set if an error occurs, otherwise the
+   value ESMF_SUCCESS should be returned.
+
+    subroutine GComp_Run(comp, importState, exportState, clock, rc)
+      type(ESMF_GridComp)   :: comp                   ! must not be optional
+      type(ESMF_State)      :: importState            ! must not be optional
+      type(ESMF_State)      :: exportState            ! must not be optional
+      type(ESMF_Clock)      :: clock                  ! must not be optional
+      integer, intent(out)  :: rc                     ! must not be optional
+
+      print *, "Gridded Comp Run starting"
+      ! call ESMF_StateGet(), etc to get fields, bundles, arrays
+      !  from import state.
+
+      ! This is where the model specific computation goes.
+
+      ! Fill export state here using ESMF_StateAdd(), etc
+
+      print *, "Gridded Comp Run returning"
+
+      rc = ESMF_SUCCESS
+
+    end subroutine GComp_Run
+
+  17.2.4 Implement a user-code Finalize routine
+
+   At the end of application execution, each ESMF_GridComp should
+   deallocate data space, close open files, and flush final results. These
+   functions should be placed in a finalize routine.
+
+   The component writer must supply a subroutine with the exact interface
+   shown below. Arguments must not be declared as optional, and the types
+   and order must match.
+
+   The rc return code should be set if an error occurs, otherwise the
+   value ESMF_SUCCESS should be returned.
+
+    subroutine GComp_Final(comp, importState, exportState, clock, rc)
+      type(ESMF_GridComp)   :: comp                   ! must not be optional
+      type(ESMF_State)      :: importState            ! must not be optional
+      type(ESMF_State)      :: exportState            ! must not be optional
+      type(ESMF_Clock)      :: clock                  ! must not be optional
+      integer, intent(out)  :: rc                     ! must not be optional
+
+      print *, "Gridded Comp Final starting"
+
+      ! Add whatever code here needed
+
+      print *, "Gridded Comp Final returning"
+
+      rc = ESMF_SUCCESS
+
+    end subroutine GComp_Final
+
+  17.2.5 Implement a user-code SetVM routine
+
+   Every ESMF_GridComp can optionally provide and document a public set vm
+   routine. It can have any name, but must follow the declaration below: a
+   subroutine which takes an ESMF_GridComp as the first argument, and an
+   integer return code as the second. Both arguments are required and must
+   not be declared as optional. If an intent is specified in the interface
+   it must be intent(inout) for the first and intent(out) for the second
+   argument.
+
+   The set vm routine is the only place where the child component can use
+   the ESMF_GridCompSetVMMaxPEs(), or ESMF_GridCompSetVMMaxThreads(), or
+   ESMF_GridCompSetVMMinThreads() call to modify aspects of its own VM.
+
+   A component's VM is started up right before its set services routine is
+   entered. ESMF_GridCompSetVM() is executing in the parent VM, and must
+   be called before ESMF_GridCompSetServices().
+
+    subroutine GComp_SetVM(comp, rc)
+      type(ESMF_GridComp)   :: comp   ! must not be optional
+      integer, intent(out)  :: rc     ! must not be optional
+
+      type(ESMF_VM) :: vm
+      logical :: pthreadsEnabled
+
+      ! Test for Pthread support, all SetVM calls require it
+      call ESMF_VMGetGlobal(vm, rc=rc)
+      call ESMF_VMGet(vm, pthreadsEnabledFlag=pthreadsEnabled, rc=rc)
+
+      if (pthreadsEnabled) then
+        ! run PETs single-threaded
+        call ESMF_GridCompSetVMMinThreads(comp, rc=rc)
+      endif
+
+      rc = ESMF_SUCCESS
+
+    end subroutine
+
+    end module ESMF_GriddedCompEx
+
+  17.2.6 Set and Get the Internal State
+
+   ESMF provides the concept of an Internal State that is associated with
+   a Component. Through the Internal State API a user can attach a private
+   data block to a Component, and later retrieve a pointer to this memory
+   allocation. Setting and getting of Internal State information are
+   supported from anywhere in the Component's SetServices, Initialize,
+   Run, or Finalize code.
+
+   The code below demonstrates the basic Internal State API of
+   ESMF_<Grid|Cpl>SetInternalState() and
+   ESMF_<Grid|Cpl>GetInternalState(). Notice that an extra level of
+   indirection to the user data is necessary!
+
+  ! ESMF Framework module
+  use ESMF
+  use ESMF_TestMod
+  implicit none
+
+  type(ESMF_GridComp) :: comp
+  integer :: rc, finalrc
+
+  ! Internal State Variables
+  type testData
+  sequence
+    integer :: testValue
+    real    :: testScaling
+  end type
+
+  type dataWrapper
+  sequence
+    type(testData), pointer :: p
+  end type
+
+  type(dataWrapper) :: wrap1, wrap2
+  type(testData), target :: data
+  type(testData), pointer :: datap  ! extra level of indirection
+
+!-------------------------------------------------------------------------
+
+  call ESMF_Initialize(defaultlogfilename="InternalStateEx.Log", &
+                    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+  if (rc /= ESMF_SUCCESS) call ESMF_Finalize(endflag=ESMF_END_ABORT)
+
+!-------------------------------------------------------------------------
+
+  !  Creation of a Component
+  comp = ESMF_GridCompCreate(name="test", rc=rc)
+  if (rc .ne. ESMF_SUCCESS) finalrc = ESMF_FAILURE
+
+!-------------------------------------------------------------------------
+! This could be called, for example, during a Component's initialize phase.
+
+    ! Initialize private data block
+  data%testValue = 4567
+  data%testScaling = 0.5
+
+  ! Set Internal State
+  wrap1%p => data
+  call ESMF_GridCompSetInternalState(comp, wrap1, rc)
+  if (rc .ne. ESMF_SUCCESS) finalrc = ESMF_FAILURE
+
+!-------------------------------------------------------------------------
+! This could be called, for example, during a Component's run phase.
+
+  ! Get Internal State
+  call ESMF_GridCompGetInternalState(comp, wrap2, rc)
+  if (rc .ne. ESMF_SUCCESS) finalrc = ESMF_FAILURE
+
+  ! Access private data block and verify data
+  datap => wrap2%p
+  if ((datap%testValue .ne. 4567) .or. (datap%testScaling .ne. 0.5)) then
+    print *, "did not get same values back"
+    finalrc = ESMF_FAILURE
+  else
+    print *, "got same values back from GetInternalState as original"
+  endif
+
+   When working with ESMF Internal States it is important to consider the
+   applying scoping rules. The user must ensure that the private data
+   block that is being referenced persists for the entire access period.
+   This is not an issue in the previous example, where the private data
+   block was defined on the scope of the main program. However, the
+   Internal State construct is often useful inside of Component modules to
+   hold Component specific data between calls. One option to ensure
+   persisting private data blocks is to use the Fortran SAVE attribute
+   either on local or module variables. A second option, illustrated in
+   the following example, is to use Fortran pointers and user controlled
+   memory management via allocate() and deallocate() calls.
+
+   One situation where the Internal State is useful is in the creation of
+   ensembles of the same Component. In this case it can be tricky to
+   distinguish which data, held in saved module variables, belongs to
+   which ensemble member - especially if the ensemble members are
+   executing on the same set of PETs. The Internal State solves this
+   problem by providing a handle to instance specific data allocations.
+
+module user_mod
+
+  use ESMF
+
+  implicit none
+
+  ! module variables
+  private
+
+  ! Internal State Variables
+  type testData
+  sequence
+    integer       :: testValue        ! scalar data
+    real          :: testScaling      ! scalar data
+    real, pointer :: testArray(:)     ! array data
+  end type
+
+  type dataWrapper
+  sequence
+    type(testData), pointer :: p
+  end type
+
+  contains !--------------------------------------------------------------
+
+  subroutine mygcomp_init(gcomp, istate, estate, clock, rc)
+    type(ESMF_GridComp):: gcomp
+    type(ESMF_State):: istate, estate
+    type(ESMF_Clock):: clock
+    integer, intent(out):: rc
+
+    ! Local variables
+    type(dataWrapper) :: wrap
+    type(testData), pointer :: data
+    integer :: i
+
+    rc = ESMF_SUCCESS
+
+    ! Allocate private data block
+    allocate(data)
+
+    ! Initialize private data block
+    data%testValue = 4567         ! initialize scalar data
+    data%testScaling = 0.5        ! initialize scalar data
+    allocate(data%testArray(10))  ! allocate array data
+
+    do i=1, 10
+      data%testArray(i) = real(i) ! initialize array data
+    enddo
+
+    ! In a real ensemble application the initial data would be set to
+    ! something unique for this ensemble member. This could be
+    ! accomplished for example by reading a member specific config file
+    ! that was specified by the driver code. Alternatively, Attributes,
+    ! set by the driver, could be used to label the Component instances
+    ! as specific ensemble members.
+
+    ! Set Internal State
+    wrap%p => data
+    call ESMF_GridCompSetInternalState(gcomp, wrap, rc)
+
+  end subroutine !-------------------------------------------------------
+
+  subroutine mygcomp_run(gcomp, istate, estate, clock, rc)
+    type(ESMF_GridComp):: gcomp
+    type(ESMF_State):: istate, estate
+    type(ESMF_Clock):: clock
+    integer, intent(out):: rc
+
+    ! Local variables
+    type(dataWrapper) :: wrap
+    type(testData), pointer :: data
+    logical :: match = .true.
+    integer :: i
+
+    rc = ESMF_SUCCESS
+
+    ! Get Internal State
+    call ESMF_GridCompGetInternalState(gcomp, wrap, rc)
+    if (rc/=ESMF_SUCCESS) return
+
+    ! Access private data block and verify data
+    data => wrap%p
+    if (data%testValue .ne. 4567) match = .false.   ! test scalar data
+    if (data%testScaling .ne. 0.5) match = .false.  ! test scalar data
+    do i=1, 10
+      if (data%testArray(i) .ne. real(i)) match = .false. ! test array data
+    enddo
+
+    if (match) then
+      print *, "got same values back from GetInternalState as original"
+    else
+      print *, "did not get same values back"
+      rc = ESMF_FAILURE
+    endif
+
+  end subroutine !-------------------------------------------------------
+
+  subroutine mygcomp_final(gcomp, istate, estate, clock, rc)
+    type(ESMF_GridComp):: gcomp
+    type(ESMF_State):: istate, estate
+    type(ESMF_Clock):: clock
+    integer, intent(out):: rc
+
+    ! Local variables
+    type(dataWrapper) :: wrap
+    type(testData), pointer :: data
+
+    rc = ESMF_SUCCESS
+
+    ! Get Internal State
+    call ESMF_GridCompGetInternalState(gcomp, wrap, rc)
+    if (rc/=ESMF_SUCCESS) return
+
+    ! Deallocate private data block
+    data => wrap%p
+    deallocate(data%testArray)  ! deallocate array data
+    deallocate(data)
+
+  end subroutine !--------------------------------------------------------------
+
+
+end module
+
+17.3 Restrictions and Future Work
+
+    1. No optional arguments. User-written routines called by SetServices,
+       and registered for Initialize, Run and Finalize, must not declare
+       any of the arguments as optional.
+    2. Namespace isolation. If possible, Gridded Components should attempt
+       to make all data private, so public names do not interfere with
+       data in other components.
+    3. Single execution mode. It is not expected that a single Gridded
+       Component be able to function in both sequential and concurrent
+       modes, although Gridded Components of different types can be
+       nested. For example, a concurrently called Gridded Component can
+       contain several nested sequential Gridded Components.
+
+17.4 Class API
+
+  17.4.1 ESMF_GridCompAssignment(=) - GridComp assignment
+
+   INTERFACE:
+     interface assignment(=)
+     gridcomp1 = gridcomp2
+
+   ARGUMENTS:
+     type(ESMF_GridComp) :: gridcomp1
+     type(ESMF_GridComp) :: gridcomp2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign gridcomp1 as an alias to the same ESMF GridComp object in memory
+   as gridcomp2. If gridcomp2 is invalid, then gridcomp1 will be equally
+   invalid after the assignment.
+
+   The arguments are:
+
+   gridcomp1
+          The ESMF_GridComp object on the left hand side of the
+          assignment.
+
+   gridcomp2
+          The ESMF_GridComp object on the right hand side of the
+          assignment.
+
+  17.4.2 ESMF_GridCompOperator(==) - GridComp equality operator
+
+   INTERFACE:
+   interface operator(==)
+     if (gridcomp1 == gridcomp2) then ... endif
+               OR
+     result = (gridcomp1 == gridcomp2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(in) :: gridcomp1
+     type(ESMF_GridComp), intent(in) :: gridcomp2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether gridcomp1 and gridcomp2 are valid aliases to the same ESMF
+   GridComp object in memory. For a more general comparison of two ESMF
+   GridComps, going beyond the simple alias test, the ESMF_GridCompMatch()
+   function (not yet implemented) must be used.
+
+   The arguments are:
+
+   gridcomp1
+          The ESMF_GridComp object on the left hand side of the equality
+          operation.
+
+   gridcomp2
+          The ESMF_GridComp object on the right hand side of the equality
+          operation.
+
+  17.4.3 ESMF_GridCompOperator(/=) - GridComp not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (gridcomp1 /= gridcomp2) then ... endif
+               OR
+     result = (gridcomp1 /= gridcomp2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_GridComp), intent(in) :: gridcomp1
+     type(ESMF_GridComp), intent(in) :: gridcomp2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Test whether gridcomp1 and gridcomp2 are not valid aliases to the same
+   ESMF GridComp object in memory. For a more general comparison of two
+   ESMF GridComps, going beyond the simple alias test, the
+   ESMF_GridCompMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   gridcomp1
+          The ESMF_GridComp object on the left hand side of the
+          non-equality operation.
+
+   gridcomp2
+          The ESMF_GridComp object on the right hand side of the
+          non-equality operation.
+

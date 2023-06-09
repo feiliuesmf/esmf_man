@@ -1,0 +1,44 @@
+  46.6.14 ESMF_AlarmNotSticky - Unset an Alarm's sticky flag
+
+   INTERFACE:
+       subroutine ESMF_AlarmNotSticky(alarm, &
+         ringDuration, ringTimeStepCount, rc)
+
+   ARGUMENTS:
+       type(ESMF_Alarm),        intent(inout)         :: alarm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_TimeInterval), intent(in),  optional :: ringDuration
+       integer,                 intent(in),  optional :: ringTimeStepCount
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Unset an ESMF_Alarm's sticky flag; once alarm is ringing, it turns
+   itself off after ringDuration.
+
+   The arguments are:
+
+   alarm
+          The object instance to unset sticky.
+
+   [ringDuration]
+          If not sticky, alarms rings for ringDuration, then turns itself
+          off. Mutually exclusive with ringTimeStepCount (see below and
+          full description in method ESMF_AlarmCreate() or
+          ESMF_AlarmSet()).
+
+   [ringTimeStepCount]
+          If not sticky, alarms rings for ringTimeStepCount, then turns
+          itself off. Mutually exclusive with ringDuration (see above and
+          full description in method ESMF_AlarmCreate() or
+          ESMF_AlarmSet()).
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

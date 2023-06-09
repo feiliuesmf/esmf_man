@@ -1,0 +1,183 @@
+  17.4.4 ESMF_GridCompCreate - Create a GridComp
+
+   INTERFACE:
+   recursive function ESMF_GridCompCreate(grid, gridList, &
+     mesh, meshList, locstream, locstreamList, xgrid, xgridList, &
+     config, configFile, clock, petList, contextflag, name, rc)
+
+   RETURN VALUE:
+     type(ESMF_GridComp) :: ESMF_GridCompCreate
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_Grid),         intent(in),    optional :: grid
+     type(ESMF_Grid),         intent(in),    optional :: gridList(:)
+     type(ESMF_Mesh),         intent(in),    optional :: mesh
+     type(ESMF_Mesh),         intent(in),    optional :: meshList(:)
+     type(ESMF_LocStream),    intent(in),    optional :: locstream
+     type(ESMF_LocStream),    intent(in),    optional :: locstreamList(:)
+     type(ESMF_XGrid),        intent(in),    optional :: xgrid
+     type(ESMF_XGrid),        intent(in),    optional :: xgridList(:)
+     type(ESMF_Config),       intent(in),    optional :: config
+     character(len=*),        intent(in),    optional :: configFile
+     type(ESMF_Clock),        intent(in),    optional :: clock
+     integer,                 intent(in),    optional :: petList(:)
+     type(ESMF_Context_Flag), intent(in),    optional :: contextflag
+     character(len=*),        intent(in),    optional :: name
+     integer,                 intent(out),   optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.1.0r
+                Added arguments gridList, mesh, meshList, locstream,
+                locstreamList, xgrid, and xgridList. These arguments add
+                support for holding references to multiple geom objects,
+                either of the same type, or different type, in the same
+                ESMF_GridComp object.
+
+   DESCRIPTION:
+
+   This interface creates an ESMF_GridComp object. By default, a separate
+   VM context will be created for each component. This implies creating a
+   new MPI communicator and allocating additional memory to manage the VM
+   resources. When running on a large number of processors, creating a
+   separate VM for each component could be both time and memory
+   inefficient. If the application is sequential, i.e., each component is
+   running on all the PETs of the global VM, it will be more efficient to
+   use the global VM instead of creating a new one. This can be done by
+   setting contextflag to ESMF_CONTEXT_PARENT_VM.
+
+   The return value is the new ESMF_GridComp.
+
+   The arguments are:
+
+   [grid]
+          Associate an ESMF_Grid object with the newly created component.
+          This is simply a convenience feature for the user. The ESMF
+          library code does not access the grid object. The grid argument
+          is mutually exclusive with the gridList argument. If both
+          arguments are provided, the routine will fail, and an error is
+          returned in rc. By default, i.e. if neither grid nor gridList
+          are provided, no ESMF_Grid objects are associated with the
+          component.
+
+   [gridList]
+          Associate a list of ESMF_Grid objects with the newly created
+          component. This is simply a convenience feature for the user.
+          The ESMF library code does not access the gridList object. The
+          gridList argument is mutually exclusive with the grid argument.
+          If both arguments are provided, the routine will fail, and an
+          error is returned in rc. By default, i.e. if neither grid nor
+          gridList are provided, no ESMF_Grid objects are associated with
+          the component.
+
+   [mesh]
+          Associate an ESMF_Mesh object with the newly created component.
+          This is simply a convenience feature for the user. The ESMF
+          library code does not access the mesh object. The mesh argument
+          is mutually exclusive with the meshList argument. If both
+          arguments are provided, the routine will fail, and an error is
+          returned in rc. By default, i.e. if neither mesh nor meshList
+          are provided, no ESMF_Mesh objects are associated with the
+          component.
+
+   [meshList]
+          Associate a list of ESMF_Mesh objects with the newly created
+          component. This is simply a convenience feature for the user.
+          The ESMF library code does not access the meshList object. The
+          meshList argument is mutually exclusive with the mesh argument.
+          If both arguments are provided, the routine will fail, and an
+          error is returned in rc. By default, i.e. if neither mesh nor
+          meshList are provided, no ESMF_Mesh objects are associated with
+          the component.
+
+   [locstream]
+          Associate an ESMF_LocStream object with the newly created
+          component. This is simply a convenience feature for the user.
+          The ESMF library code does not access the locstream object. The
+          locstream argument is mutually exclusive with the locstreamList
+          argument. If both arguments are provided, the routine will fail,
+          and an error is returned in rc. By default, i.e. if neither
+          locstream nor locstreamList are provided, no ESMF_LocStream
+          objects are associated with the component.
+
+   [locstreamList]
+          Associate a list of ESMF_LocStream objects with the newly
+          created component. This is simply a convenience feature for the
+          user. The ESMF library code does not access the locstreamList
+          object. The locstreamList argument is mutually exclusive with
+          the locstream argument. If both arguments are provided, the
+          routine will fail, and an error is returned in rc. By default,
+          i.e. if neither locstream nor locstreamList are provided, no
+          ESMF_LocStream objects are associated with the component.
+
+   [xgrid]
+          Associate an ESMF_XGrid object with the newly created component.
+          This is simply a convenience feature for the user. The ESMF
+          library code does not access the xgrid object. The xgrid
+          argument is mutually exclusive with the xgridList argument. If
+          both arguments are provided, the routine will fail, and an error
+          is returned in rc. By default, i.e. if neither xgrid nor
+          xgridList are provided, no ESMF_XGrid objects are associated
+          with the component.
+
+   [xgridList]
+          Associate a list of ESMF_XGrid objects with the newly created
+          component. This is simply a convenience feature for the user.
+          The ESMF library code does not access the xgridList object. The
+          xgridList argument is mutually exclusive with the xgrid
+          argument. If both arguments are provided, the routine will fail,
+          and an error is returned in rc. By default, i.e. if neither
+          xgrid nor xgridList are provided, no ESMF_XGrid objects are
+          associated with the component.
+
+   [config]
+          An already-created ESMF_Config object to be attached to the
+          newly created component. If both config and configFile arguments
+          are specified, config takes priority.
+
+   [configFile]
+          The filename of an ESMF_Config format file. If specified, a new
+          ESMF_Config object is created and attached to the newly created
+          component. The configFile file is opened and associated with the
+          new config object. If both config and configFile arguments are
+          specified, config takes priority.
+
+   [clock]
+          Component-specific ESMF_Clock. This clock is available to be
+          queried and updated by the new ESMF_GridComp as it chooses. This
+          should not be the parent component clock, which should be
+          maintained and passed down to the initialize/run/finalize
+          routines separately.
+
+   [petList]
+          List of parent PETs given to the created child component by the
+          parent component. If petList is not specified, or is empty, all
+          of the parent PETs are given to the child component. The order
+          of PETs in petList determines how the child local PETs map back
+          to the parent PETs.
+
+   [contextflag]
+          Specify the component's VM context. The default context is
+          ESMF_CONTEXT_OWN_VM. See section [263]54.10 for a complete list
+          of valid flags.
+
+   [name]
+          Name of the newly-created ESMF_GridComp. This name can be
+          altered from within the ESMF_GridComp code once the
+          initialization routine is called.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

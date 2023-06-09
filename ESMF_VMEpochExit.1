@@ -1,0 +1,29 @@
+  51.6.15 ESMF_VMEpochExit - Exit an ESMF epoch
+
+   INTERFACE:
+   subroutine ESMF_VMEpochExit(vm, keepAlloc, rc)
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_VM),            intent(in),  optional :: vm
+     logical,                  intent(in),  optional :: keepAlloc
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Exit the current VM epoch.
+
+   The arguments are:
+
+   [vm]
+          ESMF_VM object. Defaults to the current VM.
+
+   [keepAlloc]
+          For .true., keep internal allocations to be reused by
+          consecutive epoch phases. For .false., deallocate all internal
+          buffers not actively used. The flag only affects the local PET.
+          Defaults to .true..
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

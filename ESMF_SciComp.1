@@ -1,0 +1,349 @@
+          + [117]19 SciComp Class
+               o [118]19.1 Description
+               o [119]19.2 Use and Examples
+                    # [120]19.2.1 Use ESMF_SciComp and Attach Attributes
+               o [121]19.3 Restrictions and Future Work
+               o [122]19.4 Class API
+                    # [123]19.4.1 ESMF_SciCompAssignment(=)
+                    # [124]19.4.2 ESMF_SciCompOperator(==)
+                    # [125]19.4.3 ESMF_SciCompOperator(/=)
+                    # [126]19.4.4 ESMF_SciCompCreate
+                    # [127]19.4.5 ESMF_SciCompDestroy
+                    # [128]19.4.6 ESMF_SciCompGet
+                    # [129]19.4.7 ESMF_SciCompIsCreated
+                    # [130]19.4.8 ESMF_SciCompPrint
+                    # [131]19.4.9 ESMF_SciCompSet
+                    # [132]19.4.10 ESMF_SciCompValidate
+          + [133]20 Fault-tolerant Component Tunnel
+               o [134]20.1 Description
+               o [135]20.2 Use and Examples
+                    # [136]20.2.1 Creating an actual Component
+                    # [137]20.2.2 Creating a dual Component
+                    # [138]20.2.3 Setting up the actual side of a
+                      Component Tunnel
+                    # [139]20.2.4 Setting up the dual side of a Component
+                      Tunnel
+                    # [140]20.2.5 Invoking standard Component methods
+                      through a Component Tunnel
+                    # [141]20.2.6 The non-blocking option to invoke
+                      standard Component methods through a Component
+                      Tunnel
+                    # [142]20.2.7 Destroying a connected dual Component
+                    # [143]20.2.8 Destroying a connected actual Component
+               o [144]20.3 Restrictions and Future Work
+                                19 SciComp Class
+
+19.1 Description
+
+   In Earth system modeling, a particular piece of code representing a
+   physical domain, such as an atmospheric model or an ocean model, is
+   typically implemented as an ESMF Gridded Component, or ESMC_GridComp.
+   However, there are times when physical domains, or realms, need to be
+   represented, but aren't actual pieces of code, or software. These
+   domains can be implemented as ESMF Science Components, or ESMC_SciComp.
+
+   Unlike Gridded and Coupler Components, Science Components are not
+   associated with software; they don't include execution routines such as
+   initialize, run and finalize. The main purpose of a Science Component
+   is to provide a container for Attributes within a Component hierarchy.
+
+19.2 Use and Examples
+
+   A Science Component is a container object intended to represent
+   scientific domains, or realms, in an Earth Science Model. It's primary
+   purpose is to provide a means for representing Component metadata
+   within a hierarchy of Components, and it does this by being a container
+   for Attributes as well as other Components.
+
+  19.2.1 Use ESMF_SciComp and Attach Attributes
+
+   This example illustrates the use of the ESMF_SciComp to attach
+   Attributes within a Component hierarchy. The hierarchy includes
+   Coupler, Gridded, and Science Components and Attributes are attached to
+   the Science Components. For demonstrable purposes, we'll add some CIM
+   Component attributes to the Gridded Component.
+
+   Create the top 2 levels of the Component hierarchy. This example
+   creates a parent Coupler Component and 2 Gridded Components as
+   children.
+
+      ! Create top-level Coupler Component
+      cplcomp = ESMF_CplCompCreate(name="coupler_component", rc=rc)
+
+      ! Create Gridded Component for Atmosphere
+      atmcomp = ESMF_GridCompCreate(name="Atmosphere", rc=rc)
+
+      ! Create Gridded Component for Ocean
+      ocncomp = ESMF_GridCompCreate(name="Ocean", rc=rc)
+
+   Now add CIM Attribute packages to the Component. Also, add a CIM
+   Component Properties package, to contain two custom attributes.
+
+      convCIM = 'CIM 1.5'
+      purpComp = 'ModelComp'
+      purpProp = 'CompProp'
+      purpField = 'Inputs'
+      purpPlatform = 'Platform'
+
+      convISO = 'ISO 19115'
+      purpRP = 'RespParty'
+      purpCitation = 'Citation'
+
+      ! Add CIM Attribute package to the Science Component
+      call ESMF_AttributeAdd(atmcomp, convention=convCIM, &
+        purpose=purpComp, attpack=attpack, rc=rc)
+
+   The Attribute package can also be retrieved in a multi-Component
+   setting like this:
+
+      call ESMF_AttributeGetAttPack(atmcomp, convCIM, purpComp, &
+                                    attpack=attpack, rc=rc)
+
+   Now, add some CIM Component attributes to the Atmosphere Grid
+   Component.
+
+      !
+      ! Top-level model component attributes, set on gridded component
+      !
+      call ESMF_AttributeSet(atmcomp, 'ShortName', 'EarthSys_Atmos', &
+        attpack=attpack, rc=rc)
+
+      call ESMF_AttributeSet(atmcomp, 'LongName', &
+        'Earth System High Resolution Global Atmosphere Model', &
+        attpack=attpack, rc=rc)
+
+      call ESMF_AttributeSet(atmcomp, 'Description', &
+        'EarthSys brings together expertise from the global ' // &
+        'community in a concerted effort to develop coupled ' // &
+        'climate models with increased horizontal resolutions.  ' // &
+        'Increasing the horizontal resolution of coupled climate ' // &
+        'models will allow us to capture climate processes and ' // &
+        'weather systems in much greater detail.', &
+        attpack=attpack, rc=rc)
+
+      call ESMF_AttributeSet(atmcomp, 'Version', '2.0', &
+        attpack=attpack, rc=rc)
+
+      call ESMF_AttributeSet(atmcomp, 'ReleaseDate', '2009-01-01T00:00:00Z', &
+        attpack=attpack, rc=rc)
+
+      call ESMF_AttributeSet(atmcomp, 'ModelType', 'aerosol', &
+        attpack=attpack, rc=rc)
+
+      call ESMF_AttributeSet(atmcomp, 'URL', &
+        'www.earthsys.org', attpack=attpack, rc=rc)
+
+   Now create a set of Science Components as a children of the Atmosphere
+   Gridded Component. The hierarchy is as follows:
+     * Atmosphere
+          + AtmosDynamicalCore
+               o AtmosAdvection
+          + AtmosRadiation
+
+   After each Component is created, we need to link it with its parent
+   Component. We then add some standard CIM Component properties as well
+   as Scientific Properties to each of these components.
+
+    !
+    ! Atmosphere Dynamical Core Science Component
+    !
+    dc_scicomp = ESMF_SciCompCreate(name="AtmosDynamicalCore", rc=rc)
+
+    call ESMF_AttributeAdd(dc_scicomp,  &
+                           convention=convCIM, purpose=purpComp, &
+                           attpack=attpack, rc=rc)
+
+    call ESMF_AttributeSet(dc_scicomp, "ShortName", "AtmosDynamicalCore", &
+                           attpack=attpack, rc=rc)
+    call ESMF_AttributeSet(dc_scicomp, "LongName", &
+                           "Atmosphere Dynamical Core", &
+                           attpack=attpack, rc=rc)
+
+    purpSci = 'SciProp'
+
+    dc_sciPropAtt(1) = 'TopBoundaryCondition'
+    dc_sciPropAtt(2) = 'HeatTreatmentAtTop'
+    dc_sciPropAtt(3) = 'WindTreatmentAtTop'
+
+    call ESMF_AttributeAdd(dc_scicomp,  &
+                           convention=convCIM, purpose=purpSci, &
+                           attrList=dc_sciPropAtt, &
+                           attpack=attpack, rc=rc)
+
+    call ESMF_AttributeSet(dc_scicomp, 'TopBoundaryCondition', &
+                           'radiation boundary condition', &
+                           attpack=attpack, rc=rc)
+    call ESMF_AttributeSet(dc_scicomp, 'HeatTreatmentAtTop', &
+                           'some heat treatment', &
+                           attpack=attpack, rc=rc)
+    call ESMF_AttributeSet(dc_scicomp, 'WindTreatmentAtTop', &
+                           'some wind treatment', &
+                           attpack=attpack, rc=rc)
+
+    !
+    ! Atmosphere Advection Science Component
+    !
+    adv_scicomp = ESMF_SciCompCreate(name="AtmosAdvection", rc=rc)
+
+    call ESMF_AttributeAdd(adv_scicomp,  &
+                           convention=convCIM, purpose=purpComp, &
+                           attpack=attpack, rc=rc)
+
+    call ESMF_AttributeSet(adv_scicomp, "ShortName", "AtmosAdvection", &
+                           attpack=attpack, rc=rc)
+    call ESMF_AttributeSet(adv_scicomp, "LongName", "Atmosphere Advection", &
+                           attpack=attpack, rc=rc)
+
+    adv_sciPropAtt(1) = 'TracersSchemeName'
+    adv_sciPropAtt(2) = 'TracersSchemeCharacteristics'
+    adv_sciPropAtt(3) = 'MomentumSchemeName'
+
+    call ESMF_AttributeAdd(adv_scicomp,  &
+                           convention=convCIM, purpose=purpSci, &
+                           attrList=adv_sciPropAtt, &
+                           attpack=attpack, rc=rc)
+
+    call ESMF_AttributeSet(adv_scicomp, 'TracersSchemeName', 'Prather', &
+                           attpack=attpack, rc=rc)
+    call ESMF_AttributeSet(adv_scicomp, 'TracersSchemeCharacteristics', &
+                           'modified Euler', &
+                           attpack=attpack, rc=rc)
+    call ESMF_AttributeSet(adv_scicomp, 'MomentumSchemeName', 'Van Leer', &
+                           attpack=attpack, rc=rc)
+
+    !
+    ! Atmosphere Radiation Science Component
+    !
+    rad_scicomp = ESMF_SciCompCreate(name="AtmosRadiation", rc=rc)
+
+    call ESMF_AttributeAdd(rad_scicomp,  &
+                           convention=convCIM, purpose=purpComp, &
+                           attpack=attpack, rc=rc)
+
+    call ESMF_AttributeSet(rad_scicomp, "ShortName", "AtmosRadiation", &
+                           attpack=attpack, rc=rc)
+    call ESMF_AttributeSet(rad_scicomp, "LongName", &
+                           "Atmosphere Radiation", &
+                           attpack=attpack, rc=rc)
+
+    rad_sciPropAtt(1) = 'LongwaveSchemeType'
+    rad_sciPropAtt(2) = 'LongwaveSchemeMethod'
+
+    call ESMF_AttributeAdd(rad_scicomp,  &
+                           convention=convCIM, purpose=purpSci, &
+                           attrList=rad_sciPropAtt, &
+                           attpack=attpack, rc=rc)
+
+    call ESMF_AttributeSet(rad_scicomp, &
+                           'LongwaveSchemeType', &
+                           'wide-band model', &
+                           attpack=attpack, rc=rc)
+    call ESMF_AttributeSet(rad_scicomp, &
+                           'LongwaveSchemeMethod', &
+                           'two-stream', &
+                           attpack=attpack, rc=rc)
+
+   Finally, destroy all of the Components.
+
+      call ESMF_SciCompDestroy(rad_scicomp, rc=rc)
+      call ESMF_SciCompDestroy(adv_scicomp, rc=rc)
+      call ESMF_SciCompDestroy(dc_scicomp, rc=rc)
+      call ESMF_GridCompDestroy(atmcomp, rc=rc)
+      call ESMF_GridCompDestroy(ocncomp, rc=rc)
+      call ESMF_CplCompDestroy(cplcomp, rc=rc)
+
+19.3 Restrictions and Future Work
+
+    1. None.
+
+19.4 Class API
+
+  19.4.1 ESMF_SciCompAssignment(=) - SciComp assignment
+
+   INTERFACE:
+     interface assignment(=)
+     scicomp1 = scicomp2
+
+   ARGUMENTS:
+     type(ESMF_SciComp) :: scicomp1
+     type(ESMF_SciComp) :: scicomp2
+
+   DESCRIPTION:
+
+   Assign scicomp1 as an alias to the same ESMF SciComp object in memory
+   as scicomp2. If scicomp2 is invalid, then scicomp1 will be equally
+   invalid after the assignment.
+
+   The arguments are:
+
+   scicomp1
+          The ESMF_SciComp object on the left hand side of the assignment.
+
+   scicomp2
+          The ESMF_SciComp object on the right hand side of the
+          assignment.
+
+  19.4.2 ESMF_SciCompOperator(==) - SciComp equality operator
+
+   INTERFACE:
+   interface operator(==)
+     if (scicomp1 == scicomp2) then ... endif
+               OR
+     result = (scicomp1 == scicomp2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_SciComp), intent(in) :: scicomp1
+     type(ESMF_SciComp), intent(in) :: scicomp2
+
+   DESCRIPTION:
+
+   Test whether scicomp1 and scicomp2 are valid aliases to the same ESMF
+   SciComp object in memory. For a more general comparison of two ESMF
+   SciComps, going beyond the simple alias test, the ESMF_SciCompMatch()
+   function (not yet implemented) must be used.
+
+   The arguments are:
+
+   scicomp1
+          The ESMF_SciComp object on the left hand side of the equality
+          operation.
+
+   scicomp2
+          The ESMF_SciComp object on the right hand side of the equality
+          operation.
+
+  19.4.3 ESMF_SciCompOperator(/=) - SciComp not equal operator
+
+   INTERFACE:
+   interface operator(/=)
+     if (scicomp1 /= scicomp2) then ... endif
+               OR
+     result = (scicomp1 /= scicomp2)
+
+   RETURN VALUE:
+     logical :: result
+
+   ARGUMENTS:
+     type(ESMF_SciComp), intent(in) :: scicomp1
+     type(ESMF_SciComp), intent(in) :: scicomp2
+
+   DESCRIPTION:
+
+   Test whether scicomp1 and scicomp2 are not valid aliases to the same
+   ESMF SciComp object in memory. For a more general comparison of two
+   ESMF SciComps, going beyond the simple alias test, the
+   ESMF_SciCompMatch() function (not yet implemented) must be used.
+
+   The arguments are:
+
+   scicomp1
+          The ESMF_SciComp object on the left hand side of the
+          non-equality operation.
+
+   scicomp2
+          The ESMF_SciComp object on the right hand side of the
+          non-equality operation.
+

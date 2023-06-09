@@ -1,0 +1,104 @@
+  25.5.24 ESMF_FieldBundleRegrid - Execute a FieldBundle regrid operation
+
+   INTERFACE:
+   subroutine ESMF_FieldBundleRegrid(srcFieldBundle, dstFieldBundle, &
+          routehandle, zeroregion, termorderflag, checkflag, rc)
+
+   ARGUMENTS:
+         type(ESMF_FieldBundle), intent(in), optional :: srcFieldBundle
+         type(ESMF_FieldBundle), intent(inout), optional :: dstFieldBundle
+         type(ESMF_RouteHandle), intent(inout) :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+         type(ESMF_Region_Flag), intent(in), optional :: zeroregion
+         type(ESMF_TermOrder_Flag), intent(in), optional :: termorderflag(:)
+         logical, intent(in), optional :: checkflag
+         integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.0.0
+                Added argument termorderflag. The new argument gives the
+                user control over the order in which the src terms are
+                summed up.
+
+   DESCRIPTION:
+
+   Execute a precomputed regrid from srcFieldBundle to dstFieldBundle.
+   Both srcFieldBundle and dstFieldBundle must match the respective
+   FieldBundles used during ESMF_FieldBundleRedistStore() in type, kind,
+   and memory layout of the gridded dimensions. However, the size, number,
+   and index order of ungridded dimensions may be different. See section
+   [749]37.2.5 for a more detailed discussion of RouteHandle reusability.
+
+   The srcFieldBundle and dstFieldBundle arguments are optional in support
+   of the situation where srcFieldBundle and/or dstFieldBundle are not
+   defined on all PETs. The srcFieldBundle and dstFieldBundle must be
+   specified on those PETs that hold source or destination DEs,
+   respectively, but may be omitted on all other PETs. PETs that hold
+   neither source nor destination DEs may omit both arguments.
+
+   It is erroneous to specify the identical FieldBundle object for
+   srcFieldBundle and dstFieldBundle arguments.
+
+   See ESMF_FieldBundleRegridStore() on how to precompute routehandle.
+
+   This call is collective across the current VM.
+
+   [srcFieldBundle]
+          ESMF_FieldBundle with source data.
+
+   [dstFieldBundle]
+          ESMF_FieldBundle with destination data.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [zeroregion]
+          If set to ESMF_REGION_TOTAL (default) the total regions of all
+          DEs in dstFieldBundle will be initialized to zero before
+          updating the elements with the results of the sparse matrix
+          multiplication. If set to ESMF_REGION_EMPTY the elements in
+          dstFieldBundle will not be modified prior to the sparse matrix
+          multiplication and results will be added to the incoming element
+          values. Setting zeroregion to ESMF_REGION_SELECT will only zero
+          out those elements in the destination FieldBundle that will be
+          updated by the sparse matrix multiplication. See section
+          [750]54.48 for a complete list of valid settings.
+
+   [termorderflag]
+          Specifies the order of the source side terms in all of the
+          destination sums. The termorderflag only affects the order of
+          terms during the execution of the RouteHandle. See the
+          [751]37.2.1 section for an in-depth discussion of all
+          bit-for-bit reproducibility aspects related to route-based
+          communication methods. See [752]54.58 for a full list of
+          options. The size of this array argument must either be 1 or
+          equal the number of Fields in the srcFieldBundle and
+          dstFieldBundle arguments. In the latter case, the term order for
+          each Field Regrid operation is indicated separately. If only one
+          term order element is specified, it is used for all Field pairs.
+          The default is (/ESMF_TERMORDER_FREE/), allowing maximum
+          flexibility in the order of terms for optimum performance.
+
+   [checkflag]
+          If set to .TRUE. the input FieldBundle pair will be checked for
+          consistency with the precomputed operation provided by
+          routehandle. If set to .FALSE. (default) only a very basic input
+          check will be performed, leaving many inconsistencies
+          undetected. Set checkflag to .FALSE. to achieve highest
+          performance.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

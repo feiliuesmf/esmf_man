@@ -1,0 +1,77 @@
+  26.6.51 ESMF_FieldGather - Gather a Fortran array from an ESMF_Field
+
+   INTERFACE:
+   subroutine ESMF_FieldGather<rank><type><kind>(field, farray, &
+   rootPet, tile, vm, rc)
+
+   ARGUMENTS:
+   type(ESMF_Field), intent(in) :: field
+   <type>(ESMF_KIND_<kind>), intent(out), target :: farray(<rank>)
+   integer, intent(in) :: rootPet
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   integer, intent(in), optional :: tile
+   type(ESMF_VM), intent(in), optional :: vm
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gather the data of an ESMF_Field object into the farray located on
+   rootPET. A single DistGrid tile of array must be gathered into farray.
+   The optional tile argument allows selection of the tile. For Fields
+   defined on a single tile DistGrid the default selection (tile 1) will
+   be correct. The shape of farray must match the shape of the tile in
+   Field.
+
+   If the Field contains replicating DistGrid dimensions data will be
+   gathered from the numerically higher DEs. Replicated data elements in
+   numericaly lower DEs will be ignored.
+
+   The implementation of Scatter and Gather is not sequence index based.
+   If the Field is built on arbitrarily distributed Grid, Mesh, LocStream
+   or XGrid, Gather will not gather data to rootPet from source data
+   points corresponding to the sequence index on rootPet. Instead Gather
+   will gather a contiguous memory range from source PET to rootPet. The
+   size of the memory range is equal to the number of data elements on the
+   source PET. Vice versa for the Scatter operation. In this case, the
+   user should use ESMF_FieldRedist to achieve the same data operation
+   result. For examples how to use ESMF_FieldRedist to perform Gather and
+   Scatter, please refer to [925]26.3.32 and [926]26.3.31.
+
+   This version of the interface implements the PET-based blocking
+   paradigm: Each PET of the VM must issue this call exactly once for all
+   of its DEs. The call will block until all PET-local data objects are
+   accessible.
+
+   For examples and associated documentation regarding this method see
+   Section [927]26.3.28.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object from which data will be gathered.
+
+   {farray}
+          The Fortran array into which to gather data. Only root must
+          provide a valid farray, the other PETs may treat farray as an
+          optional argument.
+
+   rootPet
+          PET that holds the valid destination array, i.e. farray.
+
+   [tile]
+          The DistGrid tile in field from which to gather farray. By
+          default farray will be gathered from tile 1.
+
+   [vm]
+          Optional ESMF_VM object of the current context. Providing the VM
+          of the current context will lower the method's overhead.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

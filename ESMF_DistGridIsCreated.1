@@ -1,0 +1,28 @@
+  36.6.18 ESMF_DistGridIsCreated - Check whether a DistGrid object has been
+  created
+
+   INTERFACE:
+   function ESMF_DistGridIsCreated(distgrid, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_DistGridIsCreated
+
+   ARGUMENTS:
+     type(ESMF_DistGrid), intent(in)            :: distgrid
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the distgrid has been created. Otherwise return
+   .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the
+   return value of the function will also be .false..
+
+   The arguments are:
+
+   distgrid
+          ESMF_DistGrid queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

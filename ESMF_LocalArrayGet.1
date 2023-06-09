@@ -1,0 +1,109 @@
+  29.3.9 ESMF_LocalArrayGet - Get object-wide LocalArray information
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocalArrayGet()
+   subroutine ESMF_LocalArrayGetDefault(localarray, &
+     typekind, rank, totalCount, totalLBound, totalUBound, isESMFAllocated, rc)
+
+   ARGUMENTS:
+     type(ESMF_LocalArray), intent(in) :: localarray
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_TypeKind_Flag), intent(out), optional :: typekind
+     integer, intent(out), optional :: rank
+     integer, intent(out), optional :: totalCount(:)
+     integer, intent(out), optional :: totalLBound(:)
+     integer, intent(out), optional :: totalUBound(:)
+     logical, intent(out), optional :: isESMFAllocated
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        8.5.0
+                Added argument isESMFAllocated to support user query of
+                whether ESMF or user is responsible for the data
+                allocation referenced by this object.
+
+   DESCRIPTION:
+
+   Returns information about the ESMF_LocalArray.
+
+   The arguments are:
+
+   localarray
+          Queried ESMF_LocalArray object.
+
+   [typekind]
+          TypeKind of the LocalArray object.
+
+   [rank]
+          Rank of the LocalArray object.
+
+   [totalCount]
+          Count per dimension.
+
+   [totalLBound]
+          Lower bound per dimension.
+
+   [totalUBound]
+          Upper bound per dimension.
+
+   [isESMFAllocated]
+          Set to .true. for data allocations held by ESMF. Set to .false.
+          otherwise.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  29.3.10 ESMF_LocalArrayGet - Get a Fortran array pointer from a LocalArray
+
+   INTERFACE:
+   ! Private name; call using ESMF_LocalArrayGet()
+   subroutine ESMF_LocalArrayGetData<rank><type><kind>(localarray, farrayPtr, &
+   datacopyflag, rc)
+
+   ARGUMENTS:
+   type(ESMF_LocalArray) :: localarray
+   <type> (ESMF_KIND_<kind>), pointer :: farrayPtr
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   type(ESMF_DataCopy_Flag), intent(in), optional :: datacopyflag
+   integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Return a Fortran pointer to the data buffer, or return a Fortran
+   pointer to a new copy of the data.
+
+   The arguments are:
+
+   localarray
+          The ESMF_LocalArray to get the value from.
+
+   farrayPtr
+          An unassociated or associated Fortran pointer correctly
+          allocated.
+
+   [datacopyflag]
+          An optional copy flag which can be specified. Can either make a
+          new copy of the data or reference existing data. See section
+          [1183]54.12 for a list of possible values.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

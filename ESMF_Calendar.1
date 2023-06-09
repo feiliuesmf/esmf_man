@@ -1,0 +1,418 @@
+          + [61]42 Calendar Class
+               o [62]42.1 Description
+               o [63]42.2 Constants
+                    # [64]42.2.1 ESMF_CALKIND
+               o [65]42.3 Use and Examples
+                    # [66]42.3.1 Calendar creation
+                    # [67]42.3.2 Calendar comparison
+                    # [68]42.3.3 Time conversion between Calendars
+                    # [69]42.3.4 Add a time interval to a time on a
+                      Calendar
+                    # [70]42.3.5 Calendar destruction
+               o [71]42.4 Restrictions and Future Work
+               o [72]42.5 Class API
+                    # [73]42.5.1 ESMF_CalendarAssignment(=)
+                    # [74]42.5.2 ESMF_CalendarOperator(==)
+                    # [75]42.5.3 ESMF_CalendarOperator(/=)
+                    # [76]42.5.4 ESMF_CalendarCreate
+                    # [77]42.5.5 ESMF_CalendarCreate
+                    # [78]42.5.6 ESMF_CalendarCreate
+                    # [79]42.5.7 ESMF_CalendarDestroy
+                    # [80]42.5.8 ESMF_CalendarGet
+                    # [81]42.5.9 ESMF_CalendarIsCreated
+                    # [82]42.5.10 ESMF_CalendarIsLeapYear
+                    # [83]42.5.11 ESMF_CalendarPrint
+                    # [84]42.5.12 ESMF_CalendarSet
+                    # [85]42.5.13 ESMF_CalendarSet
+                    # [86]42.5.14 ESMF_CalendarSetDefault
+                    # [87]42.5.15 ESMF_CalendarSetDefault
+                    # [88]42.5.16 ESMF_CalendarValidate
+                               42 Calendar Class
+
+42.1 Description
+
+   The Calendar class represents the standard calendars used in
+   geophysical modeling: Gregorian, Julian, Julian Day, Modified Julian
+   Day, no-leap, 360-day, and no-calendar. It also supports a
+   user-customized calendar. Brief descriptions are provided for each
+   calendar below. For more information on standard calendars,
+   see [[519]33] and [[520]29].
+
+42.2 Constants
+
+  42.2.1 ESMF_CALKIND
+
+   DESCRIPTION:
+   Supported calendar kinds.
+
+   The type of this flag is:
+
+   type(ESMF_CalKind_Flag)
+
+   The valid values are:
+
+   ESMF_CALKIND_360DAY
+          Valid range: machine limits
+          In the 360-day calendar, there are 12 months, each of which has
+          30 days. Like the no-leap calendar, this is a simple
+          approximation to the Gregorian calendar sometimes used by
+          modelers.
+
+   ESMF_CALKIND_CUSTOM
+          Valid range: machine limits
+          The user can set calendar parameters in the generic calendar.
+
+   ESMF_CALKIND_GREGORIAN
+          Valid range: 3/1/4801 BC to 10/29/292,277,019,914
+          The Gregorian calendar is the calendar currently in use
+          throughout Western countries. Named after Pope Gregory XIII, it
+          is a minor correction to the older Julian calendar. In the
+          Gregorian calendar every fourth year is a leap year in which
+          February has 29 and not 28 days; however, years divisible by 100
+          are not leap years unless they are also divisible by 400. As in
+          the Julian calendar, days begin at midnight.
+
+   ESMF_CALKIND_JULIAN
+          Valid range: 3/1/4713 BC to 4/24/292,271,018,333
+          The Julian calendar was introduced by Julius Caesar in 46 B.C.,
+          and reached its final form in 4 A.D. The Julian calendar differs
+          from the Gregorian only in the determination of leap years,
+          lacking the correction for years divisible by 100 and 400 in the
+          Gregorian calendar. In the Julian calendar, any year is a leap
+          year if divisible by 4. Days are considered to begin at
+          midnight.
+
+   ESMF_CALKIND_JULIANDAY
+          Valid range: +/- 1x10 $^{14}$
+          Julian days simply enumerate the days and fraction of a day
+          which have elapsed since the start of the Julian era, defined as
+          beginning at noon on Monday, 1st January of year 4713 B.C. in
+          the Julian calendar. Julian days, unlike the dates in the Julian
+          and Gregorian calendars, begin at noon.
+
+   ESMF_CALKIND_MODJULIANDAY
+          Valid range: +/- 1x10 $^{14}$
+          The Modified Julian Day (MJD) was introduced by space scientists
+          in the late 1950's. It is defined as an offset from the Julian
+          Day (JD):
+
+          MJD = JD - 2400000.5
+
+          The half day is subtracted so that the day starts at midnight.
+
+   ESMF_CALKIND_NOCALENDAR
+          Valid range: machine limits
+          The no-calendar option simply tracks the elapsed model time in
+          seconds.
+
+   ESMF_CALKIND_NOLEAP
+          Valid range: machine limits
+          The no-leap calendar is the Gregorian calendar with no leap
+          years - February is always assumed to have 28 days. Modelers
+          sometimes use this calendar as a simple, close approximation to
+          the Gregorian calendar.
+
+42.3 Use and Examples
+
+   In most multi-component Earth system applications, the timekeeping in
+   each component must refer to the same standard calendar in order for
+   the components to properly synchronize. It therefore makes sense to
+   create as few ESMF Calendars as possible, preferably one per
+   application. A typical strategy would be to create a single Calendar at
+   the start of an application, and use that Calendar in all subsequent
+   calls that accept a Calendar, such as ESMF_TimeSet.
+
+   The following example shows how to set up an ESMF Calendar.
+
+! !PROGRAM: ESMF_CalendarEx - Calendar creation examples
+!
+! !DESCRIPTION:
+!
+! This program shows examples of how to create different calendar kinds
+!-----------------------------------------------------------------------------
+#include "ESMF.h"
+
+      ! ESMF Framework module
+      use ESMF
+      use ESMF_TestMod
+      implicit none
+
+      ! instantiate calendars
+      type(ESMF_Calendar) :: gregorianCalendar
+      type(ESMF_Calendar) :: julianDayCalendar
+      type(ESMF_Calendar) :: marsCalendar
+
+      ! local variables for Get methods
+      integer :: sols
+      integer(ESMF_KIND_I8) :: dl
+      type(ESMF_Time) :: time, marsTime
+      type(ESMF_TimeInterval) :: marsTimeStep
+
+      ! return code
+      integer:: rc
+
+      ! initialize ESMF framework
+      call ESMF_Initialize(defaultlogfilename="CalendarEx.Log", &
+                    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+  42.3.1 Calendar creation
+
+   This example shows how to create three ESMF_Calendars.
+
+      ! create a Gregorian calendar
+      gregorianCalendar = ESMF_CalendarCreate(ESMF_CALKIND_GREGORIAN, &
+                                              name="Gregorian", rc=rc)
+
+      ! create a Julian Day calendar
+      julianDayCalendar = ESMF_CalendarCreate(ESMF_CALKIND_JULIANDAY, &
+                                              name="JulianDay", rc=rc)
+
+      ! create a Custom calendar for the planet Mars
+      ! 1 Mars solar day = 24 hours, 39 minutes, 35 seconds = 88775 seconds
+      ! 1 Mars solar year = 668.5921 Mars solar days = 668 5921/10000 sols/year
+      ! http://www.giss.nasa.gov/research/briefs/allison_02
+      ! http://www.giss.nasa.gov/tools/mars24/help/notes.html
+      marsCalendar = ESMF_CalendarCreate(secondsPerDay=88775, &
+                                         daysPerYear=668, &
+                                         daysPerYearDn=5921, &
+                                         daysPerYearDd=10000, &
+                                         name="MarsCalendar", rc=rc)
+
+  42.3.2 Calendar comparison
+
+   This example shows how to compare an ESMF_Calendar with a known
+   calendar kind.
+
+      ! compare calendar kind against a known type
+      if (gregorianCalendar == ESMF_CALKIND_GREGORIAN) then
+        print *, "gregorianCalendar is of type ESMF_CALKIND_GREGORIAN."
+      else
+        print *, "gregorianCalendar is not of type ESMF_CALKIND_GREGORIAN."
+      end if
+
+  42.3.3 Time conversion between Calendars
+
+   This example shows how to convert a time from one ESMF_Calendar to
+   another.
+
+      call ESMF_TimeSet(time, yy=2004, mm=4, dd=17, &
+                        calendar=gregorianCalendar, rc=rc)
+
+      ! switch time's calendar to perform conversion
+      call ESMF_TimeSet(time, calendar=julianDayCalendar, rc=rc)
+
+      call ESMF_TimeGet(time, d_i8=dl, rc=rc)
+      print *, "Gregorian date 2004/4/17 is ", dl, &
+               " days in the Julian Day calendar."
+
+  42.3.4 Add a time interval to a time on a Calendar
+
+   This example shows how to increment a time using a custom
+   ESMF_Calendar.
+
+      ! Set a time to Mars solar year 3, sol 100
+      call ESMF_TimeSet(marsTime, yy=3, d=100, &
+                        calendar=marsCalendar, rc=rc)
+
+      ! Set a 1 solar year time step
+      call ESMF_TimeIntervalSet(marsTimeStep, yy=1, rc=rc)
+
+      ! Perform the increment
+      marsTime = marsTime + marsTimeStep
+
+      ! Get the result in sols (2774 = (3+1)*668.5921 + 100)
+      call ESMF_TimeGet(marsTime, d=sols, rc=rc)
+      print *, "For Mars, 3 solar years, 100 sols + 1 solar year = ", &
+                sols, "sols."
+
+  42.3.5 Calendar destruction
+
+   This example shows how to destroy three ESMF_Calendars.
+
+      call ESMF_CalendarDestroy(julianDayCalendar, rc=rc)
+
+      call ESMF_CalendarDestroy(gregorianCalendar, rc=rc)
+
+      call ESMF_CalendarDestroy(marsCalendar, rc=rc)
+
+      ! finalize ESMF framework
+      call ESMF_Finalize(rc=rc)
+
+      end program ESMF_CalendarEx
+
+42.4 Restrictions and Future Work
+
+    1. Months per year set to 12. Due to the requirement of only Earth
+       modeling, the number of months per year is hard-coded at 12.
+       However, for easy modification, this is implemented via a C
+       preprocessor #define MONTHS_PER_YEAR in ESMCI_Calendar.h.
+    2. Calendar date conversions. Date conversions are currently defined
+       between the Gregorian, Julian, Julian Day, and Modified Julian Day
+       calendars. Further research and work would need to be done to
+       determine conversion algorithms with and between the other
+       calendars: No Leap, 360 Day, and Custom.
+    3. ESMF_CALKIND_CUSTOM. Currently, there is no provision for a custom
+       calendar to define a leap year rule, so ESMF_CalendarIsLeapYear()
+       will always return .false. in this case. However, the arguments
+       daysPerYear, daysPerYearDn, and daysPerYearDd in
+       ESMF_CalendarCreate() and ESMF_CalendarSet() can be used to set a
+       fractional number of days per year, for example, 365.25 = 365
+       25/100. Also, if further timekeeping precision is required,
+       fractional and/or floating point secondsPerDay and secondsPerYear
+       could be added to the interfaces ESMF_CalendarCreate(),
+       ESMF_CalendarSet(), and ESMF_CalendarGet() and implemented.
+
+42.5 Class API
+
+  42.5.1 ESMF_CalendarAssignment(=) - Assign a Calendar to another Calendar
+
+   INTERFACE:
+       interface assignment(=)
+       calendar1 = calendar2
+
+   ARGUMENTS:
+       type(ESMF_Calendar) :: calendar1
+       type(ESMF_Calendar) :: calendar2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Assign calendar1 as an alias to the same ESMF_Calendar object in memory
+   as calendar2. If calendar2 is invalid, then calendar1 will be equally
+   invalid after the assignment.
+
+   The arguments are:
+
+   calendar1
+          The ESMF_Calendar object on the left hand side of the
+          assignment.
+
+   calendar2
+          The ESMF_Calendar object on the right hand side of the
+          assignment.
+
+  42.5.2 ESMF_CalendarOperator(==) - Test if Calendar argument 1 is equal to
+  Calendar argument 2
+
+   INTERFACE:
+       interface operator(==)
+       if (<calendar argument 1> == <calendar argument 2>) then ... endif
+                                   OR
+       result = (<calendar argument 1> == <calendar argument 2>)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       <calendar argument 1>, see below for supported values
+       <calendar argument 2>, see below for supported values
+
+   DESCRIPTION:
+
+   Overloads the (==) operator for the ESMF_Calendar class. Compare an
+   ESMF_Calendar object or ESMF_CalKind_Flag with another calendar object
+   or calendar kind for equality. Return .true. if equal, .false.
+   otherwise. Comparison is based on calendar kind, which is a property of
+   a calendar object.
+
+   If both arguments are ESMF_Calendar objects, and both are of type
+   ESMF_CALKIND_CUSTOM, then all the calendar's properties, except name,
+   are compared.
+
+   If both arguments are ESMF_Calendar objects, and either of them is not
+   in the ESMF_INIT_CREATED status, an error will be logged. However, this
+   does not affect the return value, which is .true. when both arguments
+   are in the same status, and .false. otherwise.
+
+   If one argument is an ESMF_Calendar object, and the other is an
+   ESMF_CalKind_Flag, and the calendar object is not in the
+   ESMF_INIT_CREATED status, an error will be logged and .false. will be
+   returned.
+
+   Supported values for <calendar argument 1> are:
+
+          type(ESMF_Calendar), intent(in) :: calendar1
+
+          type(ESMF_CalKind_Flag), intent(in) :: calkindflag1
+
+   Supported values for <calendar argument 2> are:
+
+          type(ESMF_Calendar), intent(in) :: calendar2
+
+          type(ESMF_CalKind_Flag), intent(in) :: calkindflag2
+
+   The arguments are:
+
+   <calendar argument 1>
+          The ESMF_Calendar object or ESMF_CalKind_Flag on the left hand
+          side of the equality operation.
+
+   <calendar argument 2>
+          The ESMF_Calendar object or ESMF_CalKind_Flag on the right hand
+          side of the equality operation.
+
+  42.5.3 ESMF_CalendarOperator(/=) - Test if Calendar argument 1 is not equal to
+  Calendar argument 2
+
+   INTERFACE:
+       interface operator(/=)
+       if (<calendar argument 1> /= <calendar argument 2>) then ... endif
+                                   OR
+       result = (<calendar argument 1> /= <calendar argument 2>)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       <calendar argument 1>, see below for supported values
+       <calendar argument 2>, see below for supported values
+
+   DESCRIPTION:
+
+   Overloads the (/=) operator for the ESMF_Calendar class. Compare a
+   ESMF_Calendar object or ESMF_CalKind_Flag with another calendar object
+   or calendar kind for inequality. Return .true. if not equal, .false.
+   otherwise. Comparison is based on calendar kind, which is a property of
+   a calendar object.
+
+   If both arguments are ESMF_Calendar objects, and both are of type
+   ESMF_CALKIND_CUSTOM, then all the calendar's properties, except name,
+   are compared.
+
+   If both arguments are ESMF_Calendar objects, and either of them is not
+   in the ESMF_INIT_CREATED status, an error will be logged. However, this
+   does not affect the return value, which is .true. when both arguments
+   are not in the same status, and .false. otherwise.
+
+   If one argument is an ESMF_Calendar object, and the other is an
+   ESMF_CalKind_Flag, and the calendar object is not in the
+   ESMF_INIT_CREATED status, an error will be logged and .true. will be
+   returned.
+
+   Supported values for <calendar argument 1> are:
+
+          type(ESMF_Calendar), intent(in) :: calendar1
+
+          type(ESMF_CalKind_Flag), intent(in) :: calkindflag1
+
+   Supported values for <calendar argument 2> are:
+
+          type(ESMF_Calendar), intent(in) :: calendar2
+
+          type(ESMF_CalKind_Flag), intent(in) :: calkindflag2
+
+   The arguments are:
+
+   <calendar argument 1>
+          The ESMF_Calendar object or ESMF_CalKind_Flag on the left hand
+          side of the non-equality operation.
+
+   <calendar argument 2>
+          The ESMF_Calendar object or ESMF_CalKind_Flag on the right hand
+          side of the non-equality operation.
+

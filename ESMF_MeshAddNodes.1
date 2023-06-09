@@ -1,0 +1,82 @@
+  33.4.5 ESMF_MeshAddNodes - Add nodes to a Mesh
+
+   INTERFACE:
+     subroutine ESMF_MeshAddNodes(mesh, nodeIds, nodeCoords, nodeOwners, &
+                                  nodeMask, nodalDistgrid, rc)
+
+   ARGUMENTS:
+     type(ESMF_Mesh),    intent(inout)         :: mesh
+     integer,            intent(in)            :: nodeIds(:)
+     real(ESMF_KIND_R8), intent(in)            :: nodeCoords(:)
+     integer,            intent(in),  optional :: nodeOwners(:)
+     integer,            intent(in),  optional :: nodeMask(:)
+     type(ESMF_DistGrid), intent(in), optional :: nodalDistgrid
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   This call is the second part of the three part mesh create sequence and
+   should be called after the mesh's dimensions are set using
+   ESMF_MeshCreate() ([1468]33.4.6). This call adds the nodes to the mesh.
+   The next step is to call ESMF_MeshAddElements() ([1469]33.4.4).
+
+   The parameters to this call nodeIds, nodeCoords, and nodeOwners
+   describe the nodes to be created on this PET. The description for a
+   particular node lies at the same index location in nodeIds and
+   nodeOwners. Each entry in nodeCoords consists of spatial dimension
+   coordinates, so the coordinates for node $n$ in the nodeIds array will
+   start at $(n-1)*spatialDim+1$ .
+
+   nodeIds
+          An array containing the global ids of the nodes to be created on
+          this PET. This input consists of a 1D array the size of the
+          number of nodes on this PET. Each node id must be a number equal
+          to or greater than 1. An id should be unique in the sense that
+          different nodes must have different ids (the same node that
+          appears on different processors must have the same id). There
+          may be gaps in the sequence of ids, but if these gaps are the
+          same scale as the length of the sequence it can lead to
+          inefficiencies when the Mesh is used (e.g. in
+          ESMF_FieldRegridStore()).
+
+   nodeCoords
+          An array containing the physical coordinates of the nodes to be
+          created on this PET. This input consists of a 1D array the size
+          of the number of nodes on this PET times the Mesh's spatial
+          dimension (spatialDim). The coordinates in this array are
+          ordered so that the coordinates for a node lie in sequence in
+          memory. (e.g. for a Mesh with spatial dimension 2, the
+          coordinates for node 1 are in nodeCoords(1) and nodeCoords(2),
+          the coordinates for node 2 are in nodeCoords(3) and
+          nodeCoords(4), etc.).
+
+   [nodeOwners]
+          An array containing the PETs that own the nodes to be created on
+          this PET. If the node is shared with another PET, the value may
+          be a PET other than the current one. Only nodes owned by this
+          PET will have PET local entries in a Field created on the Mesh.
+          This input consists of a 1D array the size of the number of
+          nodes on this PET. If not provided by the user, then ESMF will
+          calculate node ownership.
+
+   [nodeMask]
+          An array containing values which can be used for node masking.
+          Which values indicate masking are chosen via the srcMaskValues
+          or dstMaskValues arguments to ESMF_FieldRegridStore() call. This
+          input consists of a 1D array the size of the number of nodes on
+          this PET.
+
+   [nodalDistgrid]
+          If present, use this as the node Distgrid for the Mesh. The
+          passed in Distgrid needs to contain a local set of sequence
+          indices matching the set of local node ids (i.e. the ids in
+          nodeIds with nodeOwners equal to the current PET). However,
+          specifying an externally created Distgrid gives the user more
+          control over aspects of the Distgrid containing those sequence
+          indices (e.g. how they are broken into DEs). If not present, a
+          1D Distgrid will be created internally consisting of one DE per
+          PET.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

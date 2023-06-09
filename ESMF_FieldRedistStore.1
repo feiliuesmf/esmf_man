@@ -1,0 +1,254 @@
+  26.6.63 ESMF_FieldRedistStore - Precompute Field redistribution with a local
+  factor argument
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldRedistStore()
+   subroutine ESMF_FieldRedistStore<type><kind>(srcField, dstField, &
+          routehandle, factor, srcToDstTransposeMap, &
+          ignoreUnmatchedIndices, rc)
+
+   ARGUMENTS:
+     type(ESMF_Field),         intent(in)            :: srcField
+     type(ESMF_Field),         intent(inout)         :: dstField
+     type(ESMF_RouteHandle),   intent(inout)         :: routehandle
+     <type>(ESMF_KIND_<kind>), intent(in)            :: factor
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                  intent(in),  optional :: srcToDstTransposeMap(:)
+     logical,                  intent(in),  optional :: ignoreUnmatchedIndices
+     integer,                  intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.0.0
+                Added argument ignoreUnmatchedIndices to support sparse
+                matrices that contain elements with indices that do not
+                have a match within the source or destination Array.
+
+   DESCRIPTION:
+
+   ESMF_FieldRedistStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_FieldRedistStore() through
+   a different entry point. Restrictions apply as to which combinations
+   are sensible. All other combinations result in ESMF run time errors.
+   The complete semantics of the ESMF_FieldRedistStore() method, as
+   provided through the separate entry points shown in [965]26.6.63 and
+   [966]26.6.64, is described in the following paragraphs as a whole.
+
+   Store a Field redistribution operation from srcField to dstField.
+   Interface [967]26.6.63 allows PETs to specify a factor argument. PETs
+   not specifying a factor argument call into interface [968]26.6.64. If
+   multiple PETs specify the factor argument, its type and kind, as well
+   as its value must match across all PETs. If none of the PETs specify a
+   factor argument the default will be a factor of 1. The resulting factor
+   is applied to all of the source data during redistribution, allowing
+   scaling of the data, e.g. for unit transformation.
+
+   Both srcField and dstField are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [969]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source Field, destination Field, and the factor may be of different
+   <type><kind>. Further, source and destination Fields may differ in
+   shape, however, the number of elements must match.
+
+   The default redistribution operation, when srcToDstTransposeMap is not
+   specified, corresponds to the identity mapping: each element of the
+   sequentialized source Field is copied to the sequentialized destination
+   Field element in order.
+
+   If the srcToDstTransposeMap argument is provided it must be identical
+   across all PETs. The srcToDstTransposeMap allows source and destination
+   Field dimensions to be transposed during the redistribution. To support
+   this option, the number of source and destination Field dimensions must
+   be equal and the size of the associated dimensions must match. See
+   section [970]28.2.17 for more details about the use of the
+   srcToDstTransposeMap argument.
+
+   It is erroneous to specify the identical Field object for srcField and
+   dstField arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_FieldRedist() on any pair of Fields that matches srcField and
+   dstField in type, kind, and memory layout of the gridded dimensions.
+   However, the size, number, and index order of ungridded dimensions may
+   be different. See section [971]37.2.5 for a more detailed discussion of
+   RouteHandle reusability.
+
+   This method is overloaded for:
+   ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   This call is collective across the current VM.
+
+   For examples and associated documentation regarding this method see
+   Section [972]26.3.30.
+
+   The arguments are:
+
+   srcField
+          ESMF_Field with source data.
+
+   dstField
+          ESMF_Field with destination data. The data in this Field may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   factor
+          Factor by which to multiply data. Default is 1. See full method
+          description above for details on the interplay with other PETs.
+
+   [srcToDstTransposeMap]
+          A list with as many entries as there are dimensions in srcField,
+          or tileCount times this many entries. Each entry maps the
+          corresponding srcField dimension against the specified dstField
+          dimension. Mixing distributed and undistributed dimensions is
+          supported. Negative entries reverse the order of elements along
+          the specified dimension when going from source to destination.
+          When providing $rank \times tileCount$ elements in
+          srcToDstTransposeMap, each block of size rank is associated with
+          the corresponding tile (in order), and interpreted as the
+          tile-specific transpose map.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when not all
+          elements match between the srcField and dstField side. The
+          default setting is .false., indicating that it is an error when
+          such a situation is encountered. Setting ignoreUnmatchedIndices
+          to .true. ignores unmatched indices.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  26.6.64 ESMF_FieldRedistStore - Precompute Field redistribution without a
+  local factor argument
+
+   INTERFACE:
+   ! Private name; call using ESMF_FieldRedistStore()
+     subroutine ESMF_FieldRedistStoreNF(srcField, dstField, &
+         routehandle, srcToDstTransposeMap, &
+         ignoreUnmatchedIndices, rc)
+
+   ARGUMENTS:
+         type(ESMF_Field),       intent(in)            :: srcField
+         type(ESMF_Field),       intent(inout)         :: dstField
+         type(ESMF_RouteHandle), intent(inout)         :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+         integer,                intent(in), optional  :: srcToDstTransposeMap(:
+)
+         logical,                intent(in), optional  :: ignoreUnmatchedIndices
+         integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   ESMF_FieldRedistStore() is a collective method across all PETs of the
+   current Component. The interface of the method is overloaded, allowing
+   - in principle - each PET to call into ESMF_FieldRedistStore() through
+   a different entry point. Restrictions apply as to which combinations
+   are sensible. All other combinations result in ESMF run time errors.
+   The complete semantics of the ESMF_FieldRedistStore() method, as
+   provided through the separate entry points shown in [973]26.6.63 and
+   [974]26.6.64, is described in the following paragraphs as a whole.
+
+   Store a Field redistribution operation from srcField to dstField.
+   Interface [975]26.6.63 allows PETs to specify a factor argument. PETs
+   not specifying a factor argument call into interface [976]26.6.64. If
+   multiple PETs specify the factor argument, its type and kind, as well
+   as its value must match across all PETs. If none of the PETs specify a
+   factor argument the default will be a factor of 1. The resulting factor
+   is applied to all of the source data during redistribution, allowing
+   scaling of the data, e.g. for unit transformation.
+
+   Both srcField and dstField are interpreted as sequentialized vectors.
+   The sequence is defined by the order of DistGrid dimensions and the
+   order of tiles within the DistGrid or by user-supplied arbitrary
+   sequence indices. See section [977]28.2.18 for details on the
+   definition of sequence indices.
+
+   Source Field, destination Field, and the factor may be of different
+   <type><kind>. Further, source and destination Fields may differ in
+   shape, however, the number of elements must match.
+
+   The default redistribution operation, when srcToDstTransposeMap is not
+   specified, corresponds to the identity mapping: each element of the
+   sequentialized source Field is copied to the sequentialized destination
+   Field element in order.
+
+   If the srcToDstTransposeMap argument is provided it must be identical
+   across all PETs. The srcToDstTransposeMap allows source and destination
+   Field dimensions to be transposed during the redistribution. To support
+   this option, the number of source and destination Field dimensions must
+   be equal and the size of the associated dimensions must match. See
+   section [978]28.2.17 for more details about the use of the
+   srcToDstTransposeMap argument.
+
+   It is erroneous to specify the identical Field object for srcField and
+   dstField arguments.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_FieldRedist() on any pair of Fields that matches srcField and
+   dstField in type, kind, and memory layout of the gridded dimensions.
+   However, the size, number, and index order of ungridded dimensions may
+   be different. See section [979]37.2.5 for a more detailed discussion of
+   RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   For examples and associated documentation regarding this method see
+   Section [980]26.3.30.
+
+   The arguments are:
+
+   srcField
+          ESMF_Field with source data.
+
+   dstField
+          ESMF_Field with destination data. The data in this Field may be
+          destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [srcToDstTransposeMap]
+          A list with as many entries as there are dimensions in srcField,
+          or tileCount times this many entries. Each entry maps the
+          corresponding srcField dimension against the specified dstField
+          dimension. Mixing distributed and undistributed dimensions is
+          supported. Negative entries reverse the order of elements along
+          the specified dimension when going from source to destination.
+          When providing $rank \times tileCount$ elements in
+          srcToDstTransposeMap, each block of size rank is associated with
+          the corresponding tile (in order), and interpreted as the
+          tile-specific transpose map.
+
+   [ignoreUnmatchedIndices]
+          A logical flag that affects the behavior for when not all
+          elements match between the srcField and dstField side. The
+          default setting is .false., indicating that it is an error when
+          such a situation is encountered. Setting ignoreUnmatchedIndices
+          to .true. ignores unmatched indices.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

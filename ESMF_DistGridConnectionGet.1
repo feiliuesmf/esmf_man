@@ -1,0 +1,50 @@
+  36.7.1 ESMF_DistGridConnectionGet - Get DistGridConnection
+
+   INTERFACE:
+   subroutine ESMF_DistGridConnectionGet(connection, &
+     tileIndexA, tileIndexB, dimCount, positionVector, orientationVector, rc)
+
+   ARGUMENTS:
+     type(ESMF_DistGridConnection), intent(in)            :: connection
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                       intent(out), optional :: tileIndexA
+     integer,                       intent(out), optional :: tileIndexB
+     integer,                       intent(out), optional :: dimCount
+     integer,                       intent(out), optional :: positionVector(:)
+     integer,                       intent(out), optional :: orientationVector(:
+)
+     integer,                       intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get connection parameters from an ESMF_DistGridConnection object. This
+   interface provides access to all variables required to create a new
+   connection using the ESMF_DistGridConnectionSet() method.
+
+   The arguments are:
+
+   connection
+          DistGridConnection object.
+
+   [tileIndexA]
+          Index of one of the two connected tiles.
+
+   [tileIndexB]
+          Index of the other connected tile.
+
+   [dimCount]
+          Number of dimensions of positionVector.
+
+   [positionVector]
+          Position of tile B's minIndex with respect to tile A's minIndex.
+          This array's size should be at least equal to dimCount.
+
+   [orientationVector]
+          Lists which dimension of tile A is associated to which dimension
+          of tile B. Negative index values may be used to indicate a
+          reversal in index orientation. Should be at least of size
+          dimCount.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

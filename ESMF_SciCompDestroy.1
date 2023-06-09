@@ -1,0 +1,25 @@
+  19.4.5 ESMF_SciCompDestroy - Release resources associated with a SciComp
+
+   INTERFACE:
+   subroutine ESMF_SciCompDestroy(scicomp, rc)
+
+   ARGUMENTS:
+     type(ESMF_SciComp), intent(inout)           :: scicomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out),  optional :: rc
+
+   DESCRIPTION:
+
+   Destroys an ESMF_SciComp, releasing the resources associated with the
+   object.
+
+   The arguments are:
+
+   scicomp
+          Release all resources associated with this ESMF_SciComp and mark
+          the object as invalid. It is an error to pass this object into
+          any other routines after being destroyed.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

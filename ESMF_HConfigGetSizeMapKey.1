@@ -1,0 +1,40 @@
+  48.5.24 ESMF_HConfigGetSizeMapKey - Get size of HConfig node
+
+   INTERFACE:
+   function ESMF_HConfigGetSizeMapKey(hconfig, index, keyString, &
+     doc, rc)
+
+   RETURN VALUE:
+     integer :: ESMF_HConfigGetSizeMapKey
+
+   ARGUMENTS:
+     type(ESMF_HConfigIter), intent(in)        :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,            intent(in),  optional :: index
+     character(*),       intent(in),  optional :: keyString
+     integer,            intent(in),  optional :: doc
+     integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return size of the hconfig node.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfigIter object.
+
+   [index]
+          Attempt to access by index if specified. Mutural exclusive with
+          keyString.
+
+   [keyString]
+          Attempt to access by key string if specified. Mutural exclusive
+          with index.
+
+   [doc]
+          The doc index. Defaults to the first document.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

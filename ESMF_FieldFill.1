@@ -1,0 +1,91 @@
+  26.6.50 ESMF_FieldFill - Fill data into a Field
+
+   INTERFACE:
+   subroutine ESMF_FieldFill(field, dataFillScheme, &
+     const1, member, step, &
+     param1I4, param2I4, param3I4, &
+     param1R4, param2R4, param3R4, &
+     param1R8, param2R8, param3R8, &
+     rc)
+
+   ARGUMENTS:
+     type(ESMF_Field), intent(inout) :: field
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len=*), intent(in), optional :: dataFillScheme
+     real(ESMF_KIND_R8), intent(in), optional :: const1
+     integer, intent(in), optional :: member
+     integer, intent(in), optional :: step
+     integer(ESMF_KIND_I4), intent(in), optional :: param1I4
+     integer(ESMF_KIND_I4), intent(in), optional :: param2I4
+     integer(ESMF_KIND_I4), intent(in), optional :: param3I4
+     real(ESMF_KIND_R4), intent(in), optional :: param1R4
+     real(ESMF_KIND_R4), intent(in), optional :: param2R4
+     real(ESMF_KIND_R4), intent(in), optional :: param3R4
+     real(ESMF_KIND_R8), intent(in), optional :: param1R8
+     real(ESMF_KIND_R8), intent(in), optional :: param2R8
+     real(ESMF_KIND_R8), intent(in), optional :: param3R8
+     integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Fill field with data according to dataFillScheme. Depending on the
+   chosen fill scheme, the member and step arguments are used to provide
+   differing fill data patterns.
+
+   The arguments are:
+
+   field
+          The ESMF_Field object to fill with data.
+
+   [dataFillScheme]
+          The fill scheme. The available options are "sincos", "one",
+          "const", "random", "nan", and "snan". Defaults to "sincos".
+
+   [const1]
+          Constant of real type. Defaults to 0.
+
+   [member]
+          Member incrementor. Defaults to 1.
+
+   [step]
+          Step incrementor. Defaults to 1.
+
+   [param1I4]
+          Optional parameter of typekind I4. The default depends on the
+          specified dataFillScheme.
+
+   [param2I4]
+          Optional parameter of typekind I4. The default depends on the
+          specified dataFillScheme.
+
+   [param3I4]
+          Optional parameter of typekind I4. The default depends on the
+          specified dataFillScheme.
+
+   [param1R4]
+          Optional parameter of typekind R4. The default depends on the
+          specified dataFillScheme.
+
+   [param2R4]
+          Optional parameter of typekind R4. The default depends on the
+          specified dataFillScheme.
+
+   [param3R4]
+          Optional parameter of typekind R4. The default depends on the
+          specified dataFillScheme.
+
+   [param1R8]
+          Optional parameter of typekind R8. The default depends on the
+          specified dataFillScheme.
+
+   [param2R8]
+          Optional parameter of typekind R8. The default depends on the
+          specified dataFillScheme.
+
+   [param3R8]
+          Optional parameter of typekind R8. The default depends on the
+          specified dataFillScheme.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

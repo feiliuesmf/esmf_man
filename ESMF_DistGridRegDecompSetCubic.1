@@ -1,0 +1,29 @@
+  36.8.1 ESMF_DistGridRegDecompSetCubic - Construct a DistGrid regDecomp
+
+   INTERFACE:
+   subroutine ESMF_DistGridRegDecompSetCubic(regDecomp, deCount, rc)
+
+   ARGUMENTS:
+     integer,        target, intent(out)           :: regDecomp(:)
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,                intent(in),  optional :: deCount
+     integer,                intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Construct a regular decomposition argument for DistGrid that is most
+   cubic in dimCount dimensions, and multiplies out to deCount DEs. The
+   factorization is stable monotonic decreasing, ensuring that earlier
+   entries in regDecomp are larger or equal to the later entires.
+
+   The arguments are:
+
+   regDecomp
+          The regular decomposition description being constructed.
+
+   [deCount]
+          The number of DEs. Defaults to petCount.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

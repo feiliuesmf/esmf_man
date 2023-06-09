@@ -1,0 +1,35 @@
+          + [583]35 Geom Class
+               o [584]35.1 Description
+               o [585]35.2 Class API: Geom Methods
+                    # [586]35.2.1 ESMF_GeomCreate
+                    # [587]35.2.2 ESMF_GeomCreate
+                    # [588]35.2.3 ESMF_GeomCreate
+                    # [589]35.2.4 ESMF_GeomCreate
+                    # [590]35.2.5 ESMF_GeomDestroy
+                    # [591]35.2.6 ESMF_GeomGet
+                                 35 Geom Class
+
+35.1 Description
+
+   The ESMF Geom class is used as a container for other ESMF geometry
+   objects (e.g. an ESMF Grid). This allows a generic representation of a
+   geometry to be passed around (e.g. through a coupled system) without
+   it's specific type being known. Some operations are supported on a Geom
+   object and more will be added over time as needed. However, if an
+   unsupported operation is needed, then the specific geometry object can
+   always be pulled out and operated on that way.
+
+   In addition to the geometry object, a Geom can also contain information
+   describing a location on a geometry. For example, in the case of a
+   Grid, a geometry object will also contain a stagger location. Having
+   this location information allows the creation of Fields and other
+   capabilities to be performed in the most generic way on a Geom object.
+   For geometries where it is appropriate, the user can optionally specify
+   this location information during the creation of a Geom object.
+   However, if no location is specified, then default values for this
+   information are provided which match those which would be used when
+   creating a Field with the specific geometry (e.g. stagger location
+   ESMF_STAGGERLOC_CENTER for a Grid).
+
+35.2 Class API: Geom Methods
+

@@ -1,0 +1,279 @@
+  16.4.1 ESMF_Initialize - Initialize ESMF
+
+   INTERFACE:
+       subroutine ESMF_Initialize(configFilename, configKey, &
+         defaultCalKind, defaultDefaultLogFilename, defaultLogFilename, &
+         defaultLogAppendFlag, logAppendFlag, defaultLogKindFlag, logKindFlag, &
+         mpiCommunicator,  ioUnitLBound, ioUnitUBound, &
+         defaultGlobalResourceControl, globalResourceControl, config, vm, rc)
+
+   ARGUMENTS:
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       character(len=*),        intent(in),  optional :: configFilename
+       character(len=*),        intent(in),  optional :: configKey(:)
+       type(ESMF_CalKind_Flag), intent(in),  optional :: defaultCalKind
+       character(len=*),        intent(in),  optional :: defaultDefaultLogFilena
+me
+       character(len=*),        intent(in),  optional :: defaultLogFilename
+       logical,                 intent(in),  optional :: defaultLogAppendFlag
+       logical,                 intent(in),  optional :: logAppendFlag
+       type(ESMF_LogKind_Flag), intent(in),  optional :: defaultLogKindFlag
+       type(ESMF_LogKind_Flag), intent(in),  optional :: logKindFlag
+       integer,                 intent(in),  optional :: mpiCommunicator
+       integer,                 intent(in),  optional :: ioUnitLBound
+       integer,                 intent(in),  optional :: ioUnitUBound
+       logical,                 intent(in),  optional :: defaultGlobalResourceCo
+ntrol
+       logical,                 intent(in),  optional :: globalResourceControl
+       type(ESMF_Config),       intent(out), optional :: config
+       type(ESMF_VM),           intent(out), optional :: vm
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.0.0
+                Added argument logAppendFlag to allow specifying that the
+                existing log files will be overwritten.
+
+        8.2.0
+                Added argument globalResourceControl to support ESMF-aware
+                threading and resource control on the global VM level.
+                Added argument config to return default handle to the
+                defaultConfig.
+                Renamed argument defaultConfigFilename to configFilename,
+                in order to clarify that provided settings in the Config
+                file are not defaults, but final overrides.
+                Introduce default prefixed arguments:
+                defaultDefaultLogFilename, defaultLogAppendFlag,
+                defaultLogKindFlag, defaultGlobalResourceControl. These
+                arguments allow specification of defaults for the
+                associated settings. This default can be overridden via
+                the associated argument, without the extra default prefix,
+                either specified in the call, or within the specified
+                Config file.
+
+        8.5.0
+                Added argument configKey to support custom location of the
+                map of predefined initialization options for YAML
+                configurations.
+
+   DESCRIPTION:
+
+   This method must be called once on each PET before any other ESMF
+   methods are used. The method contains a barrier before returning,
+   ensuring that all processes made it successfully through
+   initialization.
+
+   Typically ESMF_Initialize() will call MPI_Init() internally unless MPI
+   has been initialized by the user code before initializing the
+   framework. If the MPI initialization is left to ESMF_Initialize() it
+   inherits all of the MPI implementation dependent limitations of what
+   may or may not be done before MPI_Init(). For instance, it is unsafe
+   for some MPI implementations, such as MPICH1, to do I/O before the MPI
+   environment is initialized. Please consult the documentation of your
+   MPI implementation for details.
+
+   Note that when using MPICH1 as the MPI library, ESMF needs to use the
+   application command line arguments for MPI_Init(). However, ESMF
+   acquires these arguments internally and the user does not need to worry
+   about providing them. Also, note that ESMF does not alter the command
+   line arguments, so that if the user obtains them they will be as
+   specified on the command line (including those which MPICH1 would
+   normally strip out).
+
+   ESMF_Initialize() supports running ESMF inside a user MPI program.
+   Details of this feature are discussed under the VM example [235]51.3.5.
+   It is not necessary that all MPI ranks are handed to ESMF. Section
+   [236]51.3.6 shows how an MPI communicator can be used to execute ESMF
+   on a subset of MPI ranks. ESMF_Initialize() supports running multiple
+   concurrent instances of ESMF under the same user MPI program. This
+   feature is discussed under [237]51.3.7.
+
+   In order to use any of the advanced resource management functions that
+   ESMF provides via the ESMF_*CompSetVM*() methods, the MPI environment
+   must be thread-safe. ESMF_Initialize() handles this automatically if it
+   is in charge of initializing MPI. However, if the user code initializes
+   MPI before calling into ESMF_Initialize(), it must do so via
+   MPI_Init_thread(), specifying MPI_THREAD_SERIALIZED or above for the
+   required level of thread support.
+
+   In cases where ESMF_*CompSetVM*() methods are used to move processing
+   elements (PEs), i.e. CPU cores, between persistent execution threads
+   (PETs), ESMF uses POSIX signals between PETs. In order to do so safely,
+   the proper signal handlers must be installed before MPI is initialized.
+   ESMF_Initialize() handles this automatically if it is in charge of
+   initializing MPI. If, however, MPI is explicitly initialized by user
+   code, then to ensure correct signal handling it is necessary to call
+   ESMF_InitializePreMPI() from the user code prior to the MPI
+   initialization.
+
+   By default, ESMF_Initialize() opens multiple error log files, one per
+   processor. This is very useful for debugging purpose. However, when
+   running the application on a large number of tasks, opening a large
+   number of log files and writing log messages from all the tasks can
+   become a performance bottleneck. Therefore, it is recommended for
+   production runs to set logKindFlag to ESMF_LOGKIND_NONE, or
+   ESMF_LOGKIND_Multi_On_Error. The latter only creates log files when an
+   error occurs.
+
+   When integrating ESMF with applications where Fortran unit number
+   conflicts exist, the optional ioUnitLBound and ioUnitUBound arguments
+   may be used to specify an alternate unit number range. See section
+   [238]53.2.1 for more information on how ESMF uses Fortran unit numbers.
+
+   Before exiting the application the user must call ESMF_Finalize() to
+   release resources and clean up ESMF gracefully. See the ESMF_Finalize()
+   documentation about details relating to the MPI environment.
+
+   The arguments are:
+
+   [configFilename]
+          Name of the configuration file for the entire application. If
+          this argument is specified, the configuration file must exist.
+          Its content is read during ESMF_Initialize(), and returned in
+          optional argument config if present.
+
+          The traditional ESMF_Config format and the YAML format are
+          supported. The latter is identified by file suffix .yaml and
+          .yml, including all lower/upper case letter combinations that
+          map to either suffix.
+
+          In the case of the traditional ESMF_Config format, the
+          predefined labels of initialization options discussed below are
+          expected on the top level of the configuration. The expected
+          termination character for this case is a single colon following
+          each label.
+
+          For the YAML case, the predefined initialization option labels
+          are expected as the keys of a map. If the optional argument
+          configKey is specified, it is used to locate this map. The map
+          is expected as the terminal value of a succession of mappings:
+
+               configKey(1) :
+                 configKey(2) :
+                   ...
+                     configKey(size(configKey)) :
+                       {map of specified init options}
+
+          By default, in the absence of argument configKey, the top level
+          itself is searched for a mapping of predefined labels, analogous
+          to the traditional case.
+
+          If any of the following predefined labels are found in the
+          specified configuration file (as per the above defined rules),
+          their values are used to set the associated ESMF_Initialize()
+          argument, overriding any defaults. If the same argument is also
+          specified in the ESMF_Initialize() call directly, an error is
+          returned, and ESMF is not initialized. The supported config
+          labels are:
+
+          + defaultLogFilename
+          + logAppendFlag
+          + logKindFlag
+          + globalResourceControl
+
+   [configKey]
+          If present, use configKey to find the map of predefined
+          initialization options that are used during ESMF initialization.
+          The default is to search the top level of the configuration for
+          the labels directly. The configKey option is only supported for
+          YAML configurations. An error is returned if configKey is
+          specified for the traditional ESMF_Config case.
+
+   [defaultCalKind]
+          Sets the default calendar to be used by ESMF Time Manager. See
+          section [239]42.2.1 for a list of valid options. If not
+          specified, defaults to ESMF_CALKIND_NOCALENDAR.
+
+   [defaultDefaultLogFilename]
+          Default value for argument defaultLogFilename, the name of the
+          default log file for warning and error messages. If not
+          specified, the default is ESMF_LogFile.
+
+   [defaultLogFilename]
+          Name of the default log file for warning and error messages. If
+          not specified, defaults according to defaultDefaultLogFilename.
+
+   [defaultLogAppendFlag]
+          Default value for argument logAppendFlag, indicating the
+          overwrite behavior in case the default log file already exists.
+          If not specified, the default is .true..
+
+   [logAppendFlag]
+          If the default log file already exists, a value of .false. will
+          set the file position to the beginning of the file. A value of
+          .true. sets the position to the end of the file. If not
+          specified, defaults according to defaultLogAppendFlag.
+
+   [defaultLogKindFlag]
+          Default value for argument logKindFlag, setting the LogKind of
+          the default ESMF log. If not specified, the default is
+          ESMF_LOGKIND_MULTI.
+
+   [logKindFlag]
+          Sets the LogKind of the default ESMF log. See section
+          [240]49.2.2 for a list of valid options. If not specified,
+          defaults according to defaultLogKindFlag.
+
+   [mpiCommunicator]
+          MPI communicator defining the group of processes on which the
+          ESMF application is running. See section [241]51.3.6 and
+          [242]51.3.7 for details. If not specified, defaults to
+          MPI_COMM_WORLD.
+
+   [ioUnitLBound]
+          Lower bound for Fortran unit numbers used within the ESMF
+          library. Fortran units are primarily used for log files. Legal
+          unit numbers are positive integers. A value higher than 10 is
+          recommended in order to avoid the compiler-specific reservations
+          which are typically found on the first few units. If not
+          specified, defaults to ESMF_LOG_FORT_UNIT_NUMBER, which is
+          distributed with a value of 50.
+
+   [ioUnitUBound]
+          Upper bound for Fortran unit numbers used within the ESMF
+          library. Must be set to a value at least 5 units higher than
+          ioUnitLBound. If not specified, defaults to ESMF_LOG_UPPER,
+          which is distributed with a value of 99.
+
+   [defaultGlobalResourceControl]
+          Default value for argument globalResourceControl, indicating
+          whether PETs of the global VM are pinned to PEs and the OpenMP
+          threading level is reset. If not specified, the default is
+          .false..
+
+   [globalResourceControl]
+          For .true., each global PET is pinned to the corresponding PE
+          (i.e. CPU core) in order. Further, if OpenMP support is enabled
+          for the ESMF installation (during build time), the
+          OMP_NUM_THREADS is set to 1 on every PET, regardless of the
+          setting in the launching environment. The .true. setting is
+          recommended for applications that utilize the ESMF-aware
+          threading and resource control features. For .false., global
+          PETs are not pinned by ESMF, and OMP_NUM_THREADS is not
+          modified. If not specified, defaults according to
+          defaultGlobalResourceControl.
+
+   [config]
+          Returns the default ESMF_Config if the configFilename argument
+          was provided. Otherwise the presence of this argument triggers
+          an error.
+
+   [vm]
+          Returns the global ESMF_VM that was created during
+          initialization.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

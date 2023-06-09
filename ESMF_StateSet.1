@@ -1,0 +1,31 @@
+  21.7.18 ESMF_StateSet - Set State aspects
+
+   INTERFACE:
+   subroutine ESMF_StateSet(state, stateIntent, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_State),            intent(inout)         :: state
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_StateIntent_Flag), intent(in),  optional :: stateIntent
+     character(len = *),          intent(in),  optional :: name
+     integer,                     intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set the info in the state object.
+
+   he arguments are:
+
+   state
+          The ESMF_State to set.
+
+   [stateIntent]
+          The intent, e.g. Import, Export, or Internal, of this
+          ESMF_State. Possible values are listed in Section [305]21.2.1.
+
+   [name]
+          The State name.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

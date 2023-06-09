@@ -1,0 +1,27 @@
+  33.4.19 ESMF_MeshIsCreated - Check whether a Mesh object has been created
+
+   INTERFACE:
+   function ESMF_MeshIsCreated(mesh, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_MeshIsCreated
+
+   ARGUMENTS:
+     type(ESMF_Mesh), intent(in)            :: mesh
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the mesh has been created. Otherwise return .false..
+   If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the return
+   value of the function will also be .false..
+
+   The arguments are:
+
+   mesh
+          ESMF_Mesh queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,76 @@
+  42.5.8 ESMF_CalendarGet - Get Calendar properties
+
+   INTERFACE:
+       subroutine ESMF_CalendarGet(calendar, &
+         name, calkindflag, daysPerMonth, monthsPerYear, &
+         secondsPerDay, secondsPerYear, &
+         daysPerYear, daysPerYearDn, daysPerYearDd, rc)
+
+   ARGUMENTS:
+       type(ESMF_Calendar),    intent(in)            :: calendar
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_CalKind_Flag),intent(out), optional :: calkindflag
+       integer,                intent(out), optional :: daysPerMonth(:)
+       integer,                intent(out), optional :: monthsPerYear
+       integer(ESMF_KIND_I4),  intent(out), optional :: secondsPerDay
+       integer(ESMF_KIND_I4),  intent(out), optional :: secondsPerYear
+       integer(ESMF_KIND_I4),  intent(out), optional :: daysPerYear
+       integer(ESMF_KIND_I4),  intent(out), optional :: daysPerYearDn
+       integer(ESMF_KIND_I4),  intent(out), optional :: daysPerYearDd
+       character (len=*),      intent(out), optional :: name
+       integer,                intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Gets one or more of an ESMF_Calendar's properties.
+
+   The arguments are:
+
+   calendar
+          The object instance to query.
+
+   [calkindflag]
+          The CalKind_Flag ESMF_CALKIND_GREGORIAN, ESMF_CALKIND_JULIAN,
+          etc.
+
+   [daysPerMonth]
+          Integer array of days per month, for each month of the year.
+
+   [monthsPerYear]
+          Integer number of months per year; the size of the daysPerMonth
+          array.
+
+   [secondsPerDay]
+          Integer number of seconds per day.
+
+   [secondsPerYear]
+          Integer number of seconds per year.
+
+   [daysPerYear]
+          Integer number of days per year. For calendars with
+          intercalations, daysPerYear is the number of days for years
+          without an intercalation. For other calendars, it is the number
+          of days in every year.
+
+   [daysPerYearDn]
+          Integer fractional number of days per year (numerator). For
+          calendars with intercalations, daysPerYearDn/daysPerYearDd is
+          the average fractional number of days per year (e.g. 25/100 for
+          Julian 4-year intercalation). For other calendars, it is zero.
+
+   [daysPerYearDd]
+          Integer fractional number of days per year (denominator). See
+          daysPerYearDn above.
+
+   [name]
+          The name of this calendar.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

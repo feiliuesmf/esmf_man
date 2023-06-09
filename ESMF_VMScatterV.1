@@ -1,0 +1,68 @@
+  51.6.29 ESMF_VMScatterV - ScatterV across VM
+
+   INTERFACE:
+    subroutine ESMF_VMScatterV(vm, sendData, sendCounts, &
+      sendOffsets, recvData, recvCount, rootPet, rc)
+
+   ARGUMENTS:
+      type(ESMF_VM),                    intent(in)            :: vm
+      <type>(ESMF_KIND_<kind>), target, intent(in)            :: sendData(:)
+      integer,                          intent(in)            :: sendCounts(:)
+      integer,                          intent(in)            :: sendOffsets(:)
+      <type>(ESMF_KIND_<kind>), target, intent(out)           :: recvData(:)
+      integer,                          intent(in)            :: recvCount
+      integer,                          intent(in)            :: rootPet
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,                          intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Collective ESMF_VM communication call that scatters contiguous data of
+   <type><kind> from rootPet across all the PETs of an ESMF_VM object.
+   Every PET, including rootPet, receives a portion of the data. The
+   recvCount number of elements received by PET i originate from the
+   sendData array on rootPet, starting at position sendOffsets(i). Each
+   PET stores the received contiguous data portion at the start of its
+   recvData array.
+
+   This method is overloaded for: ESMF_TYPEKIND_I4, ESMF_TYPEKIND_I8,
+   ESMF_TYPEKIND_R4, ESMF_TYPEKIND_R8.
+
+   The arguments are:
+
+   vm
+          ESMF_VM object.
+
+   sendData
+          Contiguous data array holding data to be sent. Only the sendData
+          array specified by the rootPet will be used by this method.
+
+   sendCounts
+          Number of sendData elements to be sent to corresponding receive
+          PET.
+
+   sendOffsets
+          Offsets in units of elements in sendData marking the start of
+          element sequence to be sent to receive PET.
+
+   recvData
+          Contiguous data array for data to be received. All PETs must
+          specify a valid recvData argument large enough to accommodate
+          the received data.
+
+   recvCount
+          Number of recvData elements to receive by local PET from
+          rootPet.
+
+   rootPet
+          PET that holds data that is being scattered.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

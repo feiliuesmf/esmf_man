@@ -1,0 +1,40 @@
+  45.5.7 ESMF_ClockDestroy - Release resources associated with a Clock
+
+   INTERFACE:
+       subroutine ESMF_ClockDestroy(clock, rc)
+
+   ARGUMENTS:
+       type(ESMF_Clock), intent(inout)          :: clock
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,          intent(out),  optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Releases resources associated with this ESMF_Clock. This releases the
+   list of associated ESMF_Alarms (pointers), but not the ESMF_Alarms
+   themselves; the user must explicitly call ESMF_AlarmDestroy() on each
+   ESMF_Alarm to release its resources. ESMF_ClockDestroy() and
+   corresponding ESMF_AlarmDestroy()s can be called in either order.
+
+   If ESMF_ClockDestroy() is called before ESMF_AlarmDestroy(), any
+   ESMF_Alarms that were in the ESMF_Clock's list will no longer be
+   associated with any ESMF_Clock. If desired, these "orphaned"
+   ESMF_Alarms can be associated with a different ESMF_Clock via a call to
+   ESMF_AlarmSet(...clock=...).
+
+   The arguments are:
+
+   clock
+          Release resources associated with this ESMF_Clock and mark the
+          object as invalid. It is an error to pass this object into any
+          other routines after being destroyed.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,232 @@
+  33.4.17 ESMF_MeshGet - Get Mesh information
+
+   INTERFACE:
+       subroutine ESMF_MeshGet(mesh, parametricDim, spatialDim, &
+                    nodeCount, nodeIds, nodeCoords, nodeOwners, &
+                    nodeMaskIsPresent, nodeMask,&
+                    elementCount, elementIds, elementTypes, &
+                    elementConnCount, elementConn, &
+                    elementMaskIsPresent,elementMask, &
+                    elementAreaIsPresent, elementArea, &
+                    elementCoordsIsPresent, elementCoords, &
+                    nodalDistgridIsPresent, nodalDistgrid, &
+                    elementDistgridIsPresent, elementDistgrid, &
+                    numOwnedNodes, ownedNodeCoords, &
+                    numOwnedElements, ownedElemCoords, &
+                    elemMaskArray, elemAreaArray, &
+                    isMemFreed, coordSys, status, name, rc)
+
+   RETURN VALUE:
+
+   ARGUMENTS:
+     type(ESMF_Mesh),          intent(in)            :: mesh
+     integer,                  intent(out), optional :: parametricDim
+     integer,                  intent(out), optional :: spatialDim
+     integer,                  intent(out), optional :: nodeCount
+     integer,                  intent(out), optional :: nodeIds(:)
+     real(ESMF_KIND_R8),       intent(out), optional :: nodeCoords(:)
+     integer,                  intent(out), optional :: nodeOwners(:)
+     logical,                  intent(out), optional :: nodeMaskIsPresent
+     integer,                  intent(out), optional :: nodeMask(:)
+     integer,                  intent(out), optional :: elementCount
+     integer,                  intent(out), optional :: elementIds(:)
+     integer,                  intent(out), optional :: elementTypes(:)
+     integer,                  intent(out), optional :: elementConnCount
+     integer,                  intent(out), optional :: elementConn(:)
+     logical,                  intent(out), optional :: elementMaskIsPresent
+     integer,                  intent(out), optional :: elementMask(:)
+     logical,                  intent(out), optional :: elementAreaIsPresent
+     real(ESMF_KIND_R8),       intent(out), optional :: elementArea(:)
+     logical,                  intent(out), optional :: elementCoordsIsPresent
+     real(ESMF_KIND_R8),       intent(out), optional :: elementCoords(:)
+     logical,                  intent(out), optional :: nodalDistgridIsPresent
+     type(ESMF_DistGrid),      intent(out), optional :: nodalDistgrid
+     logical,                  intent(out), optional :: elementDistgridIsPresent
+     type(ESMF_DistGrid),      intent(out), optional :: elementDistgrid
+     integer,                  intent(out), optional :: numOwnedNodes
+     real(ESMF_KIND_R8),       intent(out), optional :: ownedNodeCoords(:)
+     integer,                  intent(out), optional :: numOwnedElements
+     real(ESMF_KIND_R8),       intent(out), optional :: ownedElemCoords(:)
+     logical,                  intent(out), optional :: isMemFreed
+     type(ESMF_Array),         intent(inout), optional :: elemMaskArray
+     type(ESMF_Array),         intent(inout), optional :: elemAreaArray
+     type(ESMF_CoordSys_Flag), intent(out), optional :: coordSys
+     type(ESMF_MeshStatus_Flag),intent(out), optional :: status
+     character(len=*),         intent(out), optional :: name
+     integer,                  intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Get various information from a mesh.
+
+   The arguments are:
+
+   mesh
+          Mesh object to retrieve information from.
+
+   [parametricDim]
+          Dimension of the topology of the Mesh. (E.g. a mesh constructed
+          of squares would have a parametric dimension of 2, whereas a
+          Mesh constructed of cubes would have one of 3.)
+
+   [spatialDim]
+          The number of coordinate dimensions needed to describe the
+          locations of the nodes making up the Mesh. For a manifold, the
+          spatial dimension can be larger than the parametric dim (e.g.
+          the 2D surface of a sphere in 3D space), but it can't be
+          smaller.
+
+   [nodeCount]
+          The number of local nodes in the mesh (both owned and shared
+          with another PET).
+
+   [nodeIds]
+          An array of ids for each local node in the mesh. The nodeIds
+          array should be of size nodeCount.
+
+   [nodeCoords]
+          An array of coordinates for each local node in the mesh. The
+          nodeCoords array should be of size (spatialDim*nodeCount).
+
+   [nodeOwners]
+          An array of the PET numbers that own each local node in the
+          mesh. The nodeOwners array should be of size nodeCount.
+
+   [nodeMaskIsPresent]
+          .true. if node masking was set in mesh, .false. otherwise.
+
+   [nodeMask]
+          An array of mask values for each local node in the mesh. The
+          nodeOwners array should be of size nodeCount.
+
+   [elementCount]
+          The number of local elements in the mesh (both owned and shared
+          with another PET).
+
+   [elementIds]
+          An array of ids for each local element in the mesh. The
+          elementIds array should be of size elementCount.
+
+   [elementTypes]
+          An array of types for each local element in the mesh. Please see
+          section [1482]33.2.1 for the list of options. The elementTypes
+          array should be of size elementCount.
+
+   [elementConnCount]
+          The number of entries elementConn array. Provided as a
+          convenience.
+
+   elementConn
+          An array containing the indexes of the sets of nodes to be
+          connected together to form the elements to be created on this
+          PET. The entries in this list are NOT node global ids, but
+          rather each entry is a local index (1 based) into the list of
+          nodes to be created on this PET by this call. In other words, an
+          entry of 1 indicates that this element contains the node
+          described by nodeIds(1), nodeCoords(1), etc. on this PET. It is
+          also important to note that the order of the nodes in an element
+          connectivity list matters. Please see Section [1483]33.2.1 for
+          diagrams illustrating the correct order of nodes in a element.
+          This input consists of a 1D array with a total size equal to the
+          sum of the number of nodes contained in each element on this PET
+          (also provided by elementConnCount). The number of nodes in each
+          element is implied by its element type in elementTypes. The
+          nodes for each element are in sequence in this array (e.g. the
+          nodes for element 1 are elementConn(1), elementConn(2), etc.).
+
+   [elementMaskIsPresent]
+          .true. if element masking was set in mesh, .false. otherwise.
+
+   [elementMask]
+          An array of mask values for each local element in the mesh. The
+          elementMask array should be of size elementCount.
+
+   [elementAreaIsPresent]
+          .true. if element areas were set in mesh, .false. otherwise.
+
+   [elementArea]
+          An array of area values for each local element in the mesh. The
+          elementArea array should be of size elementCount.
+
+   [elementCoordsIsPresent]
+          .true. if element coordinates were set in mesh, .false.
+          otherwise.
+
+   [elementCoords]
+          An array of coordinate values for each local element in the
+          mesh. The elementCoord array should be of size
+          (spatialDim*elementCount).
+
+   [nodalDistgridIsPresent]
+          .true. if nodalDistgrid was set in Mesh object, .false.
+          otherwise.
+
+   [nodalDistgrid]
+          A Distgrid describing the distribution of the nodes across the
+          PETs. Note that on each PET the distgrid will only contain
+          entries for nodes owned by that PET. This is the DistGrid that
+          would be used to construct the Array in a Field that is
+          constructed on mesh.
+
+   [elementDistgridIsPresent]
+          .true. if elementDistgrid was set in Mesh object, .false.
+          otherwise.
+
+   [elementDistgrid]
+          A Distgrid describing the distribution of elements across the
+          PETs. Note that on each PET the distgrid will only contain
+          entries for elements owned by that PET.
+
+   [numOwnedNodes]
+          The number of local nodes which are owned by this PET. This is
+          the number of PET local entries in the nodalDistgrid.
+
+   [ownedNodeCoords]
+          The coordinates for the local nodes. These coordinates will be
+          in the proper order to correspond with the nodes in the
+          nodalDistgrid returned by this call, and hence with a Field
+          built on mesh. The size of the input array should be the spatial
+          dim of mesh times numOwnedNodes.
+
+   [numOwnedElements]
+          The number of local elements which are owned by this PET. Note
+          that every element is owned by the PET it resides on, so unlike
+          for nodes, numOwnedElements is identical to the number of
+          elements on the PET. It is also the number of PET local entries
+          in the elementDistgrid.
+
+   [ownedElemCoords]
+          The center coordinates for the local elements. These coordinates
+          will be in the proper order to correspond with the elements in
+          the elementDistgrid returned by this call, and hence with a
+          Field built on the center of mesh. The size of the input array
+          should be the spatial dim of mesh times numOwnedElements.
+
+   [elemMaskArray]
+          The mask information for elements put into an ESMF Array. The
+          ESMF Array must be build on a DistGrid which matches the
+          elementDistgrid.
+
+   [elemAreaArray]
+          The area information for elements put into an ESMF Array. The
+          ESMF Array must be build on a DistGrid which matches the
+          elementDistgrid.
+
+   [isMemFreed]
+          Indicates if the coordinate and connection memory been freed
+          from mesh. If so, it can no longer be used as part of an
+          ESMF_FieldRegridStore() call.
+
+   [coordSys]
+          The coordinate system of the grid coordinate data.
+
+   [status]
+          Flag indicating the status of the Mesh. Please see
+          Section [1484]54.41 for the list of options.
+
+   [name]
+          Name of the Mesh object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

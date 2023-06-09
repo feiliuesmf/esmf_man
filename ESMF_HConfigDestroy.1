@@ -1,0 +1,27 @@
+  48.5.19 ESMF_HConfigDestroy - Release resources associated with a HConfig
+
+   INTERFACE:
+   subroutine ESMF_HConfigDestroy(hconfig, rc)
+
+   ARGUMENTS:
+     type(ESMF_HConfig), intent(inout)          :: hconfig
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+      integer,            intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Destroys an ESMF_HConfig, releasing the resources associated with the
+   object.
+
+   By default a small remnant of the object is kept in memory in order to
+   prevent problems with dangling aliases. The default garbage collection
+   mechanism can be overridden with the noGarbage argument.
+
+   The arguments are:
+
+   hconfig
+          ESMF_HConfig object to be destroyed.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

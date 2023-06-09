@@ -1,0 +1,195 @@
+  40.4.24 ESMF_InfoSet - Set a value
+
+   INTERFACE:
+  subroutine ESMF_InfoSet(info, key, value, force, idx, pkey, rc)
+
+   ARGUMENTS:
+    type(ESMF_Info), intent(inout) :: info
+    character(len=*), intent(in) :: key
+    <value>, see below for supported value
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+    logical, intent(in), optional :: force
+    integer, intent(in), optional :: idx
+    character(len=*), intent(in), optional :: pkey
+    integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set a value in an ESMF_Info object using a key.
+
+   Overloaded value for the following types:
+     * integer(kind=ESMF_KIND_I4)
+     * integer(kind=ESMF_KIND_I8)
+     * real(kind=ESMF_KIND_R4)
+     * real(kind=ESMF_KIND_R8)
+     * logical
+     * character(:)
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [505]40.2
+          for an overview of the key format.
+
+   value
+          The input value associated with the key.
+
+   [force]
+          Default is true. When true, insert the key even if it already
+          exists in storage. If false, rc will not return ESMF_SUCCESS if
+          the key already exists.
+
+   [idx]
+          An integer index to set if the target key's value is a list.
+
+   [pkey]
+          Use this key's location as the origin for the set call.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  40.4.25 ESMF_InfoSet - Set a key to the contents of an Info object
+
+   INTERFACE:
+   ! Private name; call using ESMF_InfoSet
+ subroutine ESMF_InfoSetINFO(info, key, value, force, rc)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(inout) :: info
+   character(len=*), intent(in) :: key
+   type(ESMF_Info), intent(in) :: value
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   logical, intent(in), optional :: force
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set a value to the contents of an ESMF_Info object. A copy of the
+   source contents is made.
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [506]40.2
+          for an overview of the key format.
+
+   value
+          The ESMF_Info object to use as source data.
+
+   [force]
+          Default is true. When true, insert the key even if it already
+          exists in storage. If false, rc will not return ESMF_SUCCESS if
+          the key already exists.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  40.4.26 ESMF_InfoSet - Set contents from a HConfig object
+
+   INTERFACE:
+   ! Private name; call using ESMF_InfoSet
+ recursive subroutine ESMF_InfoSetHConfig(info, value, keyPrefix, force, rc)
+
+   ARGUMENTS:
+   type(ESMF_Info), intent(inout) :: info
+   type(ESMF_HConfig), intent(in) :: value
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+   character(len=*), intent(in), optional :: keyPrefix
+   logical, intent(in), optional :: force
+   integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   The provided ESMF_HConfig object is expected to be a map. An error is
+   returned if this condition is not met. Each key-value pair held by the
+   ESMF_HConfig object is added to the ESMF_Info object. A copy of the
+   source contents is made.
+
+   Transfer of scalar, sequence, and map values from ESMF_HConfig to
+   ESMF_Info are supported. Maps are treated recursively. Sequences are
+   restricted to scalar elements of the same typekind.
+
+   The keys of any map provided by the ESMF_HConfig object must be of
+   scalar type. Keys are interpreted as strings when transferred to the
+   ESMF_Info object.
+
+   When existing keys in info are overridden by this operation, the
+   typekind of the associated value element is allowed to change.
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   value
+          The ESMF_HConfig object to use as source data.
+
+   [keyPrefix]
+          If provided, prepend keyPrefix to each of the keys found in the
+          value map.
+
+   [force]
+          Default is true. When true, insert the key even if it already
+          exists in storage. If false, rc will not return ESMF_SUCCESS if
+          the key already exists.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  40.4.27 ESMF_InfoSet - Set a value list
+
+   INTERFACE:
+  subroutine ESMF_InfoSet(info, key, values, force, pkey, rc)
+
+   ARGUMENTS:
+    type(ESMF_Info), intent(inout) :: info
+    character(len=*), intent(in) :: key
+    <values>, see below for supported values
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+    logical, intent(in), optional :: force
+    character(len=*), intent(in), optional :: pkey
+    integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Set a value list in an ESMF_Info object using a key. List values are
+   initialized to null.
+
+   Overloaded values for the following types:
+     * integer(kind=ESMF_KIND_I4), dimension(:)
+     * integer(kind=ESMF_KIND_I8), dimension(:)
+     * real(kind=ESMF_KIND_R4), dimension(:)
+     * real(kind=ESMF_KIND_R8), dimension(:)
+     * logical, dimension(:)
+     * character(:), dimension(:)
+
+   The arguments are:
+
+   info
+          Target ESMF_Info object.
+
+   key
+          String key to access in ESMF_Info storage. See section [507]40.2
+          for an overview of the key format.
+
+   values
+          The input value list associated with the key.
+
+   [force]
+          Default is true. When true, insert the key even if it already
+          exists in storage. If false, rc will not return ESMF_SUCCESS if
+          the key already exists.
+
+   [pkey]
+          Use this key's location as the origin for the set call. Used
+          primarily for recursive requirements related to ESMF_Attribute.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,258 @@
+  25.5.26 ESMF_FieldBundleRegridStore - Precompute a FieldBundle regrid
+  operation
+
+   INTERFACE:
+   subroutine ESMF_FieldBundleRegridStore(srcFieldBundle, dstFieldBundle, &
+        srcMaskValues, dstMaskValues, regridmethod, polemethod, regridPoleNPnts,
+ &
+        lineType, normType, extrapMethod, extrapNumSrcPnts, extrapDistExponent,
+&
+        extrapNumLevels, unmappedaction, ignoreDegenerate, srcTermProcessing, &
+        pipelineDepth, routehandle, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(in) :: srcFieldBundle
+     type(ESMF_FieldBundle), intent(inout) :: dstFieldBundle
+  TODO: why is there no ESMF_KeywordEnforcer here???
+     integer(ESMF_KIND_I4), target, intent(in), optional :: srcMaskValues(:)
+     integer(ESMF_KIND_I4), target, intent(in), optional :: dstMaskValues(:)
+     type(ESMF_RegridMethod_Flag), intent(in), optional :: regridmethod
+     type(ESMF_PoleMethod_Flag), intent(in), optional :: polemethod
+     integer, intent(in), optional :: regridPoleNPnts
+     type(ESMF_LineType_Flag), intent(in), optional :: lineType
+     type(ESMF_NormType_Flag), intent(in), optional :: normType
+     type(ESMF_ExtrapMethod_Flag), intent(in), optional :: extrapMethod
+     integer, intent(in), optional :: extrapNumSrcPnts
+     real, intent(in), optional :: extrapDistExponent
+     integer, intent(in), optional :: extrapNumLevels
+     type(ESMF_UnmappedAction_Flag),intent(in), optional :: unmappedaction
+     logical, intent(in), optional :: ignoreDegenerate
+     integer, intent(inout), optional :: srcTermProcessing
+     integer, intent(inout), optional :: pipelineDepth
+     type(ESMF_RouteHandle), intent(inout), optional :: routehandle
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.0.0
+                Added arguments ignoreDegenerate, lineType, and normType.
+                The argument ignoreDegenerate allows the user to skip
+                degenerate cells in the regridding instead of stopping
+                with an error. The argument lineType allows the user to
+                control the path of the line between two points on a
+                sphere surface. This allows the user to use their
+                preferred line path for the calculation of distances and
+                the shape of cells during regrid weight calculation on a
+                sphere. The argument normType allows the user to control
+                the type of normalization done during conservative weight
+                generation.
+
+        7.1.0r
+                Added argument srcTermProcessing. Added argument
+                pipelineDepth. The new arguments provide access to the
+                tuning parameters affecting the performance and
+                bit-for-bit behavior when applying the regridding weights.
+
+                Added arguments extrapMethod, extrapNumSrcPnts, and
+                extrapDistExponent. These three new extrapolation
+                arguments allow the user to extrapolate destination points
+                not mapped by the regrid method. extrapMethod allows the
+                user to choose the extrapolation method. extrapNumSrcPnts
+                and extrapDistExponent are parameters that allow the user
+                to tune the behavior of the
+                ESMF_EXTRAPMETHOD_NEAREST_IDAVG method.
+
+        8.0.0
+                Added argument extrapNumLevels. For level based
+                extrapolation methods (e.g. ESMF_EXTRAPMETHOD_CREEP) this
+                argument allows the user to set how many levels to
+                extrapolate. !
+
+   DESCRIPTION:
+
+   Store a FieldBundle regrid operation over the data in srcFieldBundle
+   and dstFieldBundle pair.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_FieldBundleRegrid() on any pair of FieldBundles that matches
+   srcFieldBundle and dstFieldBundle in type, kind, and memory layout of
+   the gridded dimensions. However, the size, number, and index order of
+   ungridded dimensions may be different. See section [753]37.2.5 for a
+   more detailed discussion of RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   srcFieldbundle
+          Source ESMF_FieldBundle containing data to be regridded.
+
+   dstFieldbundle
+          Destination ESMF_FieldBundle. The data in this FieldBundle may
+          be overwritten by this call.
+
+   [srcMaskValues]
+          Mask information can be set in the Grids (see [754]31.3.17) or
+          Meshes (see [755]33.3.11) upon which the Fields in the
+          srcFieldbundle are built. The srcMaskValues argument specifies
+          the values in that mask information which indicate a source
+          point should be masked out. In other words, a location is masked
+          if and only if the value for that location in the mask
+          information matches one of the values listed in srcMaskValues.
+          If srcMaskValues is not specified, no masking will occur.
+
+   [dstMaskValues]
+          Mask information can be set in the Grids (see [756]31.3.17) or
+          Meshes (see [757]33.3.11) upon which the Fields in the
+          dstFieldbundle are built. The dstMaskValues argument specifies
+          the values in that mask information which indicate a destination
+          point should be masked out. In other words, a location is masked
+          if and only if the value for that location in the mask
+          information matches one of the values listed in dstMaskValues.
+          If dstMaskValues is not specified, no masking will occur.
+
+   [regridmethod]
+          The type of interpolation. Please see Section [758]54.49 for a
+          list of valid options. If not specified, defaults to
+          ESMF_REGRIDMETHOD_BILINEAR.
+
+   [polemethod]
+          Which type of artificial pole to construct on the source Grid
+          for regridding. Please see section [759]54.46 for a list of
+          valid options. If not specified, defaults to
+          ESMF_POLEMETHOD_ALLAVG.
+
+   [regridPoleNPnts]
+          If polemethod is ESMF_POLEMETHOD_NPNTAVG. This parameter
+          indicates how many points should be averaged over. Must be
+          specified if polemethod is ESMF_POLEMETHOD_NPNTAVG.
+
+   [lineType]
+          This argument controls the path of the line which connects two
+          points on a sphere surface. This in turn controls the path along
+          which distances are calculated and the shape of the edges that
+          make up a cell. Both of these quantities can influence how
+          interpolation weights are calculated. As would be expected, this
+          argument is only applicable when srcField and dstField are built
+          on grids which lie on the surface of a sphere.
+          Section [760]54.34 shows a list of valid options for this
+          argument. If not specified, the default depends on the regrid
+          method. Section [761]54.34 has the defaults by line type.
+          Figure [762]24.2.16 shows which line types are supported for
+          each regrid method as well as showing the default line type by
+          regrid method.
+
+   [normType]
+          This argument controls the type of normalization used when
+          generating conservative weights. This option only applies to
+          weights generated with regridmethod=ESMF_REGRIDMETHOD_CONSERVE.
+          Please see Section [763]54.43 for a list of valid options. If
+          not specified normType defaults to ESMF_NORMTYPE_DSTAREA.
+
+   [extrapMethod]
+          The type of extrapolation. Please see Section [764]54.17 for a
+          list of valid options. If not specified, defaults to
+          ESMF_EXTRAPMETHOD_NONE.
+
+   [extrapNumSrcPnts]
+          The number of source points to use for the extrapolation methods
+          that use more than one source point (e.g.
+          ESMF_EXTRAPMETHOD_NEAREST_IDAVG). If not specified, defaults to
+          8.
+
+   [extrapDistExponent]
+          The exponent to raise the distance to when calculating weights
+          for the ESMF_EXTRAPMETHOD_NEAREST_IDAVG extrapolation method. A
+          higher value reduces the influence of more distant points. If
+          not specified, defaults to 2.0.
+
+   [extrapNumLevels]
+          The number of levels to output for the extrapolation methods
+          that fill levels (e.g. ESMF_EXTRAPMETHOD_CREEP). When a method
+          is used that requires this, then an error will be returned, if
+          it is not specified.
+
+   [unmappedaction]
+          Specifies what should happen if there are destination points
+          that can not be mapped to a source cell. Please see
+          Section [765]54.60 for a list of valid options. If not
+          specified, unmappedaction defaults to ESMF_UNMAPPEDACTION_ERROR.
+
+   [ignoreDegenerate]
+          Ignore degenerate cells when checking the input Grids or Meshes
+          for errors. If this is set to true, then the regridding
+          proceeds, but degenerate cells will be skipped. If set to false,
+          a degenerate cell produces an error. If not specified,
+          ignoreDegenerate defaults to false.
+
+   [srcTermProcessing]
+          The srcTermProcessing parameter controls how many source terms,
+          located on the same PET and summing into the same destination
+          element, are summed into partial sums on the source PET before
+          being transferred to the destination PET. A value of 0 indicates
+          that the entire arithmetic is done on the destination PET;
+          source elements are neither multiplied by their factors nor
+          added into partial sums before being sent off by the source PET.
+          A value of 1 indicates that source elements are multiplied by
+          their factors on the source side before being sent to the
+          destination PET. Larger values of srcTermProcessing indicate the
+          maximum number of terms in the partial sums on the source side.
+
+          Note that partial sums may lead to bit-for-bit differences in
+          the results. See section [766]37.2.1 for an in-depth discussion
+          of all bit-for-bit reproducibility aspects related to
+          route-based communication methods.
+
+          The ESMF_FieldRegridStore() method implements an auto-tuning
+          scheme for the srcTermProcessing parameter. The intent on the
+          srcTermProcessing argument is "inout" in order to support both
+          overriding and accessing the auto-tuning parameter. If an
+          argument $>= 0$ is specified, it is used for the
+          srcTermProcessing parameter, and the auto-tuning phase is
+          skipped. In this case the srcTermProcessing argument is not
+          modified on return. If the provided argument is $< 0$ , the
+          srcTermProcessing parameter is determined internally using the
+          auto-tuning scheme. In this case the srcTermProcessing argument
+          is re-set to the internally determined value on return.
+          Auto-tuning is also used if the optional srcTermProcessing
+          argument is omitted.
+
+   [pipelineDepth]
+          The pipelineDepth parameter controls how many messages a PET may
+          have outstanding during a sparse matrix exchange. Larger values
+          of pipelineDepth typically lead to better performance. However,
+          on some systems too large a value may lead to performance
+          degradation, or runtime errors.
+
+          Note that the pipeline depth has no effect on the bit-for-bit
+          reproducibility of the results. However, it may affect the
+          performance reproducibility of the exchange.
+
+          The ESMF_FieldRegridStore() method implements an auto-tuning
+          scheme for the pipelineDepth parameter. The intent on the
+          pipelineDepth argument is "inout" in order to support both
+          overriding and accessing the auto-tuning parameter. If an
+          argument $>= 0$ is specified, it is used for the pipelineDepth
+          parameter, and the auto-tuning phase is skipped. In this case
+          the pipelineDepth argument is not modified on return. If the
+          provided argument is $< 0$ , the pipelineDepth parameter is
+          determined internally using the auto-tuning scheme. In this case
+          the pipelineDepth argument is re-set to the internally
+          determined value on return. Auto-tuning is also used if the
+          optional pipelineDepth argument is omitted.
+
+   [routehandle]
+          Handle to the precomputed Route.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

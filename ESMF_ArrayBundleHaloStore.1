@@ -1,0 +1,86 @@
+  27.5.13 ESMF_ArrayBundleHaloStore - Precompute an ArrayBundle halo operation
+
+   INTERFACE:
+     subroutine ESMF_ArrayBundleHaloStore(arraybundle, routehandle, &
+       startregion, haloLDepth, haloUDepth, rc)
+
+   ARGUMENTS:
+     type(ESMF_ArrayBundle),     intent(inout)         :: arraybundle
+     type(ESMF_RouteHandle),     intent(inout)         :: routehandle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     type(ESMF_StartRegion_Flag),intent(in),  optional :: startregion
+     integer,                    intent(in),  optional :: haloLDepth(:)
+     integer,                    intent(in),  optional :: haloUDepth(:)
+     integer,                    intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Store an ArrayBundle halo operation over the data in arraybundle. By
+   default, i.e. without specifying startregion, haloLDepth and
+   haloUDepth, all elements in the total Array regions that lie outside
+   the exclusive regions will be considered potential destination elements
+   for the halo operation. However, only those elements that have a
+   corresponding halo source element, i.e. an exclusive element on one of
+   the DEs, will be updated under the halo operation. Elements that have
+   no associated source remain unchanged under halo.
+
+   Specifying startregion allows to change the shape of the effective halo
+   region from the inside. Setting this flag to
+   ESMF_STARTREGION_COMPUTATIONAL means that only elements outside the
+   computational region for each Array are considered for potential
+   destination elements for the halo operation. The default is
+   ESMF_STARTREGION_EXCLUSIVE.
+
+   The haloLDepth and haloUDepth arguments allow to reduce the extent of
+   the effective halo region. Starting at the region specified by
+   startregion, the haloLDepth and haloUDepth define a halo depth in each
+   direction. Note that the maximum halo region is limited by the total
+   region for each Array, independent of the actual haloLDepth and
+   haloUDepth setting. The total Array regions are local DE specific. The
+   haloLDepth and haloUDepth are interpreted as the maximum desired
+   extent, reducing the potentially larger region available for the halo
+   operation.
+
+   The routine returns an ESMF_RouteHandle that can be used to call
+   ESMF_ArrayBundleHalo() on any pair of ArrayBundles that matches
+   srcArrayBundle and dstArrayBundle in type, kind, and memory layout of
+   the distributed dimensions. However, the size, number, and index order
+   of undistributed dimensions may be different. See section [1042]37.2.5
+   for a more detailed discussion of RouteHandle reusability.
+
+   This call is collective across the current VM.
+
+   arraybundle
+          ESMF_ArrayBundle containing data to be haloed. The data in the
+          halo regions may be destroyed by this call.
+
+   routehandle
+          Handle to the precomputed Route.
+
+   [startregion]
+          The start of the effective halo region on every DE. The default
+          setting is ESMF_STARTREGION_EXCLUSIVE, rendering all
+          non-exclusive elements potential halo destination elements. See
+          section [1043]54.54 for a complete list of valid settings.
+
+   [haloLDepth]
+          This vector specifies the lower corner of the effective halo
+          region with respect to the lower corner of startregion. The size
+          of haloLDepth must equal the number of distributed Array
+          dimensions.
+
+   [haloUDepth]
+          This vector specifies the upper corner of the effective halo
+          region with respect to the upper corner of startregion. The size
+          of haloUDepth must equal the number of distributed Array
+          dimensions.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

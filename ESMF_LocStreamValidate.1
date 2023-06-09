@@ -1,0 +1,26 @@
+  32.4.23 ESMF_LocStreamValidate - Check validity of a LocStream
+
+   INTERFACE:
+       subroutine ESMF_LocStreamValidate(locstream, rc)
+
+   ARGUMENTS:
+       type(ESMF_LocStream), intent(in)            :: locstream
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,              intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Validates that the locstream is internally consistent. Currently this
+   method determines if the locstream is uninitialized or already
+   destroyed.
+
+   The method returns an error code if problems are found.
+
+   The arguments are:
+
+   locstream
+          ESMF_LocStream to validate.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if the locstream is valid.
+

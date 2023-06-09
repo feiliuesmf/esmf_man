@@ -1,0 +1,665 @@
+          + [115]44 TimeInterval Class
+               o [116]44.1 Description
+               o [117]44.2 Use and Examples
+                    # [118]44.2.1 TimeInterval initialization
+                    # [119]44.2.2 TimeInterval conversion
+                    # [120]44.2.3 TimeInterval difference
+                    # [121]44.2.4 TimeInterval multiplication
+                    # [122]44.2.5 TimeInterval comparison
+               o [123]44.3 Restrictions and Future Work
+               o [124]44.4 Class API
+                    # [125]44.4.1 ESMF_TimeIntervalAssignment(=)
+                    # [126]44.4.2 ESMF_TimeIntervalOperator(+)
+                    # [127]44.4.3 ESMF_TimeIntervalOperator(-)
+                    # [128]44.4.4 ESMF_TimeIntervalOperator(-)
+                    # [129]44.4.5 ESMF_TimeIntervalOperator(/)
+                    # [130]44.4.6 ESMF_TimeIntervalOperator(/)
+                    # [131]44.4.7 ESMF_TimeIntervalFunction(MOD)
+                    # [132]44.4.8 ESMF_TimeIntervalOperator(*)
+                    # [133]44.4.9 ESMF_TimeIntervalOperator(==)
+                    # [134]44.4.10 ESMF_TimeIntervalOperator(/=)
+                    # [135]44.4.11 ESMF_TimeIntervalOperator(<)
+                    # [136]44.4.12 ESMF_TimeIntervalOperator(<=)
+                    # [137]44.4.13 ESMF_TimeIntervalOperator(>)
+                    # [138]44.4.14 ESMF_TimeIntervalOperator(>=)
+                    # [139]44.4.15 ESMF_TimeIntervalAbsValue
+                    # [140]44.4.16 ESMF_TimeIntervalGet
+                    # [141]44.4.17 ESMF_TimeIntervalGet
+                    # [142]44.4.18 ESMF_TimeIntervalGet
+                    # [143]44.4.19 ESMF_TimeIntervalGet
+                    # [144]44.4.20 ESMF_TimeIntervalNegAbsValue
+                    # [145]44.4.21 ESMF_TimeIntervalPrint
+                    # [146]44.4.22 ESMF_TimeIntervalSet
+                    # [147]44.4.23 ESMF_TimeIntervalSet
+                    # [148]44.4.24 ESMF_TimeIntervalSet
+                    # [149]44.4.25 ESMF_TimeIntervalSet
+                    # [150]44.4.26 ESMF_TimeIntervalValidate
+                             44 TimeInterval Class
+
+44.1 Description
+
+   A TimeInterval represents a period between time instants. It can be
+   either positive or negative. Like the Time interface, the TimeInterval
+   interface is designed so that you can choose one or more options from a
+   list of time units in order to specify a TimeInterval. See
+   Section [546]41.3, Table [547]41.4 for the available options.
+
+   There are TimeInterval methods defined for setting and getting a
+   TimeInterval, for incrementing and decrementing a TimeInterval by
+   another TimeInterval, and for multiplying and dividing TimeIntervals by
+   integers, reals, fractions and other TimeIntervals. Methods are also
+   defined to take the absolute value and negative absolute value of a
+   TimeInterval, and for comparing the length of two TimeIntervals.
+
+   The class used to represent time instants in ESMF is Time, and this
+   class is frequently used in operations along with TimeIntervals. For
+   example, the difference between two Times is a TimeInterval.
+
+   When a TimeInterval is used in calculations that involve an absolute
+   reference time, such as incrementing a Time with a TimeInterval,
+   calendar dependencies may be introduced. The length of the time period
+   that the TimeInterval represents will depend on the reference Time and
+   the standard calendar that is associated with it. The calendar
+   dependency becomes apparent when, for example, adding a TimeInterval of
+   1 day to the Time of February 28, 1996, at 4:00pm EST. In a 360 day
+   calendar, the resulting date would be February 29, 1996, at 4:00pm EST.
+   In a no-leap calendar, the result would be March 1, 1996, at 4:00pm
+   EST.
+
+   TimeIntervals are used by other parts of the ESMF timekeeping system,
+   such as Clocks (Section [548]45.1) and Alarms (Section [549]46.1).
+
+44.2 Use and Examples
+
+   A typical use for a TimeInterval in a geophysical model is
+   representation of the time step by which the model is advanced. Some
+   models change the size of their time step as the model run progresses;
+   this could be done by incrementing or decrementing the original time
+   step by another TimeInterval, or by dividing or multiplying the time
+   step by an integer value. An example of advancing model time using a
+   TimeInterval representation of a time step is shown in
+   Section [550]45.1.
+
+   The following brief example shows how to create, initialize and
+   manipulate TimeInterval.
+
+! !PROGRAM: ESMF_TimeIntervalEx - Time Interval initialization and
+!                                 manipulation examples
+!
+! !DESCRIPTION:
+!
+! This program shows examples of Time Interval initialization and manipulation
+!-----------------------------------------------------------------------------
+#include "ESMF.h"
+
+      ! ESMF Framework module
+      use ESMF
+      use ESMF_TestMod
+      implicit none
+
+      ! instantiate some time intervals
+      type(ESMF_TimeInterval) :: timeinterval1, timeinterval2, timeinterval3
+
+      ! local variables
+      integer :: d, h, m, s
+
+      ! return code
+      integer:: rc
+
+      ! initialize ESMF framework
+      call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, &
+        defaultlogfilename="TimeIntervalEx.Log", &
+                    logkindflag=ESMF_LOGKIND_MULTI, rc=rc)
+
+  44.2.1 TimeInterval initialization
+
+   This example shows how to initialize two ESMF_TimeIntervals.
+
+      ! initialize time interval1 to 1 day
+      call ESMF_TimeIntervalSet(timeinterval1, d=1, rc=rc)
+
+      call ESMF_TimeIntervalPrint(timeinterval1, options="string", rc=rc)
+
+      ! initialize time interval2 to 4 days, 1 hour, 30 minutes, 10 seconds
+      call ESMF_TimeIntervalSet(timeinterval2, d=4, h=1, m=30, s=10, rc=rc)
+
+      call ESMF_TimeIntervalPrint(timeinterval2, options="string", rc=rc)
+
+  44.2.2 TimeInterval conversion
+
+   This example shows how to convert ESMF_TimeIntervals into different
+   units.
+
+      call ESMF_TimeIntervalGet(timeinterval1, s=s, rc=rc)
+      print *, "Time Interval1 = ", s, " seconds."
+
+      call ESMF_TimeIntervalGet(timeinterval2, h=h, m=m, s=s, rc=rc)
+      print *, "Time Interval2 = ", h, " hours, ", m, " minutes, ", &
+                                    s, " seconds."
+
+  44.2.3 TimeInterval difference
+
+   This example shows how to calculate the difference between two
+   ESMF_TimeIntervals.
+
+      ! difference between two time intervals
+      timeinterval3 = timeinterval2 - timeinterval1
+     call ESMF_TimeIntervalGet(timeinterval3, d=d, h=h, m=m, s=s, rc=rc)
+     print *, "Difference between TimeInterval2 and TimeInterval1 = ", &
+           d, " days, ", h, " hours, ", m, " minutes, ", s, " seconds."
+
+  44.2.4 TimeInterval multiplication
+
+   This example shows how to multiply an ESMF_TimeInterval.
+
+      ! multiply time interval by an integer
+      timeinterval3 = timeinterval2 * 3
+      call ESMF_TimeIntervalGet(timeinterval3, d=d, h=h, m=m, s=s, rc=rc)
+      print *, "TimeInterval2 multiplied by 3 = ", d, " days, ", h, &
+               " hours, ", m, " minutes, ", s, " seconds."
+
+  44.2.5 TimeInterval comparison
+
+   This example shows how to compare two ESMF_TimeIntervals.
+
+      ! comparison
+      if (timeinterval1 < timeinterval2) then
+        print *, "TimeInterval1 is smaller than TimeInterval2"
+      else
+        print *, "TimeInterval1 is larger than or equal to TimeInterval2"
+      end if
+
+      end program ESMF_TimeIntervalEx
+
+44.3 Restrictions and Future Work
+
+    1. Limits on time span. The limits on the time span that can be
+       represented are based on the 64-bit integer types used. For
+       seconds, a signed 64-bit integer will have a range of +/- $2^{63}$
+       -1, or +/- 9,223,372,036,854,775,807. This corresponds to a range
+       of +/- ( $2^{63}$ -1)/(86400 * 365.25) or +/- 292,271,023,045
+       years.
+       For fractional seconds, a signed 64-bit integer will handle a
+       resolution of +/- $2^{31}$ -1, or +/- 9,223,372,036,854,775,807
+       parts of a second.
+
+44.4 Class API
+
+  44.4.1 ESMF_TimeIntervalAssignment(=) - Assign a TimeInterval to another
+  TimeInterval
+
+   INTERFACE:
+       interface assignment(=)
+       timeinterval1 = timeinterval2
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval) :: timeinterval1
+       type(ESMF_TimeInterval) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Set timeinterval1 equal to timeinterval2. This is the default Fortran
+   assignment, which creates a complete, independent copy of timeinterval2
+   as timeinterval1. If timeinterval2 is an invalid ESMF_TimeInterval
+   object then timeinterval1 will be equally invalid after the assignment.
+
+   The arguments are:
+
+   timeinterval1
+          The ESMF_TimeInterval to be set.
+
+   timeinterval2
+          The ESMF_TimeInterval to be copied.
+
+  44.4.2 ESMF_TimeIntervalOperator(+) - Add two TimeIntervals
+
+   INTERFACE:
+       interface operator(+)
+       sum = timeinterval1 + timeinterval2
+
+   RETURN VALUE:
+       type(ESMF_TimeInterval) :: sum
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (+) operator for the ESMF_TimeInterval class to add
+   timeinterval1 to timeinterval2 and return the sum as an
+   ESMF_TimeInterval.
+
+   The arguments are:
+
+   timeinterval1
+          The augend.
+
+   timeinterval2
+          The addend.
+
+  44.4.3 ESMF_TimeIntervalOperator(-) - Subtract one TimeInterval from another
+
+   INTERFACE:
+       interface operator(-)
+       difference = timeinterval1 - timeinterval2
+
+   RETURN VALUE:
+       type(ESMF_TimeInterval) :: difference
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (-) operator for the ESMF_TimeInterval class to subtract
+   timeinterval2 from timeinterval1 and return the difference as an
+   ESMF_TimeInterval.
+
+   The arguments are:
+
+   timeinterval1
+          The minuend.
+
+   timeinterval2
+          The subtrahend.
+
+  44.4.4 ESMF_TimeIntervalOperator(-) - Perform unary negation on a TimeInterval
+
+   INTERFACE:
+       interface operator(-)
+       timeinterval = -timeinterval
+
+   RETURN VALUE:
+       type(ESMF_TimeInterval) :: -timeInterval
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (-) operator for the ESMF_TimeInterval class to perform
+   unary negation on timeinterval and return the result.
+
+   The arguments are:
+
+   timeinterval
+          The time interval to be negated.
+
+  44.4.5 ESMF_TimeIntervalOperator(/) - Divide two TimeIntervals, return double
+  precision quotient
+
+   INTERFACE:
+       interface operator(/)
+       quotient = timeinterval1 / timeinterval2
+
+   RETURN VALUE:
+       real(ESMF_KIND_R8) :: quotient
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (/) operator for the ESMF_TimeInterval class to return
+   timeinterval1 divided by timeinterval2 as a double precision quotient.
+
+   The arguments are:
+
+   timeinterval1
+          The dividend.
+
+   timeinterval2
+          The divisor.
+
+  44.4.6 ESMF_TimeIntervalOperator(/) - Divide a TimeInterval by an integer,
+  return TimeInterval quotient
+
+   INTERFACE:
+       interface operator(/)
+       quotient = timeinterval / divisor
+
+   RETURN VALUE:
+       type(ESMF_TimeInterval) :: quotient
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval
+       integer(ESMF_KIND_I4),   intent(in) :: divisor
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (/) operator for the ESMF_TimeInterval class to divide a
+   timeinterval by an integer divisor, and return the quotient as an
+   ESMF_TimeInterval.
+
+   The arguments are:
+
+   timeinterval
+          The dividend.
+
+   divisor
+          Integer divisor.
+
+  44.4.7 ESMF_TimeIntervalFunction(MOD) - Divide two TimeIntervals, return
+  TimeInterval remainder
+
+   INTERFACE:
+       interface MOD
+       function MOD(timeinterval1, timeinterval2)
+
+   RETURN VALUE:
+       type(ESMF_TimeInterval) :: MOD
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the Fortran intrinsic MOD() function for the
+   ESMF_TimeInterval class to return the remainder of timeinterval1
+   divided by timeinterval2 as an ESMF_TimeInterval.
+
+   The arguments are:
+
+   timeinterval1
+          The dividend.
+
+   timeinterval2
+          The divisor.
+
+  44.4.8 ESMF_TimeIntervalOperator(*) - Multiply a TimeInterval by an integer
+
+   INTERFACE:
+       interface operator(*)
+       product = timeinterval * multiplier
+                     OR
+       product = multiplier * timeinterval
+
+   RETURN VALUE:
+       type(ESMF_TimeInterval) :: product
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval
+       integer(ESMF_KIND_I4),   intent(in) :: multiplier
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (*) operator for the ESMF_TimeInterval class to multiply
+   a timeinterval by an integer multiplier, and return the product as an
+   ESMF_TimeInterval.
+
+   The arguments are:
+
+   timeinterval
+          The multiplicand.
+
+   multiplier
+          The integer multiplier.
+
+  44.4.9 ESMF_TimeIntervalOperator(==) - Test if TimeInterval 1 is equal to
+  TimeInterval 2
+
+   INTERFACE:
+       interface operator(==)
+       if (timeinterval1 == timeinterval2) then ... endif
+                    OR
+       result = (timeinterval1 == timeinterval2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (==) operator for the ESMF_TimeInterval class to return
+   .true. if timeinterval1 and timeinterval2 represent an equal duration
+   of time, and .false. otherwise.
+
+   The arguments are:
+
+   timeinterval1
+          First ESMF_TimeInterval in comparison.
+
+   timeinterval2
+          Second ESMF_TimeInterval in comparison.
+
+  44.4.10 ESMF_TimeIntervalOperator(/=) - Test if TimeInterval 1 is not equal to
+  TimeInterval 2
+
+   INTERFACE:
+       interface operator(/=)
+       if (timeinterval1 /= timeinterval2) then ... endif
+                    OR
+       result = (timeinterval1 /= timeinterval2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (/=) operator for the ESMF_TimeInterval class to return
+   .true. if timeinterval1 and timeinterval2 do not represent an equal
+   duration of time, and .false. otherwise.
+
+   The arguments are:
+
+   timeinterval1
+          First ESMF_TimeInterval in comparison.
+
+   timeinterval2
+          Second ESMF_TimeInterval in comparison.
+
+  44.4.11 ESMF_TimeIntervalOperator(<) - Test if TimeInterval 1 is less than
+  TimeInterval 2
+
+   INTERFACE:
+       interface operator(<)
+       if (timeinterval1 < timeinterval2) then ... endif
+                    OR
+       result = (timeinterval1 < timeinterval2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (<) operator for the ESMF_TimeInterval class to return
+   .true. if timeinterval1 is a lesser duration of time than
+   timeinterval2, and .false. otherwise.
+
+   The arguments are:
+
+   timeinterval1
+          First ESMF_TimeInterval in comparison.
+
+   timeinterval2
+          Second ESMF_TimeInterval in comparison.
+
+  44.4.12 ESMF_TimeIntervalOperator(<=) - Test if TimeInterval 1 is less than or
+  equal to TimeInterval 2
+
+   INTERFACE:
+       interface operator(<=)
+       if (timeinterval1 <= timeinterval2) then ... endif
+                    OR
+       result = (timeinterval1 <= timeinterval2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (<=) operator for the ESMF_TimeInterval class to return
+   .true. if timeinterval1 is a lesser or equal duration of time than
+   timeinterval2, and .false. otherwise.
+
+   The arguments are:
+
+   timeinterval1
+          First ESMF_TimeInterval in comparison.
+
+   timeinterval2
+          Second ESMF_TimeInterval in comparison.
+
+  44.4.13 ESMF_TimeIntervalOperator(>) - Test if TimeInterval 1 is greater than
+  TimeInterval 2
+
+   INTERFACE:
+       interface operator(>)
+       if (timeinterval1 > timeinterval2) then ... endif
+                    OR
+       result = (timeinterval1 > timeinterval2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (>) operator for the ESMF_TimeInterval class to return
+   .true. if timeinterval1 is a greater duration of time than
+   timeinterval2, and .false. otherwise.
+
+   The arguments are:
+
+   timeinterval1
+          First ESMF_TimeInterval in comparison.
+
+   timeinterval2
+          Second ESMF_TimeInterval in comparison.
+
+  44.4.14 ESMF_TimeIntervalOperator(>=) - Test if TimeInterval 1 is greater than
+  or equal to TimeInterval 2
+
+   INTERFACE:
+       interface operator(>=)
+       if (timeinterval1 >= timeinterval2) then ... endif
+                    OR
+       result = (timeinterval1 >= timeinterval2)
+
+   RETURN VALUE:
+       logical :: result
+
+   ARGUMENTS:
+       type(ESMF_TimeInterval), intent(in) :: timeinterval1
+       type(ESMF_TimeInterval), intent(in) :: timeinterval2
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Overloads the (>=) operator for the ESMF_TimeInterval class to return
+   .true. if timeinterval1 is a greater or equal duration of time than
+   timeinterval2, and .false. otherwise.
+
+   The arguments are:
+
+   timeinterval1
+          First ESMF_TimeInterval in comparison.
+
+   timeinterval2
+          Second ESMF_TimeInterval in comparison.
+

@@ -1,0 +1,198 @@
+  22.4.16 ESMF_MethodGet - Get info about user method attached to CplComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodGet()
+   subroutine ESMF_MethodCplCompGet(cplcomp, label, index, isPresent, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp)                      :: cplcomp
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     logical,          intent(out), optional :: isPresent
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Access information about attached method.
+
+   The arguments are:
+
+   cplcomp
+          The ESMF_CplComp object holding the attachable method.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   [isPresent]
+          .true. if a method was attached for label/index. .false.
+          otherwise.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.17 ESMF_MethodGet - Get info about user methods attached to CplComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodGet()
+   subroutine ESMF_MethodCplCompGetList(cplcomp, labelList, rc)
+
+   ARGUMENTS:
+     type(ESMF_CplComp)                                   :: cplcomp
+     character(len=:), allocatable, intent(out)           :: labelList(:)
+     integer,                       intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Access labels of all attached methods.
+
+   The arguments are:
+
+   cplcomp
+          The ESMF_CplComp object holding the attachable method.
+
+   labelList
+          List of labels of all the attached methods. On return, it will
+          be allocated with as many list elements as there are attached
+          methods. The length of each label in labelList is that of the
+          largest method label currently attached. Elements with shorter
+          labels are padded with white spaces.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.18 ESMF_MethodGet - Get info about user method attached to GridComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodGet()
+   subroutine ESMF_MethodGridCompGet(gcomp, label, index, isPresent, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp)                     :: gcomp
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     logical,          intent(out), optional :: isPresent
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Access information about attached method.
+
+   The arguments are:
+
+   gcomp
+          The ESMF_GridComp object holding the attachable method.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   [isPresent]
+          .true. if a method was attached for label/index. .false.
+          otherwise.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.19 ESMF_MethodGet - Get info about user methods attached to GridComp
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodGet()
+   subroutine ESMF_MethodGridCompGetList(gcomp, labelList, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp)                                  :: gcomp
+     character(len=:), allocatable, intent(out)           :: labelList(:)
+     integer,                       intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Access labels of all attached methods.
+
+   The arguments are:
+
+   gcomp
+          The ESMF_GridComp object holding the attachable method.
+
+   labelList
+          List of labels of all the attached methods. On return, it will
+          be allocated with as many list elements as there are attached
+          methods. The length of each label in labelList is that of the
+          largest method label currently attached. Elements with shorter
+          labels are padded with white spaces.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.20 ESMF_MethodGet - Get info about user method attached to State
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodGet()
+   subroutine ESMF_MethodStateGet(state, label, index, isPresent, rc)
+
+   ARGUMENTS:
+     type(ESMF_State)                        :: state
+     character(len=*), intent(in)            :: label
+     integer,          intent(in),  optional :: index
+     logical,          intent(out), optional :: isPresent
+     integer,          intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Access information about attached method.
+
+   The arguments are:
+
+   state
+          The ESMF_State object holding the attachable method.
+
+   label
+          Label of method.
+
+   [index]
+          Integer modifier to distinguish multiple entries with the same
+          label.
+
+   [isPresent]
+          .true. if a method was attached for label/index. .false.
+          otherwise.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
+  22.4.21 ESMF_MethodGet - Get info about user methods attached to State
+
+   INTERFACE:
+   ! Private name; call using ESMF_MethodGet()
+   subroutine ESMF_MethodStateGetList(state, labelList, rc)
+
+   ARGUMENTS:
+     type(ESMF_State)                                     :: state
+     character(len=:), allocatable, intent(out)           :: labelList(:)
+     integer,                       intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Access labels of all attached methods.
+
+   The arguments are:
+
+   state
+          The ESMF_State object holding the attachable method.
+
+   labelList
+          List of labels of all the attached methods. On return, it will
+          be allocated with as many list elements as there are attached
+          methods. The length of each label in labelList is that of the
+          largest method label currently attached. Elements with shorter
+          labels are padded with white spaces.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

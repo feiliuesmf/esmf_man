@@ -1,0 +1,28 @@
+  25.5.17 ESMF_FieldBundleIsCreated - Check whether a FieldBundle object has
+  been created
+
+   INTERFACE:
+   function ESMF_FieldBundleIsCreated(fieldbundle, rc)
+
+   RETURN VALUE:
+     logical :: ESMF_FieldBundleIsCreated
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(in) :: fieldbundle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Return .true. if the fieldbundle has been created. Otherwise return
+   .false.. If an error occurs, i.e. rc /= ESMF_SUCCESS is returned, the
+   return value of the function will also be .false..
+
+   The arguments are:
+
+   fieldbundle
+          ESMF_FieldBundle queried.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

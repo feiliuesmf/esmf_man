@@ -1,0 +1,29 @@
+  45.5.21 ESMF_ClockSyncToRealTime - Set Clock's current time to wall clock time
+
+   INTERFACE:
+       subroutine ESMF_ClockSyncToRealTime(clock, rc)
+
+   ARGUMENTS:
+       type(ESMF_Clock), intent(inout)         :: clock
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       integer,          intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets a clock's current time to the wall clock time. It is accurate to
+   the nearest second.
+
+   The arguments are:
+
+   clock
+          The object instance to be synchronized with wall clock time.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

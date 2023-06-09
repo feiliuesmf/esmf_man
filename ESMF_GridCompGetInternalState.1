@@ -1,0 +1,62 @@
+  17.4.8 ESMF_GridCompGetInternalState - Get private data block pointer
+
+   INTERFACE:
+   subroutine ESMF_GridCompGetInternalState(gridcomp, wrappedDataPointer, rc)
+
+   ARGUMENTS:
+     type(ESMF_GridComp)             :: gridcomp
+     type(wrapper)                   :: wrappedDataPointer
+     integer,            intent(out) :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Available to be called by an ESMF_GridComp at any time after
+   ESMF_GridCompSetInternalState has been called. Since init, run, and
+   finalize must be separate subroutines, data that they need to share in
+   common can either be module global data, or can be allocated in a
+   private data block and the address of that block can be registered with
+   the framework and retrieved by this call. When running multiple
+   instantiations of an ESMF_GridComp, for example during ensemble runs,
+   it may be simpler to maintain private data specific to each run with
+   private data blocks. A corresponding ESMF_GridCompSetInternalState call
+   sets the data pointer to this block, and this call retrieves the data
+   pointer. Note that the wrappedDataPointer argument needs to be a
+   derived type which contains only a pointer of the type of the data
+   block defined by the user. When making this call the pointer needs to
+   be unassociated. When the call returns, the pointer will now reference
+   the original data block which was set during the previous call to
+   ESMF_GridCompSetInternalState.
+
+   Only the last data block set via ESMF_GridCompSetInternalState will be
+   accessible.
+
+   CAUTION: If you are working with a compiler that does not support
+   Fortran 2018 assumed-type dummy arguments, then this method does not
+   have an explicit Fortran interface. In this case do not specify
+   argument keywords when calling this method!
+
+   The arguments are:
+
+   gridcomp
+          An ESMF_GridComp object.
+
+   wrappedDataPointer
+          A derived type (wrapper), containing only an unassociated
+          pointer to the private data block. The framework will fill in
+          the pointer. When this call returns, the pointer is set to the
+          same address set during the last ESMF_GridCompSetInternalState
+          call. This level of indirection is needed to reliably set and
+          retrieve the data block no matter which architecture or compiler
+          is used.
+
+   rc
+          Return code; equals ESMF_SUCCESS if there are no errors. Note:
+          unlike most other ESMF routines, this argument is not optional
+          because of implementation considerations.
+

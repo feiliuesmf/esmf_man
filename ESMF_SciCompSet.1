@@ -1,0 +1,26 @@
+  19.4.9 ESMF_SciCompSet - Set or reset information about the SciComp
+
+   INTERFACE:
+   subroutine ESMF_SciCompSet(scicomp, name, rc)
+
+   ARGUMENTS:
+     type(ESMF_SciComp), intent(inout)          :: scicomp
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     character(len=*),    intent(in),  optional :: name
+     integer,             intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Sets or resets information about an ESMF_SciComp.
+
+   The arguments are:
+
+   scicomp
+          ESMF_SciComp to change.
+
+   [name]
+          Set the name of the ESMF_SciComp.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

@@ -1,0 +1,101 @@
+  46.6.18 ESMF_AlarmSet - Set Alarm properties
+
+   INTERFACE:
+       subroutine ESMF_AlarmSet(alarm, &
+         clock, ringTime, ringInterval, stopTime, ringDuration, &
+         ringTimeStepCount, refTime, ringing, enabled, sticky, name, rc)
+
+   ARGUMENTS:
+       type(ESMF_Alarm),        intent(inout)         :: alarm
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+       type(ESMF_Clock),        intent(in),  optional :: clock
+       type(ESMF_Time),         intent(in),  optional :: ringTime
+       type(ESMF_TimeInterval), intent(in),  optional :: ringInterval
+       type(ESMF_Time),         intent(in),  optional :: stopTime
+       type(ESMF_TimeInterval), intent(in),  optional :: ringDuration
+       integer,                 intent(in),  optional :: ringTimeStepCount
+       type(ESMF_Time),         intent(in),  optional :: refTime
+       logical,                 intent(in),  optional :: ringing
+       logical,                 intent(in),  optional :: enabled
+       logical,                 intent(in),  optional :: sticky
+       character (len=*),       intent(in),  optional :: name
+       integer,                 intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+
+   DESCRIPTION:
+
+   Sets/resets one or more of the properties of an ESMF_Alarm that was
+   previously initialized via ESMF_AlarmCreate().
+
+   The arguments are:
+
+   alarm
+          The object instance to set.
+
+   [clock]
+          Re-associates this alarm with a different clock.
+
+   [ringTime]
+          The next ring time for a one-shot alarm or a repeating
+          (interval) alarm.
+
+   [ringInterval]
+          The ring interval for repeating (interval) alarms.
+
+   [stopTime]
+          The stop time for repeating (interval) alarms.
+
+   [ringDuration]
+          The absolute ring duration. If not sticky (see argument below),
+          alarms rings for ringDuration, then turns itself off. Default is
+          zero (unused). Mutually exclusive with ringTimeStepCount
+          (below); used only if set to a non-zero duration and
+          ringTimeStepCount is 1 (see below). See also ESMF_AlarmSticky(),
+          ESMF_AlarmNotSticky().
+
+   [ringTimeStepCount]
+          The relative ring duration. If not sticky (see argument below),
+          alarms rings for ringTimeStepCount, then turns itself off.
+          Default is 1: a non-sticky alarm will ring for one clock time
+          step. Mutually exclusive with ringDuration (above); used if
+          ringTimeStepCount > 1. If ringTimeStepCount is 1 (default) and
+          ringDuration is non-zero, ringDuration is used (see above),
+          otherwise ringTimeStepCount is used. See also
+          ESMF_AlarmSticky(), ESMF_AlarmNotSticky().
+
+   [refTime]
+          The reference (i.e. base) time for an interval alarm.
+
+   [ringing]
+          Sets the ringing state. See also ESMF_AlarmRingerOn(),
+          ESMF_AlarmRingerOff().
+
+   [enabled]
+          Sets the enabled state. If disabled, an alarm will not function
+          at all. See also ESMF_AlarmEnable(), ESMF_AlarmDisable().
+
+   [sticky]
+          Sets the sticky state. If sticky, once an alarm is ringing, it
+          will remain ringing until turned off manually via a user call to
+          ESMF_AlarmRingerOff(). If not sticky, an alarm will turn itself
+          off after a certain ring duration specified by either
+          ringDuration or ringTimeStepCount (see above). There is an
+          implicit limitation that in order to properly reverse timestep
+          through a ring end time in ESMF_DIRECTION_REVERSE, that time
+          must have already been traversed in the forward direction. This
+          is due to the fact that the Time Manager cannot predict when
+          user code will call ESMF_AlarmRingerOff(). An error message will
+          be logged when this limitation is not satisfied. See also
+          ESMF_AlarmSticky(), ESMF_AlarmNotSticky().
+
+   [name]
+          The new name for this alarm.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

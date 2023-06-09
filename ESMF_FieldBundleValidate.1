@@ -1,0 +1,22 @@
+  25.5.38 ESMF_FieldBundleValidate - Validate fieldbundle internals
+
+   INTERFACE:
+   subroutine ESMF_FieldBundleValidate(fieldbundle, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(in) :: fieldbundle
+     integer, intent(out), optional :: rc
+
+   DESCRIPTION:
+
+   Validates that the fieldbundle is internally consistent. The method
+   returns an error code if problems are found.
+
+   The arguments are:
+
+   fieldbundle
+          Specified ESMF_FieldBundle object.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+

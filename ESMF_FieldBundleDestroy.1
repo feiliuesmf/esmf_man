@@ -1,0 +1,64 @@
+  25.5.9 ESMF_FieldBundleDestroy - Release resources associated with a
+  FieldBundle
+
+   INTERFACE:
+   subroutine ESMF_FieldBundleDestroy(fieldbundle, noGarbage, rc)
+
+   ARGUMENTS:
+     type(ESMF_FieldBundle), intent(inout) :: fieldbundle
+ -- The following arguments require argument keyword syntax (e.g. rc=rc). --
+     logical, intent(in), optional :: noGarbage
+     integer, intent(out), optional :: rc
+
+   STATUS:
+     * This interface is backward compatible with ESMF versions starting
+       at 5.2.0r. If code using this interface compiles with any version
+       of ESMF starting with 5.2.0r, then it will compile with the current
+       version.
+     * This interface was modified since ESMF version 5.2.0r. The fact
+       that code using this interface compiles with the current ESMF
+       version does not guarantee that it compiles with previous versions
+       of this interface. If user code compatibility with version 5.2.0r
+       is desired then care must be taken to limit the use of this
+       interface to features that were available in the 5.2.0r release.
+       Changes made after the 5.2.0r release:
+
+        7.0.0
+                Added argument noGarbage. The argument provides a
+                mechanism to override the default garbage collection
+                mechanism when destroying an ESMF object.
+
+   DESCRIPTION:
+
+   Destroy an ESMF_FieldBundle object. The member Fields are not touched
+   by this operation and remain valid objects that need to be destroyed
+   individually if necessary.
+
+   The arguments are:
+
+   fieldbundle
+          ESMF_FieldBundle object to be destroyed.
+
+   [noGarbage]
+          If set to .TRUE. the object will be fully destroyed and removed
+          from the ESMF garbage collection system. Note however that under
+          this condition ESMF cannot protect against accessing the
+          destroyed object through dangling aliases - a situation which
+          may lead to hard to debug application crashes.
+
+          It is generally recommended to leave the noGarbage argument set
+          to .FALSE. (the default), and to take advantage of the ESMF
+          garbage collection system which will prevent problems with
+          dangling aliases or incorrect sequences of destroy calls.
+          However this level of support requires that a small remnant of
+          the object is kept in memory past the destroy call. This can
+          lead to an unexpected increase in memory consumption over the
+          course of execution in applications that use temporary ESMF
+          objects. For situations where the repeated creation and
+          destruction of temporary objects leads to memory issues, it is
+          recommended to call with noGarbage set to .TRUE., fully removing
+          the entire temporary object from memory.
+
+   [rc]
+          Return code; equals ESMF_SUCCESS if there are no errors.
+
